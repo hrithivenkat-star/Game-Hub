@@ -1,0 +1,54 @@
+body {
+  font-family: Segoe UI, sans-serif;
+  background: #111;
+  color: #fff;
+  text-align: center;
+}
+
+#challenge-container {
+  margin: 50px auto;
+  width: 80%;
+  max-width: 600px;
+}
+
+h1 {
+  color: #FFD700;
+}
+
+#rules {
+  background: #222;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+#timer, #score {
+  font-size: 20px;
+  margin: 10px 0;
+}
+
+button {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+#game-area {
+  margin-top: 20px;
+  min-height: 200px;
+}
+
+#game-over {
+  background: #222;
+  padding: 20px;
+  border-radius: 8px;
+}
