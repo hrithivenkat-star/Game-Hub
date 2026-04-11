@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Timed Challenge Mode</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="challenge-container">
+    <h1>Timed Challenge</h1>
+    <div id="rules">
+      <h2>Rules & Regulations</h2>
+      <ul>
+        <li>You have a limited time to clear as many mini-games as possible.</li>
+        <li>Each correct action earns points and may add bonus seconds.</li>
+        <li>Difficulty increases as you progress.</li>
+        <li>When the timer hits zero, the challenge ends instantly.</li>
+      </ul>
+    </div>
+
+    <div id="timer">Time Left: <span id="time">60</span> seconds</div>
+    <div id="score">Score: 0</div>
+
+    <button id="start-btn">Start Challenge</button>
+    <div id="game-area"></div>
+
+    <div id="game-over" style="display:none;">
+      <h2>Game Over!</h2>
+      <p id="final-score"></p>
+      <button onclick="restartChallenge()">Restart</button>
+      <button onclick="goBack()">Back to Hub</button>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
