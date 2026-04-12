@@ -291,8 +291,8 @@ let bird, pipes, score, bestScore, streak, gameState, animFrame, frameCount, pau
 let flashEffect = 0;
 let particles2 = [];
 
-function getBest() { return parseInt(localStorage.getItem('fb_best')||'0'); }
-function setBest(v) { localStorage.setItem('fb_best',v); localStorage.setItem('fb_best_update',Date.now()); }
+function getBest() { return parseInt(localStorage.getItem('flappy_best')||'0'); }
+function setBest(v) { localStorage.setItem('flappy_best',v); const p=parseInt(localStorage.getItem('total_plays')||'0'); localStorage.setItem('total_plays',p+1); }
 
 function initGame(){
   bird = { x:80, y:H/2, vy:0, gravity:0.45, jump:-8, w:28, h:22, angle:0, trail:[] };
