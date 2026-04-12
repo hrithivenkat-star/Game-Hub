@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rock Paper Scissors – GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--pink:#ff006e;--cyan:#00f5ff;--green:#39ff14;--yellow:#ffe600;--purple:#bf00ff;--bg:#050a0f;--card:#0d1117;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,110,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,110,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .topbar{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(5,10,15,0.9);border-bottom:1px solid rgba(255,0,110,0.15);backdrop-filter:blur(12px);z-index:100;}
+  .back-btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--pink);padding:8px 18px;border:1px solid var(--pink);border-radius:4px;background:rgba(255,0,110,0.05);cursor:pointer;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(255,0,110,0.15);box-shadow:0 0 18px rgba(255,0,110,0.4);}
+  .logo{font-family:'Orbitron',monospace;font-weight:900;font-size:18px;}.logo span:first-child{color:#fff;}.logo span:last-child{color:var(--cyan);}
+  .diff-badge{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 14px;background:rgba(0,255,136,0.1);border:1px solid #00ff88;color:#00ff88;border-radius:4px;}
+  main{position:relative;z-index:1;padding-top:80px;display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;}
+  .title-area{text-align:center;}
+  .game-title{font-family:'Orbitron',monospace;font-weight:900;font-size:28px;background:linear-gradient(135deg,var(--pink),var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .series-info{font-size:14px;color:#555;margin-top:6px;}
+  .scoreboard{display:flex;gap:0;border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;background:var(--card);}
+  .sb-item{padding:16px 32px;text-align:center;border-right:1px solid rgba(255,255,255,0.06);}
+  .sb-item:last-child{border-right:none;}
+  .sb-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:#555;margin-bottom:6px;}
+  .sb-val{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;}
+  .sb-val.p{color:var(--cyan);text-shadow:0 0 12px var(--cyan);}
+  .sb-val.ai{color:var(--pink);text-shadow:0 0 12px var(--pink);}
+  .sb-val.b{color:var(--yellow);text-shadow:0 0 12px var(--yellow);}
+  .arena{display:flex;align-items:center;justify-content:center;gap:40px;padding:10px 0;}
+  .fighter{display:flex;flex-direction:column;align-items:center;gap:12px;width:140px;}
+  .fighter-label{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;color:#555;}
+  .fighter-icon{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;border:2px solid rgba(255,255,255,0.06);background:var(--card);transition:all 0.3s;position:relative;}
+  .fighter-icon.player-side{border-color:rgba(0,245,255,0.3);box-shadow:0 0 25px rgba(0,245,255,0.15);}
+  .fighter-icon.ai-side{border-color:rgba(255,0,110,0.3);box-shadow:0 0 25px rgba(255,0,110,0.15);}
+  .fighter-icon.win{box-shadow:0 0 40px rgba(57,255,20,0.5);border-color:var(--green);}
+  .fighter-icon.lose{box-shadow:0 0 40px rgba(255,0,60,0.5);border-color:#ff003c;filter:grayscale(0.5);}
+  .vs-badge{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#333;}
+  .result-display{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;min-height:36px;text-align:center;}
+  .result-win{color:var(--green);text-shadow:0 0 20px var(--green);}
+  .result-lose{color:#ff003c;text-shadow:0 0 20px #ff003c;}
+  .result-draw{color:var(--yellow);text-shadow:0 0 20px var(--yellow);}
+  .choices{display:flex;gap:16px;justify-content:center;}
+  .choice-btn{width:90px;height:90px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:var(--card);font-size:36px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;}
+  .choice-btn span{font-family:'Orbitron',monospace;font-size:9px;color:#555;letter-spacing:1px;}
+  .choice-btn:hover{transform:scale(1.1);border-color:rgba(255,0,110,0.5);box-shadow:0 0 20px rgba(255,0,110,0.2);}
+  .choice-btn:active{transform:scale(0.95);}
+  .dots{display:flex;gap:8px;justify-content:center;}
+  .dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:transparent;transition:all 0.3s;}
+  .dot.won{background:var(--green);box-shadow:0 0 10px var(--green);border-color:var(--green);}
+  .dot.lost{background:#ff003c;box-shadow:0 0 10px #ff003c;border-color:#ff003c;}
+  .action-row{display:flex;gap:12px;}
+  .act-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;padding:10px 24px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;background:rgba(255,255,255,0.03);color:#666;cursor:pointer;transition:all 0.2s;}
+  .act-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+  .best-display{font-family:'Orbitron',monospace;font-size:12px;color:#333;letter-spacing:1px;}
+  .best-display span{color:var(--yellow);}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .shake{animation:shake 0.3s ease;}
+  @keyframes pop{0%{transform:scale(0.5)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .pop{animation:pop 0.3s ease;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← MINI GAMES</button>
+  <div class="logo"><span>GAME</span><span>HUB</span></div>
+  <div class="diff-badge">EASY</div>
+</div>
+
+<main>
+  <div class="title-area">
+    <div class="game-title">ROCK PAPER SCISSORS</div>
+    <div class="series-info">Best of 5 vs the Neon AI</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="sb-item"><div class="sb-label">YOU</div><div class="sb-val p" id="pScore">0</div></div>
+    <div class="sb-item"><div class="sb-label">ROUND</div><div class="sb-val b" id="round">1</div></div>
+    <div class="sb-item"><div class="sb-label">AI</div><div class="sb-val ai" id="aScore">0</div></div>
+  </div>
+
+  <div class="dots" id="dots">
+    <div class="dot" id="d0"></div><div class="dot" id="d1"></div><div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div><div class="dot" id="d4"></div>
+  </div>
+
+  <div class="arena">
+    <div class="fighter">
+      <div class="fighter-label">YOU</div>
+      <div class="fighter-icon player-side" id="playerIcon">❓</div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="fighter">
+      <div class="fighter-label">AI</div>
+      <div class="fighter-icon ai-side" id="aiIcon">❓</div>
+    </div>
+  </div>
+
+  <div class="result-display" id="result">Choose your weapon!</div>
+
+  <div class="choices">
+    <button class="choice-btn" onclick="play('rock')">🪨<span>ROCK</span></button>
+    <button class="choice-btn" onclick="play('paper')">📄<span>PAPER</span></button>
+    <button class="choice-btn" onclick="play('scissors')">✂️<span>SCISSORS</span></button>
+  </div>
+
+  <div class="action-row">
+    <button class="act-btn" onclick="resetGame()">↺ NEW SERIES</button>
+  </div>
+  <div class="best-display">ALL-TIME WINS: <span id="bestWins">0</span></div>
+</main>
+
+<script>
+const ICONS={rock:'🪨',paper:'📄',scissors:'✂️'};
+const CHOICES=['rock','paper','scissors'];
+let pW=0,aW=0,round=0,roundHistory=[],playing=true;
+let bestWins=parseInt(localStorage.getItem('rps_wins')||'0');
+document.getElementById('bestWins').textContent=bestWins;
+
+function wins(a,b){return(a==='rock'&&b==='scissors')||(a==='scissors'&&b==='paper')||(a==='paper'&&b==='rock');}
+
+function play(choice){
+  if(!playing)return;
+  const ai=CHOICES[Math.floor(Math.random()*3)];
+  const pIcon=document.getElementById('playerIcon');
+  const aIcon=document.getElementById('aiIcon');
+  const result=document.getElementById('result');
+
+  pIcon.textContent=ICONS[choice];aIcon.textContent=ICONS[ai];
+  pIcon.className='fighter-icon player-side';aIcon.className='fighter-icon ai-side';
+
+  round++;document.getElementById('round').textContent=Math.min(round,5);
+
+  let res,dot={};
+  if(choice===ai){res='DRAW — Play again';result.className='result-display result-draw';dot.draw=true;}
+  else if(wins(choice,ai)){
+    pW++;res='✦ YOU WIN THIS ROUND';result.className='result-display result-win';
+    pIcon.classList.add('win');aIcon.classList.add('lose');dot.won=true;
+  } else {
+    aW++;res='✦ AI WINS THIS ROUND';result.className='result-display result-lose';
+    aIcon.classList.add('win');pIcon.classList.add('lose');dot.lost=true;
+  }
+
+  if(!dot.draw)roundHistory.push(dot);
+  updateDots();
+
+  // Animate
+  pIcon.classList.add('pop');aIcon.classList.add('pop');
+  setTimeout(()=>{pIcon.classList.remove('pop');aIcon.classList.remove('pop');},300);
+
+  document.getElementById('pScore').textContent=pW;
+  document.getElementById('aScore').textContent=aW;
+  result.textContent=res;
+
+  if(pW>=3||aW>=3){
+    playing=false;
+    setTimeout(()=>endSeries(),700);
+  }
+}
+
+function updateDots(){
+  roundHistory.slice(-5).forEach((r,i)=>{
+    const d=document.getElementById('d'+i);
+    if(d){d.className='dot'+(r.won?' won':r.lost?' lost':'');}
+  });
+}
+
+function endSeries(){
+  const won=pW>=3;
+  const result=document.getElementById('result');
+  if(won){
+    result.className='result-display result-win';
+    result.textContent='🏆 YOU WIN THE SERIES!';
+    bestWins++;localStorage.setItem('rps_wins',bestWins);
+    localStorage.setItem('total_plays',parseInt(localStorage.getItem('total_plays')||0)+1);
+    document.getElementById('bestWins').textContent=bestWins;
+  } else {
+    result.className='result-display result-lose';result.textContent='💀 AI WINS THE SERIES!';
+  }
+}
+
+function resetGame(){
+  pW=0;aW=0;round=0;roundHistory=[];playing=true;
+  document.getElementById('pScore').textContent=0;
+  document.getElementById('aScore').textContent=0;
+  document.getElementById('round').textContent=1;
+  document.getElementById('playerIcon').textContent='❓';
+  document.getElementById('aiIcon').textContent='❓';
+  document.getElementById('playerIcon').className='fighter-icon player-side';
+  document.getElementById('aiIcon').className='fighter-icon ai-side';
+  document.getElementById('result').textContent='Choose your weapon!';
+  document.getElementById('result').className='result-display';
+  for(let i=0;i<5;i++){const d=document.getElementById('d'+i);if(d)d.className='dot';}
+}
+</script>
+</body>
+</html>
