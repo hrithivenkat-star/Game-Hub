@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole – GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#ff003c;--cyan:#00f5ff;--green:#39ff14;--yellow:#ffe600;--pink:#ff006e;--bg:#050a0f;--card:#0d1117;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,60,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,60,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .topbar{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(5,10,15,0.9);border-bottom:1px solid rgba(255,0,60,0.15);backdrop-filter:blur(12px);z-index:100;}
+  .back-btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);padding:8px 18px;border:1px solid var(--red);border-radius:4px;background:rgba(255,0,60,0.05);transition:all 0.2s;cursor:pointer;}
+  .back-btn:hover{background:rgba(255,0,60,0.15);box-shadow:0 0 18px rgba(255,0,60,0.4);}
+  .logo{font-family:'Orbitron',monospace;font-weight:900;font-size:18px;}
+  .logo span:first-child{color:#fff;}.logo span:last-child{color:var(--cyan);}
+  .diff-badge{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 14px;background:rgba(0,255,136,0.1);border:1px solid #00ff88;color:#00ff88;border-radius:4px;}
+  .wrap{position:relative;z-index:1;padding-top:72px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+  .hud{display:flex;gap:20px;align-items:center;}
+  .hud-card{background:var(--card);border-radius:8px;padding:12px 22px;text-align:center;border:1px solid rgba(255,255,255,0.06);min-width:100px;}
+  .hud-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:#555;margin-bottom:4px;}
+  .hud-val{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;}
+  .hud-val.sc{color:var(--red);text-shadow:0 0 12px var(--red);}
+  .hud-val.be{color:var(--cyan);text-shadow:0 0 12px var(--cyan);}
+  .hud-val.ti{color:var(--yellow);text-shadow:0 0 12px var(--yellow);}
+  #timer-bar-wrap{width:420px;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+  #timer-bar{height:100%;background:linear-gradient(90deg,var(--red),var(--yellow));border-radius:4px;transition:width 0.3s linear;box-shadow:0 0 10px rgba(255,0,60,0.5);}
+  .grid{display:grid;grid-template-columns:repeat(3,130px);grid-template-rows:repeat(3,120px);gap:14px;}
+  .hole{background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,0.05);position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.15s;}
+  .hole:hover{border-color:rgba(255,0,60,0.3);}
+  .mole{position:absolute;bottom:-80px;left:50%;transform:translateX(-50%);width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;transition:bottom 0.15s ease-out;filter:drop-shadow(0 0 10px rgba(255,0,60,0.6));}
+  .mole.up{bottom:16px;}
+  .mole.whacked{bottom:10px;filter:drop-shadow(0 0 20px #fff) brightness(3);transition:all 0.08s;}
+  .ground{position:absolute;bottom:0;left:0;right:0;height:38px;background:rgba(255,0,60,0.08);border-top:2px solid rgba(255,0,60,0.3);border-radius:0 0 14px 14px;}
+  .hole-circle{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:60px;height:16px;background:rgba(0,0,0,0.5);border-radius:50%;}
+  #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,10,15,0.93);z-index:200;gap:18px;}
+  .gtitle{font-family:'Orbitron',monospace;font-weight:900;font-size:32px;background:linear-gradient(135deg,var(--red),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .gsub{font-size:14px;color:#555;text-align:center;line-height:1.6;}
+  .pbtn{font-family:'Orbitron',monospace;font-weight:700;font-size:12px;letter-spacing:3px;padding:13px 36px;border:none;border-radius:6px;cursor:pointer;background:linear-gradient(135deg,var(--red),var(--yellow));color:#000;box-shadow:0 0 28px rgba(255,0,60,0.4);transition:transform 0.15s;}
+  .pbtn:hover{transform:scale(1.05);}
+  .fscore{font-family:'Orbitron',monospace;font-size:44px;font-weight:900;color:var(--red);text-shadow:0 0 25px var(--red);}
+  .nbest{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;color:var(--yellow);animation:blink 0.8s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .hit-effect{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:#fff;text-shadow:0 0 12px #fff;animation:hitPop 0.4s ease-out forwards;pointer-events:none;}
+  @keyframes hitPop{0%{transform:translate(-50%,-50%) scale(0.5);opacity:1}100%{transform:translate(-50%,-80%) scale(1.5);opacity:0}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← MINI GAMES</button>
+  <div class="logo"><span>GAME</span><span>HUB</span></div>
+  <div class="diff-badge">EASY</div>
+</div>
+
+<div id="overlay">
+  <div style="font-size:52px">🔨</div>
+  <div class="gtitle">WHACK-A-MOLE</div>
+  <div class="gsub">Hack the glitching nodes before they disappear.<br>Speed increases each wave. 30 seconds. Go!</div>
+  <button class="pbtn" id="startBtn">▶ START GAME</button>
+</div>
+
+<div class="wrap">
+  <div class="hud">
+    <div class="hud-card"><div class="hud-label">SCORE</div><div class="hud-val sc" id="scoreEl">0</div></div>
+    <div class="hud-card"><div class="hud-label">BEST</div><div class="hud-val be" id="bestEl">0</div></div>
+    <div class="hud-card"><div class="hud-label">TIME</div><div class="hud-val ti" id="timeEl">30</div></div>
+  </div>
+  <div id="timer-bar-wrap"><div id="timer-bar" style="width:100%"></div></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const MOLES=['🔴','🟠','🔥','⚡','💥'];
+let score=0,best=parseInt(localStorage.getItem('whack_best')||'0'),timeLeft=30,gameRunning=false;
+let holes=[],moleTimers=[];
+
+document.getElementById('bestEl').textContent=best;
+
+// Build grid
+const grid=document.getElementById('grid');
+for(let i=0;i<9;i++){
+  const hole=document.createElement('div');
+  hole.className='hole';
+  hole.innerHTML=`<div class="ground"></div><div class="hole-circle"></div><div class="mole" id="mole${i}"></div>`;
+  hole.onclick=()=>whack(i);
+  grid.appendChild(hole);
+  holes.push({el:hole,moleEl:document.getElementById('mole'+i),up:false,timeout:null});
+}
+
+function whack(i){
+  if(!gameRunning||!holes[i].up)return;
+  holes[i].up=false;
+  const m=holes[i].moleEl;
+  m.classList.remove('up');m.classList.add('whacked');
+  score+=10;document.getElementById('scoreEl').textContent=score;
+  if(score>best){best=score;localStorage.setItem('whack_best',best);localStorage.setItem('total_plays',parseInt(localStorage.getItem('total_plays')||0)+1);document.getElementById('bestEl').textContent=best;}
+  // Hit effect
+  const eff=document.createElement('div');eff.className='hit-effect';eff.textContent='+10';
+  holes[i].el.appendChild(eff);setTimeout(()=>eff.remove(),400);
+  clearTimeout(holes[i].timeout);
+  setTimeout(()=>{m.classList.remove('whacked');m.innerHTML='';},150);
+}
+
+function spawnMole(){
+  if(!gameRunning)return;
+  const speed=Math.max(600,1200-score*5);
+  const i=Math.floor(Math.random()*9);
+  if(!holes[i].up){
+    holes[i].up=true;
+    const m=holes[i].moleEl;
+    m.innerHTML=MOLES[Math.floor(Math.random()*MOLES.length)];
+    m.classList.add('up');m.classList.remove('whacked');
+    holes[i].timeout=setTimeout(()=>{
+      if(holes[i].up){holes[i].up=false;m.classList.remove('up');setTimeout(()=>{m.innerHTML='';},150);}
+    },speed);
+  }
+  setTimeout(spawnMole,Math.max(400,800-score*3));
+}
+
+let timerInterval;
+function startGame(){
+  document.getElementById('overlay').style.display='none';
+  score=0;timeLeft=30;gameRunning=true;
+  document.getElementById('scoreEl').textContent=0;
+  document.getElementById('timeEl').textContent=30;
+  document.getElementById('timer-bar').style.width='100%';
+  holes.forEach(h=>{h.up=false;h.moleEl.classList.remove('up','whacked');h.moleEl.innerHTML='';clearTimeout(h.timeout);});
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--;document.getElementById('timeEl').textContent=timeLeft;
+    document.getElementById('timer-bar').style.width=(timeLeft/30*100)+'%';
+    if(timeLeft<=0){clearInterval(timerInterval);endGame();}
+  },1000);
+  spawnMole();
+}
+
+function endGame(){
+  gameRunning=false;
+  holes.forEach(h=>{h.up=false;h.moleEl.classList.remove('up');clearTimeout(h.timeout);});
+  const overlay=document.getElementById('overlay');
+  overlay.style.display='flex';
+  const isNew=score>=best&&score>0;
+  overlay.innerHTML=`
+    <div style="font-size:48px">⏱️</div>
+    <div class="gtitle">TIME'S UP!</div>
+    <div style="text-align:center">
+      <div style="font-family:Orbitron,monospace;font-size:10px;letter-spacing:2px;color:#555;margin-bottom:6px">FINAL SCORE</div>
+      <div class="fscore">${score}</div>
+      ${isNew?'<div class="nbest">✦ NEW BEST ✦</div>':''}
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="pbtn" id="startBtn" style="padding:11px 26px;font-size:10px">▶ RETRY</button>
+      <button class="pbtn" onclick="history.back()" style="padding:11px 26px;font-size:10px;background:linear-gradient(135deg,#333,#222);color:#fff;box-shadow:none">← HUB</button>
+    </div>`;
+  document.getElementById('startBtn').onclick=startGame;
+}
+
+document.getElementById('startBtn').addEventListener('click',startGame);
+</script>
+</body>
+</html>
