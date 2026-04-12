@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Blitz — Game Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,230,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,230,0,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,230,0,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes penalty-flash{0%{background:rgba(255,0,60,0.3)}100%{background:transparent}}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(255,230,0,0.08);background:rgba(5,5,16,0.95);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:8px}
+.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 14px;border-radius:6px;transition:all 0.2s}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+
+.game-wrap{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
+
+.top-stats{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.sbox{background:var(--card);border-radius:10px;padding:10px 18px;text-align:center}
+.slbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.sval{font-family:'Orbitron',monospace;font-size:22px;font-weight:700}
+
+.arena{position:relative}
+.arena-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(255,230,0,0.12);pointer-events:none}
+canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(255,230,0,0.08)}
+
+.overlay{position:absolute;inset:0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.94);backdrop-filter:blur(5px);animation:fadeIn 0.3s ease;z-index:10;padding:20px}
+.overlay.hidden{display:none}
+.ov-icon{font-size:50px;margin-bottom:10px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;margin-bottom:7px;letter-spacing:2px;text-align:center}
+.ov-sub{font-size:13px;color:var(--dim);margin-bottom:18px;text-align:center;line-height:1.6}
+.rules-box{background:rgba(255,230,0,0.05);border:1px solid rgba(255,230,0,0.12);border-radius:10px;padding:14px 18px;margin-bottom:18px;width:100%;max-width:360px}
+.rtitle{font-family:'Orbitron',monospace;font-size:10px;color:var(--yellow);letter-spacing:2px;margin-bottom:10px}
+.rrow{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.ri{font-size:13px;flex-shrink:0}
+.rt{font-size:12px;color:#aabbdd;line-height:1.4}
+.stats-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;justify-content:center}
+.sb{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;text-align:center;min-width:75px}
+.sbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sbv{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.btn-y{background:rgba(255,230,0,0.12);color:var(--yellow);border:1px solid rgba(255,230,0,0.3)}
+.btn-y:hover{background:rgba(255,230,0,0.22);box-shadow:0 0 18px rgba(255,230,0,0.3);transform:translateY(-2px)}
+.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
+.nb-badge{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
+.nb-badge.show{display:block}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<nav>
+  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
+  <div class="nav-right">
+    <a href="../index.html" class="nbtn">← Timed</a>
+    <a href="../../index.html" class="nbtn">🏠 Hub</a>
+  </div>
+</nav>
+
+<div class="game-wrap">
+  <div class="top-stats">
+    <div class="sbox" style="border:1px solid rgba(255,230,0,0.15)"><div class="slbl">Round Time</div><div class="sval" style="color:var(--yellow)" id="time-el">0.0s</div></div>
+    <div class="sbox" style="border:1px solid rgba(0,245,255,0.12)"><div class="slbl">Best Time</div><div class="sval" style="color:var(--cyan);font-size:18px" id="best-el">--</div></div>
+    <div class="sbox" style="border:1px solid rgba(0,255,136,0.12)"><div class="slbl">Next</div><div class="sval" style="color:var(--green)" id="next-el">1</div></div>
+    <div class="sbox" style="border:1px solid rgba(191,0,255,0.12)"><div class="slbl">Penalties</div><div class="sval" style="color:var(--purple);font-size:18px" id="pen-el">0s</div></div>
+    <div class="sbox" style="border:1px solid rgba(255,107,0,0.12)"><div class="slbl">Round</div><div class="sval" style="color:var(--orange);font-size:18px" id="round-el">1</div></div>
+  </div>
+
+  <div class="arena">
+    <div class="arena-glow"></div>
+    <canvas id="c" width="560" height="460"></canvas>
+
+    <div class="overlay" id="start-screen">
+      <div class="ov-icon">🔢</div>
+      <div class="ov-title" style="color:var(--yellow);text-shadow:0 0 20px rgba(255,230,0,0.6)">NUMBER BLITZ</div>
+      <div class="ov-sub">16 numbers are scattered on screen.<br>Tap them in order 1→16 as fast as you can!</div>
+      <div class="rules-box">
+        <div class="rtitle">📋 HOW TO PLAY</div>
+        <div class="rrow"><span class="ri">🔢</span><span class="rt">16 glowing numbers appear at random positions every round.</span></div>
+        <div class="rrow"><span class="ri">👆</span><span class="rt">Click/tap them in order: 1, 2, 3... all the way to 16.</span></div>
+        <div class="rrow"><span class="ri">❌</span><span class="rt">Wrong number = RED flash + 2 second penalty added to your time.</span></div>
+        <div class="rrow"><span class="ri">⏱</span><span class="rt">Your time to complete is your score. Lower = better!</span></div>
+        <div class="rrow"><span class="ri">🏆</span><span class="rt">Infinite rounds — keep playing to beat your best time!</span></div>
+      </div>
+      <div class="btns"><button class="btn btn-y" onclick="startRound()">Start!</button></div>
+    </div>
+
+    <div class="overlay hidden" id="round-end">
+      <div class="ov-icon" style="animation:none" id="re-icon">⚡</div>
+      <div class="ov-title" id="re-title" style="color:var(--yellow)">ROUND CLEAR!</div>
+      <div class="nb-badge" id="nb-badge">⚡ NEW BEST!</div>
+      <div class="stats-row">
+        <div class="sb"><div class="sbl">Time</div><div class="sbv" id="re-time" style="color:var(--yellow)">0s</div></div>
+        <div class="sb"><div class="sbl">Best</div><div class="sbv" id="re-best" style="color:var(--cyan)">--</div></div>
+        <div class="sb"><div class="sbl">Penalties</div><div class="sbv" id="re-pen" style="color:var(--pink)">0</div></div>
+      </div>
+      <div class="btns">
+        <button class="btn btn-y" onclick="startRound()">Next Round</button>
+        <a href="../index.html" class="btn btn-dim">← Hub</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+
+const COLORS=['#00f5ff','#bf00ff','#ff006e','#00ff88','#ffe600','#ff6b00','#ff003c','#0088ff'];
+let numbers=[],nextNum,startTime,timerInterval,penalties,round,best,gameRunning,penaltyTotal;
+
+best=localStorage.getItem('nb_best')?parseFloat(localStorage.getItem('nb_best')):null;
+document.getElementById('best-el').textContent=best?best.toFixed(1)+'s':'--';
+
+function startRound(){
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('round-end').classList.add('hidden');
+  numbers=[];
+  const margin=40;
+  const positions=[];
+  // place 16 numbers without overlap
+  for(let i=1;i<=16;i++){
+    let x,y,tries=0;
+    do{
+      x=margin+Math.random()*(W-margin*2);
+      y=margin+Math.random()*(H-margin*2);
+      tries++;
+    }while(tries<50&&positions.some(p=>Math.hypot(p.x-x,p.y-y)<60));
+    positions.push({x,y});
+    numbers.push({n:i,x,y,r:22,color:COLORS[(i-1)%COLORS.length],done:false,flash:0});
+  }
+  nextNum=1;penalties=0;penaltyTotal=0;round=(round||0)+1;
+  gameRunning=true;
+  startTime=Date.now();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    const elapsed=(Date.now()-startTime)/1000;
+    document.getElementById('time-el').textContent=elapsed.toFixed(1)+'s';
+  },100);
+  document.getElementById('next-el').textContent=nextNum;
+  document.getElementById('pen-el').textContent='0s';
+  document.getElementById('round-el').textContent=round;
+  if(!animRunning){animRunning=true;requestAnimationFrame(loop);}
+}
+
+let animRunning=false;
+function loop(){
+  ctx.fillStyle='#020208';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,230,0,0.02)';
+  for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40)ctx.fillRect(x-1,y-1,2,2);
+
+  numbers.forEach(n=>{
+    if(n.done)return;
+    ctx.save();
+    const isNext=n.n===nextNum;
+    const glow=n.flash>0?'rgba(255,0,60,0.8)':(isNext?n.color+'cc':n.color+'66');
+    ctx.shadowColor=glow;
+    ctx.shadowBlur=isNext?22:10;
+    ctx.fillStyle=n.flash>0?'rgba(255,0,60,0.4)':`${n.color}${isNext?'33':'18'}`;
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=n.flash>0?'#ff003c':(isNext?n.color:n.color+'88');
+    ctx.lineWidth=isNext?2.5:1.5;
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.fillStyle=n.flash>0?'#ff6677':(isNext?'#fff':n.color);
+    ctx.font=`${isNext?'bold ':''} ${n.n>=10?15:17}px Orbitron,monospace`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(n.n,n.x,n.y);
+    ctx.restore();
+    if(n.flash>0)n.flash--;
+  });
+
+  if(gameRunning)requestAnimationFrame(loop);
+  else{animRunning=false;}
+}
+
+canvas.addEventListener('click',e=>{
+  if(!gameRunning)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  let hit=false;
+  for(const n of numbers){
+    if(n.done)continue;
+    if(Math.hypot(mx-n.x,my-n.y)<=n.r+6){
+      if(n.n===nextNum){
+        n.done=true;nextNum++;
+        document.getElementById('next-el').textContent=nextNum<=16?nextNum:'Done!';
+        if(nextNum>16)endRound();
+      } else {
+        n.flash=8;penalties++;penaltyTotal+=2;
+        document.getElementById('pen-el').textContent=penaltyTotal+'s';
+      }
+      hit=true;break;
+    }
+  }
+});
+
+function endRound(){
+  gameRunning=false;
+  clearInterval(timerInterval);
+  const raw=(Date.now()-startTime)/1000;
+  const total=raw+penaltyTotal;
+  const isNew=!best||total<best;
+  if(isNew){best=total;localStorage.setItem('nb_best',best);}
+  document.getElementById('re-time').textContent=total.toFixed(1)+'s';
+  document.getElementById('re-best').textContent=best.toFixed(1)+'s';
+  document.getElementById('re-pen').textContent=penalties+'× ('+penaltyTotal+'s)';
+  document.getElementById('nb-badge').classList.toggle('show',isNew);
+  document.getElementById('re-title').textContent=isNew?'NEW BEST!':'ROUND CLEAR!';
+  document.getElementById('round-end').classList.remove('hidden');
+}
+
+ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
+</script>
+</body>
+</html>
