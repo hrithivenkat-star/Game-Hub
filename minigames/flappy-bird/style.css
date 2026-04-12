@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a1f;
+  font-family: 'Courier New', monospace;
+  color: #0ff;
+  overflow: hidden;
+}
+
+.game-container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 10px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid #0ff;
+  color: #0ff;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.game-title {
+  font-size: 28px;
+  font-weight: bold;
+  text-shadow: 0 0 20px #0ff;
+  margin: 0;
+}
+
+.canvas-wrapper {
+  border: 4px solid #0ff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+  background: #000;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.game-ui {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.score-panel {
+  display: flex;
+  justify-content: space-around;
+  font-size: 20px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px #0ff;
+}
+
+.play-btn {
+  padding: 14px 40px;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 0 25px currentColor;
+  transition: all 0.2s;
+}
+
+.neon-orange {
+  background: #ff4500;
+  color: white;
+}
+
+.neon-orange:hover {
+  box-shadow: 0 0 40px #ff4500;
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none !important;
+}

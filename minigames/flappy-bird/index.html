@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flappy Bird - GameHub</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <header>
+      <button onclick="window.location.href='../index.html'" class="back-btn">← MINI GAMES</button>
+      <h1 class="game-title neon-cyan">FLAPPY BIRD</h1>
+    </header>
+
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="400" height="600"></canvas>
+    </div>
+
+    <div class="game-ui">
+      <div class="score-panel">
+        <div>SCORE <span id="score">0</span></div>
+        <div>BEST <span id="best">0</span></div>
+      </div>
+
+      <button id="startBtn" class="play-btn neon-orange">START GAME</button>
+      <button id="restartBtn" class="play-btn neon-orange hidden">RESTART</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
