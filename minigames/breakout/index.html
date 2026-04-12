@@ -37,13 +37,13 @@
     pointer-events: none;
   }
 
-  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
   .scanline {
     position: fixed; left: 0; right: 0; height: 2px;
     background: linear-gradient(transparent, rgba(0,245,255,0.03), transparent);
     animation: scanline 9s linear infinite;
     pointer-events: none; z-index: 0;
   }
+  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
 
   nav {
     position: relative; z-index: 10;
@@ -221,20 +221,16 @@ function initRound() {
 
 function startGame() {
   document.getElementById('start-screen').classList.add('hidden');
-
   score = 0;
   lives = 3;
   level = 1;
   isInfinite = false;
   paddleWidth = PADDLE_W;
-
   bricks = createBricks(level);
   totalBricks = bricks.length;
   bricksLeft = totalBricks;
-
   initRound();
   updateUI();
-
   gameRunning = true;
   paused = false;
 }
@@ -301,10 +297,13 @@ function update() {
 
     if (b.y > H + 50) {
       balls.splice(i, 1);
-      if (balls.length === 0) ballLost();
+      if (balls.length === 0) {
+        ballLost();
+      }
       continue;
     }
 
+    // Paddle hit
     if (b.dy > 0 && b.y + BALL_R >= paddle.y && b.y - BALL_R <= paddle.y + paddle.h &&
         b.x >= paddle.x && b.x <= paddle.x + paddle.w) {
       b.dy = -Math.abs(b.dy) * 1.02;
@@ -312,6 +311,7 @@ function update() {
       b.dx = hit * 7.5;
     }
 
+    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -333,7 +333,7 @@ function update() {
             x: br.x + br.w/2,
             y: br.y + br.h/2,
             type: ['life','expand','speed','multiball'][Math.floor(Math.random()*4)],
-            vy: 2.2,
+            vy: 2.0,
             pulse: 0
           });
         }
@@ -351,7 +351,7 @@ function update() {
     }
   }
 
-  // Power-ups
+  // Power-ups update & draw logic is in draw()
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
@@ -411,6 +411,7 @@ function ballLost() {
   gameRunning = false;
   lives--;
   updateLives();
+
   if (lives <= 0) {
     if (score > bestScore) {
       bestScore = score;
@@ -419,7 +420,12 @@ function ballLost() {
     }
     setTimeout(() => alert("Game Over!\nFinal Score: " + score), 400);
   } else {
-    setTimeout(() => document.getElementById('lost-screen').classList.remove('hidden'), 400);
+    // Reset for next life
+    setTimeout(() => {
+      initRound();
+      gameRunning = true;
+      paused = false;
+    }, 600);
   }
 }
 
@@ -513,28 +519,29 @@ function draw() {
   ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
   ctx.shadowBlur = 0;
 
-  // Power-ups
+  // Power-ups - Made very visible
   for (const p of powerups) {
-    const glow = 18 + Math.sin(p.pulse) * 4;
-    ctx.shadowBlur = 28;
+    const glow = 19 + Math.sin(p.pulse) * 5;
+
+    ctx.shadowBlur = 30;
     ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, glow, 0, Math.PI*2);
     ctx.fill();
 
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = 16;
     ctx.fillStyle = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 14, 0, Math.PI*2);
+    ctx.arc(p.x, p.y, 15, 0, Math.PI*2);
     ctx.fill();
 
     ctx.shadowBlur = 0;
-    ctx.font = 'bold 18px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffffff';
     const emoji = p.type === 'life' ? '❤️' : p.type === 'expand' ? '📏' : p.type === 'speed' ? '⚡' : '🔥';
-    ctx.fillText(emoji, p.x, p.y + 6);
+    ctx.fillText(emoji, p.x, p.y + 7);
   }
 
   for (const p of particles) {
