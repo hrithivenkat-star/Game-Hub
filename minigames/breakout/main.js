@@ -91,15 +91,6 @@
   .overlay.hidden { display: none; }
   .overlay-icon { font-size: 46px; margin-bottom: 10px; }
   .overlay-title { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 900; margin-bottom: 7px; letter-spacing: 2px; }
-  .overlay-sub { font-size: 13px; color: #6677aa; margin-bottom: 22px; text-align: center; line-height: 1.6; }
-
-  .btn {
-    font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    padding: 11px 20px; border-radius: 7px; cursor: pointer;
-  }
-  .btn-pink { background: rgba(255,0,110,0.12); color: var(--neon-pink); border: 1px solid rgba(255,0,110,0.3); }
-  .btn-cyan { background: rgba(0,245,255,0.12); color: var(--neon-cyan); border: 1px solid rgba(0,245,255,0.3); }
 </style>
 </head>
 <body>
@@ -130,7 +121,7 @@
     <div class="overlay" id="start-screen">
       <div class="overlay-icon">🧱</div>
       <div class="overlay-title" style="color:var(--neon-pink)">BREAKOUT</div>
-      <div class="overlay-sub">3 Normal Levels +<br><strong>Infinite Mode</strong><br>Power-ups enabled!</div>
+      <div class="overlay-sub">3 Levels + Infinite Mode<br>Power-ups now clearly visible!</div>
       <button class="btn btn-pink" onclick="startGame()">START GAME</button>
     </div>
   </div>
@@ -160,7 +151,7 @@ let gameRunning = false, paused = false, isInfinite = false;
 let totalBricks = 0, bricksLeft = 0;
 let paddleWidth = PADDLE_W;
 let paddleExpandTimer = 0;
-let descendTimer = 0;   // for infinite mode
+let descendTimer = 0;
 
 document.getElementById('best-display').textContent = bestScore;
 
@@ -175,22 +166,19 @@ canvas.addEventListener('click', () => { if (gameRunning && !paused) launchBall(
 
 function createBricks(lvl, isInf = false) {
   const arr = [];
-  const rowsToSpawn = isInf ? 1 : BRICK_ROWS;   // only 1 new row in infinite
-
-  for (let r = 0; r < rowsToSpawn; r++) {
+  const rows = isInf ? 1 : BRICK_ROWS;
+  for (let r = 0; r < rows; r++) {
     for (let c = 0; c < BRICK_COLS; c++) {
       if (!isInf && lvl === 2 && (r + c) % 3 === 0) continue;
       if (!isInf && lvl === 3 && (r * c) % 4 === 0) continue;
-
-      // In infinite mode, sometimes make denser rows
-      if (isInf && Math.random() < 0.15) continue;
+      if (isInf && Math.random() < 0.18) continue;
 
       arr.push({
         x: BRICK_OFFSET_X + c * (BRICK_W + BRICK_GAP),
-        y: BRICK_OFFSET_Y + r * (BRICK_H + BRICK_GAP) - (isInf ? 300 : 0), // start higher when spawning new
+        y: BRICK_OFFSET_Y + r * (BRICK_H + BRICK_GAP) - (isInf ? 280 : 0),
         w: BRICK_W, h: BRICK_H,
-        color: ['#ff006e', '#ff6b00', '#00f5ff', '#00ff88'][Math.floor(Math.random()*4)],
-        points: (20 + Math.floor(level/2) * 10),
+        color: ['#ff006e','#ff6b00','#00f5ff','#00ff88'][Math.floor(Math.random()*4)],
+        points: 20 + level * 8,
         alive: true
       });
     }
@@ -226,16 +214,14 @@ function startGame() {
 
 function nextLevel() {
   if (level >= 3) {
-    // Enter Infinite Mode
     isInfinite = true;
-    level = 4; // just for display
+    level = 4;
     document.getElementById('level-display').style.color = '#ffe600';
     document.getElementById('level-display').textContent = '∞';
   } else {
     level++;
   }
 
-  // Add new bricks (in infinite: add one row at top)
   const newBricks = createBricks(level, isInfinite);
   bricks = bricks.concat(newBricks);
   totalBricks += newBricks.length;
@@ -291,7 +277,6 @@ function update() {
       continue;
     }
 
-    // Paddle hit
     if (b.dy > 0 && b.y + BALL_R >= paddle.y && b.y - BALL_R <= paddle.y + paddle.h &&
         b.x >= paddle.x && b.x <= paddle.x + paddle.w) {
       b.dy = -Math.abs(b.dy) * 1.02;
@@ -299,7 +284,7 @@ function update() {
       b.dx = hit * 7.5;
     }
 
-    // Brick collision
+    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -316,8 +301,14 @@ function update() {
         spawnParticles(br.x + br.w/2, br.y + br.h/2, br.color);
         spawnScorePopup(br.x + br.w/2, br.y, '+' + pts);
 
-        if (Math.random() < 0.28) {
-          powerups.push({ x: br.x + br.w/2, y: br.y + br.h/2, type: ['life','expand','speed','multiball'][Math.floor(Math.random()*4)], vy: 2.8 });
+        if (Math.random() < 0.30) {
+          powerups.push({
+            x: br.x + br.w/2,
+            y: br.y + br.h/2,
+            type: ['life','expand','speed','multiball'][Math.floor(Math.random()*4)],
+            vy: 2.2,
+            pulse: 0
+          });
         }
 
         b.dy *= -1;
@@ -333,13 +324,19 @@ function update() {
     }
   }
 
-  // Power-ups
+  // Update powerups (now clearly visible)
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
-    if (p.y > H) { powerups.splice(i, 1); continue; }
+    p.pulse = (p.pulse + 0.15) % (Math.PI * 2);
 
-    if (p.y + 12 >= paddle.y && p.y - 12 <= paddle.y + paddle.h &&
+    if (p.y > H + 20) {
+      powerups.splice(i, 1);
+      continue;
+    }
+
+    // Catch powerup
+    if (p.y + 15 >= paddle.y && p.y - 15 <= paddle.y + paddle.h &&
         p.x >= paddle.x && p.x <= paddle.x + paddle.w) {
       activatePowerUp(p.type);
       powerups.splice(i, 1);
@@ -351,41 +348,30 @@ function update() {
     if (paddleExpandTimer === 0) paddleWidth = PADDLE_W;
   }
 
-  // Infinite mode: slowly descend bricks
+  // Infinite mode brick descend
   if (isInfinite) {
     descendTimer++;
-    if (descendTimer > 90) {  // every ~1.5 seconds
+    if (descendTimer > 85) {
       descendTimer = 0;
-      bricks.forEach(br => {
-        if (br.alive) br.y += BRICK_H + BRICK_GAP + 2;
-      });
-
-      // If any brick reaches paddle height → game over (extra challenge)
-      for (const br of bricks) {
-        if (br.alive && br.y + br.h > paddle.y - 20) {
-          ballLost();
-          return;
-        }
-      }
+      bricks.forEach(br => { if (br.alive) br.y += 18; });
     }
   }
 
-  // Particles & popups
   particles = particles.filter(p => (p.life -= 0.04) > 0);
   scorePopups = scorePopups.filter(s => (s.life -= 0.03) > 0);
 }
 
 function activatePowerUp(type) {
   if (type === 'life') lives = Math.min(6, lives + 1);
-  else if (type === 'expand') { paddleWidth = PADDLE_W * 1.65; paddleExpandTimer = 650; }
-  else if (type === 'speed') balls.forEach(b => b.speed = Math.min(18, b.speed + 2.5));
+  else if (type === 'expand') { paddleWidth = PADDLE_W * 1.7; paddleExpandTimer = 680; }
+  else if (type === 'speed') balls.forEach(b => b.speed = Math.min(19, b.speed + 3));
   else if (type === 'multiball' && balls.length < 4) {
     const main = balls[0];
-    balls.push({x:main.x, y:main.y, dx:main.dx*0.85, dy:main.dy*-1.05, speed:main.speed, trail:[]});
-    balls.push({x:main.x, y:main.y, dx:main.dx*-0.85, dy:main.dy*-1.05, speed:main.speed, trail:[]});
+    balls.push({x:main.x, y:main.y, dx:main.dx*0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
+    balls.push({x:main.x, y:main.y, dx:main.dx*-0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
   }
   updateLives();
-  spawnParticles(paddle.x + paddle.w/2, paddle.y - 10, '#00ff88', 25);
+  spawnParticles(paddle.x + paddle.w/2, paddle.y - 15, '#00ff88', 30);
 }
 
 function ballLost() {
@@ -393,26 +379,21 @@ function ballLost() {
   lives--;
   updateLives();
   if (lives <= 0) {
-    // Save high score
     if (score > bestScore) {
       bestScore = score;
       localStorage.setItem('breakout_best', bestScore);
       document.getElementById('best-display').textContent = bestScore;
     }
-    setTimeout(showGameOver, 600);
+    setTimeout(() => alert("Game Over! Final Score: " + score), 300);
   } else {
     setTimeout(() => document.getElementById('lost-screen').classList.remove('hidden'), 400);
   }
 }
 
-function showGameOver() {
-  document.getElementById('gameover-screen').classList.remove('hidden'); // you can expand this overlay if needed
-}
-
 function spawnParticles(x, y, color, count = 12) {
   for (let i = 0; i < count; i++) {
     const a = Math.random() * Math.PI * 2;
-    particles.push({ x, y, vx: Math.cos(a)* (2 + Math.random()*3), vy: Math.sin(a)* (2 + Math.random()*3) - 2, life: 1, color });
+    particles.push({ x, y, vx: Math.cos(a)* (2.5 + Math.random()*3), vy: Math.sin(a)* (2.5 + Math.random()*3) - 2.5, life: 1, color });
   }
 }
 
@@ -448,7 +429,7 @@ function draw() {
   // Bricks
   for (const b of bricks) {
     if (!b.alive) continue;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 14;
     ctx.shadowColor = b.color;
     ctx.fillStyle = b.color;
     ctx.fillRect(b.x, b.y, b.w, b.h);
@@ -458,43 +439,63 @@ function draw() {
   // Balls
   for (const b of balls) {
     for (let i = 0; i < b.trail.length; i++) {
-      ctx.globalAlpha = (i / b.trail.length) * 0.55;
+      ctx.globalAlpha = i / b.trail.length * 0.6;
       ctx.fillStyle = '#00f5ff';
       ctx.beginPath();
-      ctx.arc(b.trail[i].x, b.trail[i].y, BALL_R * 0.7, 0, Math.PI * 2);
+      ctx.arc(b.trail[i].x, b.trail[i].y, BALL_R * 0.75, 0, Math.PI*2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 26;
     ctx.shadowColor = '#00f5ff';
     ctx.fillStyle = '#00f5ff';
     ctx.beginPath();
-    ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, BALL_R, 0, Math.PI*2);
     ctx.fill();
   }
   ctx.shadowBlur = 0;
 
   // Paddle
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 22;
   ctx.shadowColor = '#00f5ff';
   ctx.fillStyle = '#00f5ff';
   ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
   ctx.shadowBlur = 0;
 
-  // Power-ups
+  // === POWER-UPS - NOW CLEARLY VISIBLE ===
   for (const p of powerups) {
-    ctx.font = '22px Arial';
+    const glowSize = 18 + Math.sin(p.pulse) * 4;
+
+    // Glow circle
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, glowSize, 0, Math.PI*2);
+    ctx.fill();
+
+    // Main circle
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 14, 0, Math.PI*2);
+    ctx.fill();
+
+    // Emoji
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
     const emoji = p.type === 'life' ? '❤️' : p.type === 'expand' ? '📏' : p.type === 'speed' ? '⚡' : '🔥';
-    ctx.fillText(emoji, p.x, p.y + 8);
+    ctx.fillText(emoji, p.x, p.y + 6);
   }
 
-  // Particles (simple)
+  // Particles
   for (const p of particles) {
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - 2.5, p.y - 2.5, 5, 5);
+    ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
   }
   ctx.globalAlpha = 1;
 }
