@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survival Race — Multiplayer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,255,136,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes dead-flash{0%{opacity:1}50%{opacity:0.2}100%{opacity:1}}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:11px 24px;border-bottom:1px solid rgba(0,255,136,0.08);background:rgba(5,5,16,0.95);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 12px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:8px;align-items:center}
+.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 13px;border-radius:6px;transition:all 0.2s}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+.nick-pill{font-family:'Orbitron',monospace;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(0,255,136,0.25);background:rgba(0,255,136,0.08);color:var(--green)}
+
+.game-wrap{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;gap:18px;padding:12px}
+
+.side-panel{display:flex;flex-direction:column;gap:10px;width:150px;flex-shrink:0}
+.pc{background:var(--card);border-radius:10px;padding:12px;text-align:center}
+.pl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.pv{font-family:'Orbitron',monospace;font-size:22px;font-weight:700}
+
+.arena-wrap{position:relative;flex-shrink:0}
+.arena-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(0,255,136,0.15);pointer-events:none;box-shadow:0 0 30px rgba(0,255,136,0.06)}
+canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(0,255,136,0.08)}
+canvas.shake-anim{animation:shake 0.3s ease}
+
+.rivals-card{background:var(--card);border-radius:10px;padding:12px}
+.r-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.rival-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.rival-row:last-child{border-bottom:none}
+.rival-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rival-name{font-size:11px;flex:1}
+.rival-time{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--green)}
+.rival-time.dead{color:var(--dim);text-decoration:line-through}
+.you-row .rival-name{color:var(--green);font-weight:600}
+
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.95);backdrop-filter:blur(6px);animation:fadeIn 0.3s ease;z-index:50;padding:24px}
+.overlay.hidden{display:none}
+.ov-icon{font-size:52px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:25px;font-weight:900;margin-bottom:7px;letter-spacing:2px;text-align:center}
+.ov-sub{font-size:14px;color:var(--dim);margin-bottom:20px;text-align:center;line-height:1.6;max-width:440px}
+.rules-box{background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:10px;padding:16px 20px;margin-bottom:20px;width:100%;max-width:440px}
+.rules-title{font-family:'Orbitron',monospace;font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:12px}
+.r-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
+.ri{font-size:14px;flex-shrink:0}
+.rt{font-size:13px;color:#aabbdd;line-height:1.4}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;width:100%;max-width:440px}
+.sg{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px;text-align:center}
+.sg-l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.sg-v{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.lb-section{width:100%;max-width:440px;margin-bottom:18px}
+.lb-title-s{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;margin-bottom:10px}
+.lb-list{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden}
+.lb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.lb-item:last-child{border-bottom:none}
+.lb-item.you{background:rgba(0,255,136,0.04)}
+.lb-r{font-family:'Orbitron',monospace;font-size:12px;width:20px}
+.lb-n{font-size:13px;flex:1}
+.lb-s{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--green)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.btn-g{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.3)}
+.btn-g:hover{background:rgba(0,255,136,0.22);box-shadow:0 0 18px rgba(0,255,136,0.3);transform:translateY(-2px)}
+.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
+.nb-badge{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
+.nb-badge.show{display:block}
+.rank-banner{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;padding:10px 24px;border-radius:8px;margin-bottom:14px;letter-spacing:1px;text-align:center;width:100%;max-width:440px}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<nav>
+  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
+  <div class="nav-right">
+    <div class="nick-pill">💀 <span id="nick-show">Player</span></div>
+    <a href="../index.html" class="nbtn">← Arena</a>
+    <a href="../../index.html" class="nbtn">🏠 Hub</a>
+  </div>
+</nav>
+
+<div class="game-wrap">
+  <div class="side-panel">
+    <div class="pc" style="border:1px solid rgba(0,255,136,0.15)">
+      <div class="pl">Survived</div>
+      <div class="pv" style="color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.5);font-size:26px" id="timer-el">0.0s</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,230,0,0.12)">
+      <div class="pl">Best</div>
+      <div class="pv" style="color:var(--yellow);font-size:18px" id="best-el">--</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(191,0,255,0.12)">
+      <div class="pl">Wave</div>
+      <div class="pv" style="color:var(--purple);font-size:18px" id="wave-el">1</div>
+    </div>
+    <div class="rivals-card">
+      <div class="r-title">Players</div>
+      <div id="rivals-list"></div>
+    </div>
+  </div>
+
+  <div class="arena-wrap">
+    <div class="arena-glow"></div>
+    <canvas id="c" width="480" height="520"></canvas>
+
+    <div class="overlay" id="start-screen">
+      <div class="ov-icon">💀</div>
+      <div class="ov-title" style="color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.6)">SURVIVAL RACE</div>
+      <div class="ov-sub">Dodge falling obstacles. Survive longer than everyone else. Ghosts show fallen players.</div>
+      <div class="rules-box">
+        <div class="rules-title">📋 HOW TO PLAY</div>
+        <div class="r-row"><span class="ri">🏃</span><span class="rt">Move left/right with Arrow keys or A/D to dodge obstacles.</span></div>
+        <div class="r-row"><span class="ri">💀</span><span class="rt">Hit an obstacle = you die. Your ghost stays visible on screen.</span></div>
+        <div class="r-row"><span class="ri">👻</span><span class="rt">Other players' ghosts show exactly where they died.</span></div>
+        <div class="r-row"><span class="ri">🚀</span><span class="rt">Speed and obstacle count increase every 10 seconds.</span></div>
+        <div class="r-row"><span class="ri">🏆</span><span class="rt">Survive longest = top of the global leaderboard!</span></div>
+      </div>
+      <div class="btns"><button class="btn btn-g" onclick="startGame()">Start Surviving →</button><a href="../index.html" class="btn btn-dim">← Arena</a></div>
+    </div>
+
+    <div class="overlay hidden" id="end-screen">
+      <div class="ov-icon" id="end-icon">💀</div>
+      <div class="ov-title" id="end-title" style="color:var(--green)">YOU SURVIVED!</div>
+      <div class="rank-banner" id="rank-banner"></div>
+      <div class="nb-badge" id="nb-badge">⚡ NEW BEST TIME!</div>
+      <div class="stats-grid">
+        <div class="sg"><div class="sg-l">Survived</div><div class="sg-v" id="e-time" style="color:var(--green)">0s</div></div>
+        <div class="sg"><div class="sg-l">Best</div><div class="sg-v" id="e-best" style="color:var(--yellow)">0s</div></div>
+        <div class="sg"><div class="sg-l">Wave</div><div class="sg-v" id="e-wave" style="color:var(--purple)">1</div></div>
+      </div>
+      <div class="lb-section">
+        <div class="lb-title-s">🏆 GLOBAL SURVIVAL LEADERBOARD</div>
+        <div class="lb-list" id="end-lb"></div>
+      </div>
+      <div class="btns">
+        <button class="btn btn-g" onclick="startGame()">Try Again</button>
+        <a href="../index.html" class="btn btn-dim">← Arena</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="pc" style="border:1px solid rgba(255,107,0,0.12)">
+      <div class="pl">Speed</div>
+      <div id="speed-dots" style="display:flex;gap:3px;justify-content:center;margin-top:6px;flex-wrap:wrap"></div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,0,60,0.1)">
+      <div class="pl">Obstacles</div>
+      <div class="pv" style="font-size:18px;color:var(--red,#ff003c)" id="obs-count">3</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(0,245,255,0.1);padding:10px 8px">
+      <div class="pl">Controls</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">
+        <div style="font-size:10px;color:#aabbdd;text-align:center">← → Arrow Keys</div>
+        <div style="font-size:10px;color:#aabbdd;text-align:center">A / D Keys</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+const nick=localStorage.getItem('player_nick')||'Guest';
+document.getElementById('nick-show').textContent=nick;
+
+let best=parseFloat(localStorage.getItem('sr_best')||'0');
+document.getElementById('best-el').textContent=best?best.toFixed(1)+'s':'--';
+
+const PLAYER_W=32,PLAYER_H=32,PLAYER_SPEED=6;
+const OBS_W=44,OBS_H=18;
+const OBS_COLORS=['#ff006e','#ff003c','#ff6b00','#bf00ff'];
+const RIVAL_NAMES=['CyberAce','NeonKing','VoidWalker','LaserX'];
+
+let player,obstacles,ghosts,survived,wave,obsSpeed,obsCount,gameRunning,animFrame,timerInterval;
+const keys={};
+
+document.addEventListener('keydown',e=>{keys[e.key]=true});
+document.addEventListener('keyup',e=>{keys[e.key]=false});
+
+// Rivals (simulated)
+let rivals=[];
+function makeRivals(){
+  rivals=RIVAL_NAMES.map(n=>({name:n,survived:0,dead:false,x:Math.random()*W,y:H-40,color:OBS_COLORS[Math.floor(Math.random()*OBS_COLORS.length)]}));
+}
+function updateRivals(t){
+  rivals.forEach(r=>{
+    if(!r.dead&&Math.random()<0.008*wave){r.dead=true;r.survived=t;}
+  });
+  const rows=[{name:nick+'(You)',survived:parseFloat(document.getElementById('timer-el').textContent)||0,dead:!gameRunning,isYou:true},...rivals.map(r=>({name:r.name,survived:r.survived,dead:r.dead}))].sort((a,b)=>b.survived-a.survived);
+  document.getElementById('rivals-list').innerHTML=rows.map(p=>`
+    <div class="rival-row ${p.isYou?'you-row':''}">
+      <div class="rival-dot" style="background:${p.isYou?'var(--green)':'var(--dim)'}"></div>
+      <span class="rival-name">${p.isYou?'YOU':p.name.slice(0,8)}</span>
+      <span class="rival-time ${p.dead?'dead':''}">${p.survived.toFixed(1)}s</span>
+    </div>`).join('');
+}
+
+function startGame(){
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('end-screen').classList.add('hidden');
+  player={x:W/2-PLAYER_W/2,y:H-PLAYER_H-10,alive:true};
+  obstacles=[];ghosts=[];survived=0;wave=1;obsSpeed=3;obsCount=3;
+  gameRunning=true;
+  makeRivals();
+  updateSpeedDots(obsSpeed);
+  document.getElementById('obs-count').textContent=obsCount;
+
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(!gameRunning)return;
+    survived+=0.1;
+    document.getElementById('timer-el').textContent=survived.toFixed(1)+'s';
+    wave=Math.floor(survived/10)+1;
+    obsSpeed=3+wave*0.5;
+    obsCount=3+Math.floor(wave/2);
+    document.getElementById('wave-el').textContent=wave;
+    document.getElementById('obs-count').textContent=obsCount;
+    updateSpeedDots(obsSpeed);
+    updateRivals(survived);
+  },100);
+
+  // Spawn obstacles
+  spawnObs();
+  if(animFrame)cancelAnimationFrame(animFrame);
+  animFrame=requestAnimationFrame(loop);
+}
+
+let spawnTimeout;
+function spawnObs(){
+  if(!gameRunning)return;
+  for(let i=0;i<Math.min(obsCount,8);i++){
+    obstacles.push({
+      x:Math.random()*(W-OBS_W),
+      y:-OBS_H-Math.random()*100,
+      color:OBS_COLORS[Math.floor(Math.random()*OBS_COLORS.length)],
+      speed:obsSpeed*(0.8+Math.random()*0.4),
+      w:OBS_W+(Math.random()*20|0),h:OBS_H
+    });
+  }
+  spawnTimeout=setTimeout(spawnObs,Math.max(400,1200-wave*80));
+}
+
+function loop(){
+  ctx.fillStyle='#020208';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,255,136,0.02)';
+  for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40)ctx.fillRect(x-1,y-1,2,2);
+
+  if(gameRunning){
+    // Move player
+    if(keys['ArrowLeft']||keys['a']||keys['A'])player.x=Math.max(0,player.x-PLAYER_SPEED);
+    if(keys['ArrowRight']||keys['d']||keys['D'])player.x=Math.min(W-PLAYER_W,player.x+PLAYER_SPEED);
+
+    // Move obstacles
+    obstacles=obstacles.filter(o=>o.y<H+20);
+    obstacles.forEach(o=>{
+      o.y+=o.speed;
+      // Collision
+      if(player.alive&&o.x<player.x+PLAYER_W&&o.x+o.w>player.x&&o.y<player.y+PLAYER_H&&o.y+o.h>player.y){
+        player.alive=false;
+        canvas.classList.add('shake-anim');
+        setTimeout(()=>canvas.classList.remove('shake-anim'),300);
+        clearTimeout(spawnTimeout);
+        clearInterval(timerInterval);
+        gameRunning=false;
+        setTimeout(endGame,600);
+      }
+    });
+  }
+
+  // Draw ghosts (rivals)
+  rivals.filter(r=>r.dead).forEach(r=>{
+    ctx.save();ctx.globalAlpha=0.25;
+    ctx.fillStyle=r.color;ctx.shadowColor=r.color;ctx.shadowBlur=8;
+    ctx.fillRect(r.x,r.y,PLAYER_W,PLAYER_H);
+    ctx.shadowBlur=0;
+    ctx.font='9px Orbitron,monospace';ctx.fillStyle='rgba(255,255,255,0.4)';ctx.textAlign='center';
+    ctx.fillText(r.name.slice(0,6),r.x+PLAYER_W/2,r.y-4);
+    ctx.restore();
+  });
+
+  // Draw obstacles
+  obstacles.forEach(o=>{
+    ctx.save();ctx.shadowColor=o.color;ctx.shadowBlur=10;ctx.fillStyle=o.color;
+    ctx.fillRect(o.x,o.y,o.w,o.h);
+    ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,0.2)';
+    ctx.fillRect(o.x+2,o.y+2,o.w-4,5);
+    ctx.restore();
+  });
+
+  // Draw player
+  if(player){
+    ctx.save();
+    if(!player.alive){ctx.globalAlpha=0.3;}
+    ctx.shadowColor=player.alive?'#00ff88':'#ff003c';ctx.shadowBlur=player.alive?20:10;
+    ctx.fillStyle=player.alive?'#00ff88':'#ff003c';
+    // Player shape (arrow)
+    ctx.beginPath();ctx.moveTo(player.x+PLAYER_W/2,player.y);
+    ctx.lineTo(player.x+PLAYER_W,player.y+PLAYER_H);
+    ctx.lineTo(player.x+PLAYER_W/2,player.y+PLAYER_H-8);
+    ctx.lineTo(player.x,player.y+PLAYER_H);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  if(gameRunning||!player.alive)animFrame=requestAnimationFrame(loop);
+}
+
+function endGame(){
+  gameRunning=false;
+  const s=survived;
+  const entries=JSON.parse(localStorage.getItem('mp_sr')||'[]');
+  entries.push({nick,score:Math.round(s*10),date:new Date().toLocaleDateString()});
+  entries.sort((a,b)=>b.score-a.score);
+  localStorage.setItem('mp_sr',JSON.stringify(entries.slice(0,50)));
+  const isNew=s>best;
+  if(isNew){best=s;localStorage.setItem('sr_best',s);}
+
+  // Rank among rivals
+  const allTimes=[{name:nick,t:s},...rivals.map(r=>({name:r.name,t:r.survived}))].sort((a,b)=>b.t-a.t);
+  const myRank=allTimes.findIndex(p=>p.name===nick)+1;
+  const rb=document.getElementById('rank-banner');
+  rb.textContent=myRank===1?'🏆 YOU SURVIVED THE LONGEST!':myRank===2?'🥈 2nd Place — So close!':'Rank '+myRank+' of '+(rivals.length+1)+' players';
+  rb.style.background=myRank===1?'rgba(255,230,0,0.1)':'rgba(0,255,136,0.06)';
+  rb.style.color=myRank===1?'var(--yellow)':'var(--green)';
+  rb.style.border=myRank===1?'1px solid rgba(255,230,0,0.3)':'1px solid rgba(0,255,136,0.2)';
+
+  document.getElementById('e-time').textContent=s.toFixed(1)+'s';
+  document.getElementById('e-best').textContent=Math.max(best,s).toFixed(1)+'s';
+  document.getElementById('e-wave').textContent=wave;
+  document.getElementById('nb-badge').classList.toggle('show',isNew);
+
+  const allLB=JSON.parse(localStorage.getItem('mp_sr')||'[]');
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('end-lb').innerHTML=allLB.slice(0,8).map((e,i)=>`
+    <div class="lb-item ${e.nick===nick?'you':''}">
+      <span class="lb-r">${medals[i]||i+1}</span>
+      <span class="lb-n">${e.nick}${e.nick===nick?'<span style="font-size:9px;color:var(--green);margin-left:6px">(you)</span>':''}</span>
+      <span class="lb-s">${(e.score/10).toFixed(1)}s</span>
+    </div>`).join('');
+
+  document.getElementById('end-screen').classList.remove('hidden');
+}
+
+function updateSpeedDots(spd){
+  const el=document.getElementById('speed-dots');
+  const lvl=Math.min(10,Math.floor(spd));
+  el.innerHTML='';
+  for(let i=0;i<10;i++){
+    const d=document.createElement('div');
+    d.style.cssText=`width:8px;height:8px;border-radius:50%;background:${i<lvl?'var(--orange)':'rgba(255,255,255,0.06)'};box-shadow:${i<lvl?'0 0 5px rgba(255,107,0,0.6)':'none'}`;
+    el.appendChild(d);
+  }
+}
+
+ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
+updateSpeedDots(3);
+</script>
+</body>
+</html>
