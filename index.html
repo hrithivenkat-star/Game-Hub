@@ -1,15 +1,309 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Game Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction Rush — Game Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.5);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(0,245,255,0.08);background:rgba(5,5,16,0.95);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:8px}
+.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 14px;border-radius:6px;transition:all 0.2s}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+
+.game-wrapper{position:relative;z-index:1;flex:1;display:flex;gap:20px;padding:16px;align-items:flex-start;justify-content:center}
+
+.side-panel{display:flex;flex-direction:column;gap:10px;width:160px;flex-shrink:0;padding-top:8px}
+.pc{background:var(--card);border:1px solid rgba(0,245,255,0.1);border-radius:10px;padding:12px;text-align:center}
+.pl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.pv{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px rgba(0,245,255,0.5)}
+
+.arena-wrap{position:relative;flex-shrink:0}
+.arena-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(0,245,255,0.12);pointer-events:none;box-shadow:0 0 30px rgba(0,245,255,0.06)}
+canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(0,245,255,0.08);cursor:crosshair}
+
+.overlay{position:absolute;inset:0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.94);backdrop-filter:blur(5px);animation:fadeIn 0.3s ease;z-index:10;padding:24px;gap:0}
+.overlay.hidden{display:none}
+.ov-icon{font-size:52px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:2px}
+.ov-sub{font-size:14px;color:var(--dim);margin-bottom:20px;text-align:center;line-height:1.6}
+.rules-box{background:rgba(0,245,255,0.05);border:1px solid rgba(0,245,255,0.12);border-radius:10px;padding:14px 18px;margin-bottom:22px;width:100%;max-width:360px}
+.rules-title{font-family:'Orbitron',monospace;font-size:11px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px}
+.rule-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rule-icon{font-size:14px;flex-shrink:0}
+.rule-text{font-size:12px;color:#aabbdd;line-height:1.4}
+.stats-row{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;justify-content:center}
+.sbox{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}
+.slbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sval{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.btn-cyan{background:rgba(0,245,255,0.12);color:var(--cyan);border:1px solid rgba(0,245,255,0.3)}
+.btn-cyan:hover{background:rgba(0,245,255,0.22);box-shadow:0 0 18px rgba(0,245,255,0.3);transform:translateY(-2px)}
+.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
+.new-best{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
+.new-best.show{display:block}
+
+/* round history */
+.rounds-card{background:var(--card);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px;flex:1;overflow:hidden}
+.rounds-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;text-align:center}
+.round-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.round-row:last-child{border-bottom:none}
+.round-n{font-size:11px;color:var(--dim)}
+.round-t{font-family:'Orbitron',monospace;font-size:12px;font-weight:700}
+</style>
 </head>
 <body>
-    <h1>Welcome to Game Hub</h1>
-    <h2>Available MiniGames:</h2>
-    <ul>
-        <li><a href="/minigames/game1">Game 1</a></li>
-        <li><a href="/minigames/game2">Game 2</a></li>
-        <li><a href="/minigames/game3">Game 3</a></li>
-    </ul>
+<div class="scanline"></div>
+<nav>
+  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
+  <div class="nav-right">
+    <a href="../index.html" class="nbtn">← Timed</a>
+    <a href="../../index.html" class="nbtn">🏠 Hub</a>
+  </div>
+</nav>
+
+<div class="game-wrapper">
+  <div class="side-panel">
+    <div class="pc"><div class="pl">Score</div><div class="pv" id="score-el">0</div></div>
+    <div class="pc" style="border-color:rgba(255,230,0,0.15)"><div class="pl">Best</div><div class="pv" style="font-size:18px;color:var(--yellow);text-shadow:0 0 10px rgba(255,230,0,0.5)" id="best-el">0</div></div>
+    <div class="pc" style="border-color:rgba(255,0,110,0.15)"><div class="pl">Timer</div><div class="pv" style="color:var(--pink);text-shadow:0 0 10px rgba(255,0,110,0.5)" id="timer-el">30</div></div>
+    <div class="pc" style="border-color:rgba(0,255,136,0.1)"><div class="pl">Hits</div><div class="pv" style="font-size:18px;color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.4)" id="hits-el">0</div></div>
+    <div class="pc" style="border-color:rgba(191,0,255,0.1)"><div class="pl">Combo</div><div class="pv" style="font-size:18px;color:var(--purple);text-shadow:0 0 10px rgba(191,0,255,0.4)" id="combo-el">x1</div></div>
+  </div>
+
+  <div class="arena-wrap">
+    <div class="arena-glow"></div>
+    <canvas id="c" width="580" height="520"></canvas>
+
+    <!-- START -->
+    <div class="overlay" id="start-screen">
+      <div class="ov-icon">⚡</div>
+      <div class="ov-title" style="color:var(--cyan);text-shadow:0 0 20px rgba(0,245,255,0.6)">REACTION RUSH</div>
+      <div class="ov-sub">Click glowing targets before they vanish.<br>Miss = lose 3 seconds. 30 second timer.</div>
+      <div class="rules-box">
+        <div class="rules-title">📋 HOW TO PLAY</div>
+        <div class="rule-row"><span class="rule-icon">⚡</span><span class="rule-text">A glowing target appears at a random spot. Click it instantly.</span></div>
+        <div class="rule-row"><span class="rule-icon">✅</span><span class="rule-text">Hit = +10 pts × combo multiplier. Combos stack up fast.</span></div>
+        <div class="rule-row"><span class="rule-icon">❌</span><span class="rule-text">Miss (target vanishes) = −3 seconds from your timer.</span></div>
+        <div class="rule-row"><span class="rule-icon">🚀</span><span class="rule-text">Speed increases every 10 hits. Targets shrink and disappear faster.</span></div>
+        <div class="rule-row"><span class="rule-icon">🏆</span><span class="rule-text">Score = hits × accuracy. Beat your personal best!</span></div>
+      </div>
+      <div class="btns"><button class="btn btn-cyan" onclick="startGame()">Start Game</button></div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="overlay hidden" id="gameover-screen">
+      <div class="ov-icon">🎯</div>
+      <div class="ov-title" style="color:var(--cyan)">ROUND OVER</div>
+      <div class="new-best" id="new-best">⚡ NEW BEST!</div>
+      <div class="stats-row">
+        <div class="sbox"><div class="slbl">Score</div><div class="sval" id="fs-score" style="color:var(--cyan)">0</div></div>
+        <div class="sbox"><div class="slbl">Best</div><div class="sval" id="fs-best" style="color:var(--yellow)">0</div></div>
+        <div class="sbox"><div class="slbl">Hits</div><div class="sval" id="fs-hits" style="color:var(--green)">0</div></div>
+        <div class="sbox"><div class="slbl">Accuracy</div><div class="sval" id="fs-acc" style="color:var(--purple)">0%</div></div>
+      </div>
+      <div class="btns">
+        <button class="btn btn-cyan" onclick="startGame()">Play Again</button>
+        <a href="../index.html" class="btn btn-dim">← Timed Hub</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="pc" style="border-color:rgba(255,107,0,0.1)"><div class="pl">Accuracy</div><div class="pv" style="font-size:18px;color:var(--orange)" id="acc-el">100%</div></div>
+    <div class="pc" style="border-color:rgba(255,0,60,0.1)"><div class="pl">Misses</div><div class="pv" style="font-size:18px;color:#ff003c" id="miss-el">0</div></div>
+    <div class="rounds-card">
+      <div class="rounds-title">Last Hits</div>
+      <div id="rounds-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+let target=null,score,best,hits,misses,combo,timer,spawnTimer,gameRunning,animFrame,timerInterval;
+let reactionTimes=[];
+
+best=parseInt(localStorage.getItem('rr_best')||'0');
+document.getElementById('best-el').textContent=best;
+
+function startGame(){
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('gameover-screen').classList.add('hidden');
+  score=0;hits=0;misses=0;combo=0;timer=30;reactionTimes=[];
+  gameRunning=true;target=null;
+  updateUI();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timer=Math.max(0,timer-1);
+    document.getElementById('timer-el').textContent=timer;
+    if(timer<=0)endGame();
+  },1000);
+  scheduleTarget();
+  if(animFrame)cancelAnimationFrame(animFrame);
+  animFrame=requestAnimationFrame(loop);
+}
+
+function scheduleTarget(){
+  if(!gameRunning)return;
+  const delay=Math.max(400,1200-hits*20);
+  clearTimeout(spawnTimer);
+  spawnTimer=setTimeout(spawnTarget,delay);
+}
+
+function spawnTarget(){
+  if(!gameRunning)return;
+  const r=Math.max(18,36-Math.floor(hits/10)*2);
+  const x=r+30+Math.random()*(W-2*r-60);
+  const y=r+30+Math.random()*(H-2*r-60);
+  const life=Math.max(600,1500-hits*25);
+  const color=['#00f5ff','#bf00ff','#ff006e','#00ff88','#ffe600','#ff6b00'][Math.floor(Math.random()*6)];
+  target={x,y,r,life,maxLife:life,color,born:Date.now()};
+  setTimeout(()=>{
+    if(target&&target.born===target.born&&gameRunning){
+      if(target)missTarget();
+    }
+  },life);
+}
+
+function missTarget(){
+  misses++;
+  timer=Math.max(0,timer-3);
+  combo=0;
+  target=null;
+  updateUI();
+  scheduleTarget();
+}
+
+canvas.addEventListener('click',e=>{
+  if(!gameRunning||!target)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  const my=e.clientY-rect.top;
+  const dx=mx-target.x,dy=my-target.y;
+  if(Math.sqrt(dx*dx+dy*dy)<=target.r+8){
+    const rt=Date.now()-target.born;
+    reactionTimes.push(rt);
+    combo++;
+    const pts=10*Math.max(1,combo);
+    score+=pts;
+    hits++;
+    spawnHitEffect(target.x,target.y,target.color,pts);
+    target=null;
+    updateUI();
+    updateRoundsList(rt);
+    scheduleTarget();
+  }
+});
+
+const effects=[];
+function spawnHitEffect(x,y,color,pts){
+  effects.push({x,y,color,pts,life:1,r:0});
+}
+
+function loop(){
+  ctx.fillStyle='#020208';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,245,255,0.025)';
+  for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40)ctx.fillRect(x-1,y-1,2,2);
+
+  // effects
+  for(let i=effects.length-1;i>=0;i--){
+    const e=effects[i];
+    ctx.save();
+    ctx.globalAlpha=e.life;
+    ctx.strokeStyle=e.color;
+    ctx.lineWidth=2;
+    ctx.shadowColor=e.color;ctx.shadowBlur=10;
+    ctx.beginPath();ctx.arc(e.x,e.y,e.r*30,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=e.color;
+    ctx.font='bold 14px Orbitron,monospace';ctx.textAlign='center';
+    ctx.fillText('+'+e.pts,e.x,e.y-e.r*30-10);
+    ctx.restore();
+    e.life-=0.05;e.r+=0.05;
+    if(e.life<=0)effects.splice(i,1);
+  }
+
+  if(target){
+    const age=Date.now()-target.born;
+    const ratio=1-(age/target.maxLife);
+    ctx.save();
+    ctx.shadowColor=target.color;ctx.shadowBlur=20*ratio;
+    // pulse ring
+    ctx.strokeStyle=target.color;ctx.lineWidth=1.5;ctx.globalAlpha=ratio*0.4;
+    ctx.beginPath();ctx.arc(target.x,target.y,target.r+10+age/100,0,Math.PI*2);ctx.stroke();
+    // main circle
+    ctx.globalAlpha=ratio;
+    ctx.fillStyle=target.color;
+    ctx.shadowBlur=25*ratio;
+    ctx.beginPath();ctx.arc(target.x,target.y,target.r,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.beginPath();ctx.arc(target.x-target.r*0.3,target.y-target.r*0.3,target.r*0.25,0,Math.PI*2);ctx.fill();
+    // timer arc
+    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=3;ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(target.x,target.y,target.r+5,-Math.PI/2,-Math.PI/2+ratio*Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+
+  if(gameRunning)animFrame=requestAnimationFrame(loop);
+}
+
+function updateUI(){
+  document.getElementById('score-el').textContent=score;
+  document.getElementById('hits-el').textContent=hits;
+  document.getElementById('miss-el').textContent=misses;
+  document.getElementById('combo-el').textContent='x'+Math.max(1,combo);
+  const total=hits+misses;
+  const acc=total>0?Math.round(hits/total*100):100;
+  document.getElementById('acc-el').textContent=acc+'%';
+}
+
+function updateRoundsList(rt){
+  const list=document.getElementById('rounds-list');
+  const row=document.createElement('div');
+  row.className='round-row';
+  const color=rt<300?'var(--green)':rt<600?'var(--yellow)':'var(--pink)';
+  row.innerHTML=`<span class="round-n">Hit #${hits}</span><span class="round-t" style="color:${color}">${rt}ms</span>`;
+  list.insertBefore(row,list.firstChild);
+  if(list.children.length>8)list.removeChild(list.lastChild);
+}
+
+function endGame(){
+  gameRunning=false;
+  clearInterval(timerInterval);
+  clearTimeout(spawnTimer);
+  cancelAnimationFrame(animFrame);
+  const total=hits+misses;
+  const acc=total>0?Math.round(hits/total*100):100;
+  const finalScore=Math.round(score*(acc/100));
+  const isNew=finalScore>best;
+  if(isNew){best=finalScore;localStorage.setItem('rr_best',best);}
+  document.getElementById('fs-score').textContent=finalScore;
+  document.getElementById('fs-best').textContent=best;
+  document.getElementById('fs-hits').textContent=hits;
+  document.getElementById('fs-acc').textContent=acc+'%';
+  document.getElementById('new-best').classList.toggle('show',isNew);
+  document.getElementById('gameover-screen').classList.remove('hidden');
+}
+
+ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
+</script>
 </body>
 </html>
