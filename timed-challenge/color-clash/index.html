@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Clash — Game Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;display:flex;flex-direction:column;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,110,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,110,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,0,110,0.04),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes wrong-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
+@keyframes correct-pop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes timer-pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(255,0,110,0.1);background:rgba(5,5,16,0.95);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:8px}
+.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 14px;border-radius:6px;transition:all 0.2s}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+
+.game-area{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:20px}
+
+/* TOP BAR */
+.top-bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center}
+.stat-box{background:var(--card);border-radius:10px;padding:12px 20px;text-align:center;min-width:80px}
+.stat-box.timer-box{border:1px solid rgba(255,0,110,0.2)}
+.stat-box.score-box{border:1px solid rgba(0,245,255,0.15)}
+.stat-box.streak-box{border:1px solid rgba(0,255,136,0.15)}
+.stat-box.best-box{border:1px solid rgba(255,230,0,0.15)}
+.slbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.sval{font-family:'Orbitron',monospace;font-size:24px;font-weight:700}
+.timer-box .sval{color:var(--pink);text-shadow:0 0 12px rgba(255,0,110,0.5)}
+.score-box .sval{color:var(--cyan);text-shadow:0 0 12px rgba(0,245,255,0.5)}
+.streak-box .sval{color:var(--green);text-shadow:0 0 12px rgba(0,255,136,0.5)}
+.best-box .sval{color:var(--yellow);font-size:20px;text-shadow:0 0 12px rgba(255,230,0,0.5)}
+
+/* TIMER BAR */
+.timer-bar-wrap{width:100%;max-width:560px;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.timer-bar-fill{height:100%;background:var(--pink);border-radius:3px;transition:width 0.1s linear;box-shadow:0 0 10px rgba(255,0,110,0.5)}
+
+/* WORD DISPLAY */
+.word-card{background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px 48px;text-align:center;min-width:360px;position:relative;overflow:hidden}
+.word-card.correct{animation:correct-pop 0.3s ease}
+.word-card.wrong{animation:wrong-shake 0.3s ease}
+.word-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.word-text{font-family:'Orbitron',monospace;font-size:52px;font-weight:900;letter-spacing:3px;line-height:1;text-shadow:0 0 30px currentColor,0 0 60px currentColor}
+.word-hint{font-size:13px;color:var(--dim);margin-top:14px}
+
+/* ANSWER BUTTONS */
+.buttons-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:380px}
+.color-btn{padding:18px 16px;border-radius:10px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.15s;border:2px solid transparent;text-transform:uppercase}
+.color-btn:hover{transform:scale(1.04);filter:brightness(1.2)}
+.color-btn:active{transform:scale(0.97)}
+.cb-cyan{background:rgba(0,245,255,0.12);color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+.cb-purple{background:rgba(191,0,255,0.12);color:var(--purple);border-color:rgba(191,0,255,0.3)}
+.cb-pink{background:rgba(255,0,110,0.12);color:var(--pink);border-color:rgba(255,0,110,0.3)}
+.cb-green{background:rgba(0,255,136,0.12);color:var(--green);border-color:rgba(0,255,136,0.3)}
+.cb-yellow{background:rgba(255,230,0,0.12);color:var(--yellow);border-color:rgba(255,230,0,0.3)}
+.cb-orange{background:rgba(255,107,0,0.12);color:var(--orange);border-color:rgba(255,107,0,0.3)}
+.color-btn.flash-correct{background:rgba(0,255,136,0.3);border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.4)}
+.color-btn.flash-wrong{background:rgba(255,0,60,0.3);border-color:#ff003c;box-shadow:0 0 20px rgba(255,0,60,0.4)}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.94);backdrop-filter:blur(5px);animation:fadeIn 0.3s ease;z-index:20;padding:24px}
+.overlay.hidden{display:none}
+.ov-icon{font-size:52px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:2px;text-align:center}
+.ov-sub{font-size:14px;color:var(--dim);margin-bottom:20px;text-align:center;line-height:1.6;max-width:420px}
+.rules-box{background:rgba(255,0,110,0.05);border:1px solid rgba(255,0,110,0.15);border-radius:10px;padding:14px 18px;margin-bottom:20px;width:100%;max-width:380px}
+.rules-title{font-family:'Orbitron',monospace;font-size:10px;color:var(--pink);letter-spacing:2px;margin-bottom:10px}
+.rule-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.rule-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.rule-text{font-size:12px;color:#aabbdd;line-height:1.4}
+.stats-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.sbox{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;text-align:center;min-width:75px}
+.sbox-lbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sbox-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.btn-pink{background:rgba(255,0,110,0.12);color:var(--pink);border:1px solid rgba(255,0,110,0.3)}
+.btn-pink:hover{background:rgba(255,0,110,0.22);box-shadow:0 0 18px rgba(255,0,110,0.3);transform:translateY(-2px)}
+.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
+.new-best{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
+.new-best.show{display:block}
+.feedback-text{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;height:28px;text-align:center;margin-top:-10px}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<nav>
+  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
+  <div class="nav-right">
+    <a href="../index.html" class="nbtn">← Timed</a>
+    <a href="../../index.html" class="nbtn">🏠 Hub</a>
+  </div>
+</nav>
+
+<div class="game-area">
+  <div class="top-bar">
+    <div class="stat-box timer-box"><div class="slbl">Timer</div><div class="sval" id="timer-el">60</div></div>
+    <div class="stat-box score-box"><div class="slbl">Score</div><div class="sval" id="score-el">0</div></div>
+    <div class="stat-box streak-box"><div class="slbl">Streak</div><div class="sval" id="streak-el">0</div></div>
+    <div class="stat-box best-box"><div class="slbl">Best</div><div class="sval" id="best-el">0</div></div>
+  </div>
+
+  <div class="timer-bar-wrap">
+    <div class="timer-bar-fill" id="timer-bar" style="width:100%"></div>
+  </div>
+
+  <div class="word-card" id="word-card">
+    <div class="word-label">What color is the TEXT?</div>
+    <div class="word-text" id="word-text">CYAN</div>
+    <div class="word-hint">Tap the COLOR — not the word!</div>
+  </div>
+
+  <div class="feedback-text" id="feedback-text"></div>
+
+  <div class="buttons-grid" id="buttons-grid"></div>
+</div>
+
+<!-- START -->
+<div class="overlay" id="start-screen">
+  <div class="ov-icon">🎨</div>
+  <div class="ov-title" style="color:var(--pink);text-shadow:0 0 20px rgba(255,0,110,0.6)">COLOR CLASH</div>
+  <div class="ov-sub">Your brain will fight itself. The word says one color, but it GLOWS in a different one.</div>
+  <div class="rules-box">
+    <div class="rules-title">📋 HOW TO PLAY</div>
+    <div class="rule-row"><span class="rule-icon">🎨</span><span class="rule-text">A color word appears glowing in a DIFFERENT color. Example: "GREEN" written in purple.</span></div>
+    <div class="rule-row"><span class="rule-icon">👆</span><span class="rule-text">Click the button that matches the GLOW COLOR — not what the word says!</span></div>
+    <div class="rule-row"><span class="rule-icon">✅</span><span class="rule-text">Correct = +1 second added to your timer + score.</span></div>
+    <div class="rule-row"><span class="rule-icon">❌</span><span class="rule-text">Wrong = −2 seconds. Timer hits zero = game over!</span></div>
+    <div class="rule-row"><span class="rule-icon">🚀</span><span class="rule-text">Speed increases every 10 correct answers. How far can you go?</span></div>
+  </div>
+  <div class="btns"><button class="btn btn-pink" onclick="startGame()">Start Game</button></div>
+</div>
+
+<!-- GAME OVER -->
+<div class="overlay hidden" id="gameover-screen">
+  <div class="ov-icon">🎨</div>
+  <div class="ov-title" style="color:var(--pink)">TIME'S UP!</div>
+  <div class="new-best" id="new-best">⚡ NEW BEST!</div>
+  <div class="stats-row">
+    <div class="sbox"><div class="sbox-lbl">Score</div><div class="sbox-val" id="fs-score" style="color:var(--cyan)">0</div></div>
+    <div class="sbox"><div class="sbox-lbl">Best</div><div class="sbox-val" id="fs-best" style="color:var(--yellow)">0</div></div>
+    <div class="sbox"><div class="sbox-lbl">Correct</div><div class="sbox-val" id="fs-correct" style="color:var(--green)">0</div></div>
+    <div class="sbox"><div class="sbox-lbl">Best Streak</div><div class="sbox-val" id="fs-streak" style="color:var(--purple)">0</div></div>
+  </div>
+  <div class="btns">
+    <button class="btn btn-pink" onclick="startGame()">Play Again</button>
+    <a href="../index.html" class="btn btn-dim">← Timed Hub</a>
+  </div>
+</div>
+
+<script>
+const COLORS=[
+  {name:'CYAN',   cls:'cb-cyan',   hex:'#00f5ff'},
+  {name:'PURPLE', cls:'cb-purple', hex:'#bf00ff'},
+  {name:'PINK',   cls:'cb-pink',   hex:'#ff006e'},
+  {name:'GREEN',  cls:'cb-green',  hex:'#00ff88'},
+  {name:'YELLOW', cls:'cb-yellow', hex:'#ffe600'},
+  {name:'ORANGE', cls:'cb-orange', hex:'#ff6b00'},
+];
+
+let score,best,streak,bestStreak,correct,timer,gameRunning,timerInterval,questionInterval;
+let currentAnswer,questionSpeed,totalTime=60;
+
+best=parseInt(localStorage.getItem('cc_best')||'0');
+document.getElementById('best-el').textContent=best;
+
+function startGame(){
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('gameover-screen').classList.add('hidden');
+  score=0;streak=0;bestStreak=0;correct=0;timer=totalTime;questionSpeed=3000;
+  gameRunning=true;
+  updateUI();
+  buildButtons();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timer=parseFloat((timer-0.1).toFixed(1));
+    if(timer<=0){timer=0;endGame();return;}
+    document.getElementById('timer-el').textContent=Math.ceil(timer);
+    document.getElementById('timer-bar').style.width=(timer/totalTime*100)+'%';
+    const pct=timer/totalTime;
+    document.getElementById('timer-bar').style.background=pct>0.5?'var(--pink)':pct>0.25?'var(--orange)':'var(--red, #ff003c)';
+  },100);
+  nextQuestion();
+}
+
+function buildButtons(){
+  const grid=document.getElementById('buttons-grid');
+  grid.innerHTML='';
+  COLORS.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='color-btn '+c.cls;
+    btn.textContent=c.name;
+    btn.dataset.color=c.name;
+    btn.onclick=()=>answer(c.name,btn);
+    grid.appendChild(btn);
+  });
+}
+
+function nextQuestion(){
+  if(!gameRunning)return;
+  const wordColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+  let textColor;
+  do{textColor=COLORS[Math.floor(Math.random()*COLORS.length)];}while(textColor.name===wordColor.name);
+  currentAnswer=textColor.name;
+  const wt=document.getElementById('word-text');
+  wt.textContent=wordColor.name;
+  wt.style.color=textColor.hex;
+}
+
+function answer(chosen,btn){
+  if(!gameRunning)return;
+  const correct_ans=chosen===currentAnswer;
+  btn.classList.add(correct_ans?'flash-correct':'flash-wrong');
+  setTimeout(()=>btn.classList.remove('flash-correct','flash-wrong'),300);
+  const card=document.getElementById('word-card');
+  card.classList.add(correct_ans?'correct':'wrong');
+  setTimeout(()=>card.classList.remove('correct','wrong'),300);
+  const fb=document.getElementById('feedback-text');
+  if(correct_ans){
+    score+=10*(1+Math.floor(streak/5));
+    streak++;correct++;
+    if(streak>bestStreak)bestStreak=streak;
+    timer=Math.min(totalTime,timer+1);
+    fb.style.color='var(--green)';fb.textContent='✓ CORRECT! +1s';
+    if(correct%10===0){
+      questionSpeed=Math.max(800,questionSpeed-200);
+    }
+  } else {
+    streak=0;
+    timer=Math.max(0,timer-2);
+    fb.style.color='var(--pink)';fb.textContent='✗ WRONG! −2s';
+  }
+  setTimeout(()=>{fb.textContent='';},600);
+  updateUI();
+  nextQuestion();
+}
+
+function updateUI(){
+  document.getElementById('score-el').textContent=score;
+  document.getElementById('streak-el').textContent=streak;
+  document.getElementById('best-el').textContent=Math.max(best,score);
+}
+
+function endGame(){
+  gameRunning=false;
+  clearInterval(timerInterval);
+  const isNew=score>best;
+  if(isNew){best=score;localStorage.setItem('cc_best',best);}
+  document.getElementById('fs-score').textContent=score;
+  document.getElementById('fs-best').textContent=best;
+  document.getElementById('fs-correct').textContent=correct;
+  document.getElementById('fs-streak').textContent=bestStreak;
+  document.getElementById('new-best').classList.toggle('show',isNew);
+  document.getElementById('gameover-screen').classList.remove('hidden');
+}
+
+// Initial render
+document.getElementById('word-text').textContent='READY?';
+document.getElementById('word-text').style.color='var(--cyan)';
+buildButtons();
+</script>
+</body>
+</html>
