@@ -89,15 +89,16 @@
   .overlay.hidden { display: none; }
   .overlay-icon { font-size: 46px; margin-bottom: 10px; }
   .overlay-title { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 900; margin-bottom: 7px; letter-spacing: 2px; }
-  .overlay-sub { font-size: 13px; color: #a0b0ff; text-align: center; line-height: 1.7; margin-top: 8px; }
+  .overlay-sub { font-size: 13px; color: #a0b0ff; text-align: center; line-height: 1.7; margin: 15px 0; }
 
   .btn {
     font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
-    padding: 12px 28px; border-radius: 7px; cursor: pointer; margin-top: 20px;
+    padding: 12px 28px; border-radius: 7px; cursor: pointer; margin: 10px;
   }
   .btn-pink { background: rgba(255,0,110,0.12); color: var(--neon-pink); border: 1px solid rgba(255,0,110,0.3); }
   .btn-cyan { background: rgba(0,245,255,0.12); color: var(--neon-cyan); border: 1px solid rgba(0,245,255,0.3); }
+  .btn-dim { background: rgba(255,255,255,0.06); color: #a0b0ff; border: 1px solid rgba(255,255,255,0.2); }
 </style>
 </head>
 <body>
@@ -135,15 +136,16 @@
       <button class="btn btn-pink" onclick="startGame()">START GAME</button>
     </div>
 
-    <!-- Game Over Screen (Neon Themed) -->
+    <!-- Game Over Screen - Neon Theme -->
     <div class="overlay hidden" id="gameover-screen">
       <div class="overlay-icon">💥</div>
       <div class="overlay-title" style="color:var(--neon-red)">GAME OVER</div>
-      <div class="overlay-sub" style="margin:15px 0">
-        Final Score: <span id="final-score" style="color:var(--neon-cyan);font-size:22px"></span><br>
-        Best: <span id="final-best" style="color:var(--neon-yellow);font-size:18px"></span>
+      <div class="overlay-sub">
+        Final Score: <span id="final-score" style="color:var(--neon-cyan); font-size:24px;"></span><br>
+        Best Score: <span id="final-best" style="color:var(--neon-yellow);"></span>
       </div>
       <button class="btn btn-pink" onclick="startGame()">PLAY AGAIN</button>
+      <a href="../index.html" class="btn btn-dim">← Back to Mini Games</a>
     </div>
   </div>
 
@@ -373,7 +375,6 @@ function update() {
     }
   }
 
-  // Power-ups
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
@@ -444,7 +445,6 @@ function ballLost() {
     document.getElementById('final-best').textContent = bestScore;
     document.getElementById('gameover-screen').classList.remove('hidden');
   } else {
-    // Reset for next life
     setTimeout(() => {
       initRound();
       gameRunning = true;
@@ -506,7 +506,6 @@ function draw() {
 
   if (!paddle || balls.length === 0) return;
 
-  // Bricks
   for (const b of bricks) {
     if (!b.alive) continue;
     ctx.shadowBlur = 14;
@@ -516,7 +515,6 @@ function draw() {
   }
   ctx.shadowBlur = 0;
 
-  // Balls
   for (const b of balls) {
     for (let i = 0; i < b.trail.length; i++) {
       ctx.globalAlpha = i / b.trail.length * 0.6;
@@ -536,14 +534,12 @@ function draw() {
   }
   ctx.shadowBlur = 0;
 
-  // Paddle
   ctx.shadowBlur = 22;
   ctx.shadowColor = '#00f5ff';
   ctx.fillStyle = '#00f5ff';
   ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
   ctx.shadowBlur = 0;
 
-  // Power-ups
   for (const p of powerups) {
     const glow = 19 + Math.sin(p.pulse) * 5;
     ctx.shadowBlur = 30;
