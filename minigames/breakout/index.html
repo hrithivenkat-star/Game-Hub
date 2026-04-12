@@ -91,6 +91,7 @@
   .overlay.hidden { display: none; }
   .overlay-icon { font-size: 46px; margin-bottom: 10px; }
   .overlay-title { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 900; margin-bottom: 7px; letter-spacing: 2px; }
+  .overlay-sub { font-size: 13px; color: #a0b0ff; text-align: center; line-height: 1.7; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -118,11 +119,16 @@
   <div class="canvas-wrap">
     <canvas id="gameCanvas" width="500" height="560"></canvas>
 
+    <!-- Clean & Informative Start Screen -->
     <div class="overlay" id="start-screen">
       <div class="overlay-icon">🧱</div>
       <div class="overlay-title" style="color:var(--neon-pink)">BREAKOUT</div>
-      <div class="overlay-sub">3 Levels + Infinite Mode<br>Power-ups now clearly visible!</div>
-      <button class="btn btn-pink" onclick="startGame()">START GAME</button>
+      <div class="overlay-sub">
+        3 Normal Levels + Infinite Mode<br>
+        Break bricks to get Power-ups:<br>
+        ❤️ Extra Life &nbsp; 📏 Bigger Paddle &nbsp; ⚡ Speed Up &nbsp; 🔥 Multi-Ball
+      </div>
+      <button class="btn btn-pink" onclick="startGame()" style="margin-top: 30px; padding: 12px 28px;">START GAME</button>
     </div>
   </div>
 
@@ -249,12 +255,10 @@ function togglePause() {
 function update() {
   if (!gameRunning || paused || !paddle) return;
 
-  // Paddle movement
   if (keys['ArrowLeft'] || keys['a']) paddle.x = Math.max(0, paddle.x - 8);
   if (keys['ArrowRight'] || keys['d']) paddle.x = Math.min(W - paddle.w, paddle.x + 8);
   paddle.w = paddleWidth;
 
-  // Update balls
   for (let i = balls.length - 1; i >= 0; i--) {
     const b = balls[i];
     if (!ballLaunched) {
@@ -284,7 +288,6 @@ function update() {
       b.dx = hit * 7.5;
     }
 
-    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -324,18 +327,13 @@ function update() {
     }
   }
 
-  // Update powerups (now clearly visible)
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
     p.pulse = (p.pulse + 0.15) % (Math.PI * 2);
 
-    if (p.y > H + 20) {
-      powerups.splice(i, 1);
-      continue;
-    }
+    if (p.y > H + 20) { powerups.splice(i, 1); continue; }
 
-    // Catch powerup
     if (p.y + 15 >= paddle.y && p.y - 15 <= paddle.y + paddle.h &&
         p.x >= paddle.x && p.x <= paddle.x + paddle.w) {
       activatePowerUp(p.type);
@@ -348,7 +346,6 @@ function update() {
     if (paddleExpandTimer === 0) paddleWidth = PADDLE_W;
   }
 
-  // Infinite mode brick descend
   if (isInfinite) {
     descendTimer++;
     if (descendTimer > 85) {
@@ -384,7 +381,7 @@ function ballLost() {
       localStorage.setItem('breakout_best', bestScore);
       document.getElementById('best-display').textContent = bestScore;
     }
-    setTimeout(() => alert("Game Over! Final Score: " + score), 300);
+    setTimeout(() => alert("Game Over!\nFinal Score: " + score), 400);
   } else {
     setTimeout(() => document.getElementById('lost-screen').classList.remove('hidden'), 400);
   }
@@ -426,7 +423,6 @@ function draw() {
 
   if (!paddle) return;
 
-  // Bricks
   for (const b of bricks) {
     if (!b.alive) continue;
     ctx.shadowBlur = 14;
@@ -436,7 +432,6 @@ function draw() {
   }
   ctx.shadowBlur = 0;
 
-  // Balls
   for (const b of balls) {
     for (let i = 0; i < b.trail.length; i++) {
       ctx.globalAlpha = i / b.trail.length * 0.6;
@@ -456,33 +451,28 @@ function draw() {
   }
   ctx.shadowBlur = 0;
 
-  // Paddle
   ctx.shadowBlur = 22;
   ctx.shadowColor = '#00f5ff';
   ctx.fillStyle = '#00f5ff';
   ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
   ctx.shadowBlur = 0;
 
-  // === POWER-UPS - NOW CLEARLY VISIBLE ===
+  // Power-ups
   for (const p of powerups) {
     const glowSize = 18 + Math.sin(p.pulse) * 4;
-
-    // Glow circle
-    ctx.shadowBlur = 25;
+    ctx.shadowBlur = 28;
     ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, glowSize, 0, Math.PI*2);
     ctx.fill();
 
-    // Main circle
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 14;
     ctx.fillStyle = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
     ctx.beginPath();
     ctx.arc(p.x, p.y, 14, 0, Math.PI*2);
     ctx.fill();
 
-    // Emoji
     ctx.shadowBlur = 0;
     ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
@@ -491,7 +481,6 @@ function draw() {
     ctx.fillText(emoji, p.x, p.y + 6);
   }
 
-  // Particles
   for (const p of particles) {
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.color;
@@ -506,7 +495,6 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Init
 updateLives();
 gameLoop();
 </script>
