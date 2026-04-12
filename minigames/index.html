@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Games — Game Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--red:#ff003c;--blue:#0088ff;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow-pulse{0%,100%{opacity:0.7}50%{opacity:1}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.container{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 24px}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid rgba(0,245,255,0.08)}
+.logo{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:8px;align-items:center}
+.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:7px 16px;border-radius:6px;transition:all 0.2s}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+.nbtn-special{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);color:var(--green)}
+.nbtn-special:hover{background:rgba(0,255,136,0.2);border-color:rgba(0,255,136,0.4)}
+
+.hero{text-align:center;padding:44px 0 36px}
+.hero-icon{width:62px;height:62px;border-radius:14px;margin:0 auto 18px;background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 25px rgba(0,245,255,0.1);animation:float 3s ease-in-out infinite}
+.hero-tag{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(26px,5vw,50px);font-weight:900;color:#fff;margin-bottom:12px}
+.hero h1 span{color:var(--cyan);text-shadow:0 0 25px rgba(0,245,255,0.8)}
+.hero p{font-size:16px;color:var(--dim);max-width:460px;margin:0 auto 28px;line-height:1.6}
+
+.stats-bar{display:flex;justify-content:center;border:1px solid rgba(0,245,255,0.1);border-radius:8px;margin:0 auto 40px;max-width:520px;overflow:hidden;background:rgba(0,245,255,0.02)}
+.stat{flex:1;padding:14px;text-align:center;border-right:1px solid rgba(0,245,255,0.07)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--cyan);display:block;text-shadow:0 0 10px rgba(0,245,255,0.5)}
+.stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+
+/* FILTER TABS */
+.filter-wrap{display:flex;justify-content:center;gap:7px;margin-bottom:36px;flex-wrap:wrap}
+.ftab{padding:7px 18px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,0.08);color:var(--dim);background:transparent;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
+.ftab:hover{border-color:rgba(255,255,255,0.2);color:#fff}
+.ftab.on{background:rgba(0,245,255,0.1);border-color:rgba(0,245,255,0.3);color:var(--cyan);box-shadow:0 0 10px rgba(0,245,255,0.12)}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:center;gap:14px;margin-bottom:18px;margin-top:36px}
+.sec-title{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:#fff;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:rgba(255,255,255,0.05)}
+.sec-count{font-size:11px;color:var(--dim)}
+
+/* GAMES GRID */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;margin-bottom:16px}
+
+/* GAME CARD */
+.gc{position:relative;overflow:hidden;background:var(--card);border-radius:12px;border:1px solid rgba(255,255,255,0.05);text-decoration:none;color:inherit;transition:all 0.28s;display:flex;flex-direction:column;animation:fadeInUp 0.35s ease both}
+.gc:hover{transform:translateY(-5px)}
+.gc-bar{height:3px;border-radius:12px 12px 0 0;flex-shrink:0}
+.c-g .gc-bar{background:var(--green);box-shadow:0 0 8px var(--green)}
+.c-c .gc-bar{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.c-p .gc-bar{background:var(--purple);box-shadow:0 0 8px var(--purple)}
+.c-pk .gc-bar{background:var(--pink);box-shadow:0 0 8px var(--pink)}
+.c-y .gc-bar{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.c-o .gc-bar{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.c-r .gc-bar{background:var(--red);box-shadow:0 0 8px var(--red)}
+.c-b .gc-bar{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+
+.c-g:hover{box-shadow:0 14px 40px rgba(0,255,136,0.1),0 0 0 1px rgba(0,255,136,0.18)}
+.c-c:hover{box-shadow:0 14px 40px rgba(0,245,255,0.1),0 0 0 1px rgba(0,245,255,0.18)}
+.c-p:hover{box-shadow:0 14px 40px rgba(191,0,255,0.1),0 0 0 1px rgba(191,0,255,0.18)}
+.c-pk:hover{box-shadow:0 14px 40px rgba(255,0,110,0.1),0 0 0 1px rgba(255,0,110,0.18)}
+.c-y:hover{box-shadow:0 14px 40px rgba(255,230,0,0.1),0 0 0 1px rgba(255,230,0,0.18)}
+.c-o:hover{box-shadow:0 14px 40px rgba(255,107,0,0.1),0 0 0 1px rgba(255,107,0,0.18)}
+.c-r:hover{box-shadow:0 14px 40px rgba(255,0,60,0.1),0 0 0 1px rgba(255,0,60,0.18)}
+.c-b:hover{box-shadow:0 14px 40px rgba(0,136,255,0.1),0 0 0 1px rgba(0,136,255,0.18)}
+
+.gc-body{padding:16px 14px 12px;flex:1;display:flex;flex-direction:column}
+.gc-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;flex-shrink:0}
+.c-g .gc-icon{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2)}
+.c-c .gc-icon{background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.2)}
+.c-p .gc-icon{background:rgba(191,0,255,0.1);border:1px solid rgba(191,0,255,0.2)}
+.c-pk .gc-icon{background:rgba(255,0,110,0.1);border:1px solid rgba(255,0,110,0.2)}
+.c-y .gc-icon{background:rgba(255,230,0,0.1);border:1px solid rgba(255,230,0,0.2)}
+.c-o .gc-icon{background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.2)}
+.c-r .gc-icon{background:rgba(255,0,60,0.1);border:1px solid rgba(255,0,60,0.2)}
+.c-b .gc-icon{background:rgba(0,136,255,0.1);border:1px solid rgba(0,136,255,0.2)}
+
+.diff-badge{position:absolute;top:12px;right:10px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:7px}
+.d-easy{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2)}
+.d-med{background:rgba(255,230,0,0.1);color:var(--yellow);border:1px solid rgba(255,230,0,0.2)}
+.d-hard{background:rgba(255,0,110,0.1);color:var(--pink);border:1px solid rgba(255,0,110,0.2)}
+
+.gc h3{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;margin-bottom:6px}
+.gc p{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:12px;flex:1}
+.score-row{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border-radius:5px;padding:6px 9px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04)}
+.score-lbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.score-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;animation:glow-pulse 2.5s ease-in-out infinite}
+.c-g .score-val{color:var(--green)}.c-c .score-val{color:var(--cyan)}.c-p .score-val{color:var(--purple)}.c-pk .score-val{color:var(--pink)}.c-y .score-val{color:var(--yellow)}.c-o .score-val{color:var(--orange)}.c-r .score-val{color:var(--red)}.c-b .score-val{color:var(--blue)}
+
+.gc-footer{padding:9px 14px;border-top:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.01)}
+.ctrl{font-size:9px;color:var(--dim)}
+.play-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:5px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.c-g .play-btn{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.22)}
+.c-c .play-btn{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid rgba(0,245,255,0.22)}
+.c-p .play-btn{background:rgba(191,0,255,0.1);color:var(--purple);border:1px solid rgba(191,0,255,0.22)}
+.c-pk .play-btn{background:rgba(255,0,110,0.1);color:var(--pink);border:1px solid rgba(255,0,110,0.22)}
+.c-y .play-btn{background:rgba(255,230,0,0.1);color:var(--yellow);border:1px solid rgba(255,230,0,0.22)}
+.c-o .play-btn{background:rgba(255,107,0,0.1);color:var(--orange);border:1px solid rgba(255,107,0,0.22)}
+.c-r .play-btn{background:rgba(255,0,60,0.1);color:var(--red);border:1px solid rgba(255,0,60,0.22)}
+.c-b .play-btn{background:rgba(0,136,255,0.1);color:var(--blue);border:1px solid rgba(0,136,255,0.22)}
+.gc:hover .play-btn{filter:brightness(1.2);transform:scale(1.05)}
+
+footer{border-top:1px solid rgba(0,245,255,0.06);padding:26px 0;text-align:center;margin-top:48px}
+footer p{font-size:13px;color:var(--dim)}
+footer a{color:var(--cyan);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="container">
+
+  <nav>
+    <a href="../index.html" class="logo">GAME<span>HUB</span></a>
+    <div class="nav-right">
+      <a href="../timed-challenge/index.html" class="nbtn">⏱ Timed</a>
+      <a href="../multiplayer/index.html" class="nbtn nbtn-special">🌐 Multiplayer</a>
+      <a href="../leaderboard/index.html" class="nbtn">🏆 Scores</a>
+      <a href="../index.html" class="nbtn">← Hub</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-icon">🎮</div>
+    <p class="hero-tag">⚡ Arcade Collection</p>
+    <h1>MINI <span>GAMES</span></h1>
+    <p>15 neon arcade games — classics and originals. Pick a game and beat your high score.</p>
+  </section>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-n">15</span><div class="stat-l">Games</div></div>
+    <div class="stat"><span class="stat-n" id="scores-set">0</span><div class="stat-l">Scores Set</div></div>
+    <div class="stat"><span class="stat-n" id="nick-stat">--</span><div class="stat-l">Player</div></div>
+  </div>
+
+  <div class="filter-wrap">
+    <button class="ftab on" onclick="filt(this,'all')">All (15)</button>
+    <button class="ftab" onclick="filt(this,'classic')">Classic</button>
+    <button class="ftab" onclick="filt(this,'action')">Action</button>
+    <button class="ftab" onclick="filt(this,'puzzle')">Puzzle</button>
+    <button class="ftab" onclick="filt(this,'easy')">Easy</button>
+    <button class="ftab" onclick="filt(this,'medium')">Medium</button>
+    <button class="ftab" onclick="filt(this,'hard')">Hard</button>
+  </div>
+
+  <!-- ORIGINAL 5 -->
+  <div class="sec-hdr"><div class="sec-title">Original Five</div><div class="sec-line"></div><div class="sec-count">5 games</div></div>
+  <div class="games-grid">
+
+    <a href="snake/index.html" class="gc c-g" data-cat="classic action" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">🐍</div>
+        <h3>Snake</h3>
+        <p>Eat food, grow your snake. Don't hit the walls or yourself.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-snake">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow / WASD</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="tetris/index.html" class="gc c-c" data-cat="classic puzzle" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">🟦</div>
+        <h3>Tetris</h3>
+        <p>Stack blocks and clear lines before the stack hits the top.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-tetris">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow + Space</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="pong/index.html" class="gc c-p" data-cat="classic action" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">🏓</div>
+        <h3>Pong</h3>
+        <p>Rally against the AI. First to 7 wins. AI speeds up over time.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Wins</span><span class="score-val" id="s-pong">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">W / S keys</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="breakout/index.html" class="gc c-pk" data-cat="classic action" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">🧱</div>
+        <h3>Breakout</h3>
+        <p>Smash every brick without dropping the ball. 3 lives.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-breakout">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow / Mouse</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="2048/index.html" class="gc c-y" data-cat="classic puzzle" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">🔢</div>
+        <h3>2048</h3>
+        <p>Merge matching tiles. Reach 2048 and beyond. Never ends.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-2048">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow / Swipe</span><span class="play-btn">Play →</span></div>
+    </a>
+
+  </div>
+
+  <!-- NEW 10 -->
+  <div class="sec-hdr"><div class="sec-title">New Arrivals</div><div class="sec-line"></div><div class="sec-count">10 games</div></div>
+  <div class="games-grid">
+
+    <a href="flappy-bird/index.html" class="gc c-g" data-cat="action" data-diff="hard">
+      <div class="gc-bar"></div><span class="diff-badge d-hard">Hard</span>
+      <div class="gc-body">
+        <div class="gc-icon">🐦</div>
+        <h3>Flappy Bird</h3>
+        <p>Tap to fly. Dodge neon pipes. One touch is all it takes to die.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-flappy">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Space / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="space-invaders/index.html" class="gc c-c" data-cat="action" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">👾</div>
+        <h3>Space Invaders</h3>
+        <p>Shoot alien waves before they reach you. Harder every level.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-space">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow + Space</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="memory-match/index.html" class="gc c-b" data-cat="puzzle" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">🃏</div>
+        <h3>Memory Match</h3>
+        <p>Flip and match neon cards. Clear the board in fewest moves.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-memory">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Click / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="rps/index.html" class="gc c-pk" data-cat="puzzle" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">✂️</div>
+        <h3>Rock Paper Scissors</h3>
+        <p>Best of 5 vs Neon AI. Outsmart the machine to win.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Wins</span><span class="score-val" id="s-rps">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Click / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="whack-a-mole/index.html" class="gc c-r" data-cat="action" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">🔨</div>
+        <h3>Whack-a-Mole</h3>
+        <p>Hack glitching nodes before they vanish. Speed builds fast.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-whack">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Click / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="pacman/index.html" class="gc c-y" data-cat="classic action" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">🟡</div>
+        <h3>Pac-Man</h3>
+        <p>Eat all dots. Dodge neon ghosts. Power up and hunt them.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-pacman">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow / WASD</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="doodle-jump/index.html" class="gc c-o" data-cat="action" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">🦘</div>
+        <h3>Doodle Jump</h3>
+        <p>Bounce platform to platform. How high can you go?</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-doodle">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Arrow / Tilt</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="cyber-runner/index.html" class="gc c-p" data-cat="action" data-diff="medium">
+      <div class="gc-bar"></div><span class="diff-badge d-med">Medium</span>
+      <div class="gc-body">
+        <div class="gc-icon">🏃</div>
+        <h3>Cyber Runner</h3>
+        <p>Endless neon runner. Jump obstacles. Speed ramps up.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-runner">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Space / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="tictactoe/index.html" class="gc c-c" data-cat="puzzle" data-diff="easy">
+      <div class="gc-bar"></div><span class="diff-badge d-easy">Easy</span>
+      <div class="gc-body">
+        <div class="gc-icon">❌</div>
+        <h3>Tic Tac Toe</h3>
+        <p>Classic X vs O with neon glow. Beat the AI or play a friend.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Wins</span><span class="score-val" id="s-ttt">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Click / Tap</span><span class="play-btn">Play →</span></div>
+    </a>
+
+    <a href="minesweeper/index.html" class="gc c-o" data-cat="puzzle" data-diff="hard">
+      <div class="gc-bar"></div><span class="diff-badge d-hard">Hard</span>
+      <div class="gc-body">
+        <div class="gc-icon">💣</div>
+        <h3>Minesweeper</h3>
+        <p>Uncover the cyber grid. Don't trigger a mine. Logic only.</p>
+        <div class="score-row"><span class="score-lbl">🏆 Best</span><span class="score-val" id="s-mine">--</span></div>
+      </div>
+      <div class="gc-footer"><span class="ctrl">Click / Right-click</span><span class="play-btn">Play →</span></div>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>← <a href="../index.html">Back to Game Hub</a> &nbsp;|&nbsp; <a href="../timed-challenge/index.html">Timed Mode</a> &nbsp;|&nbsp; <a href="../multiplayer/index.html">Multiplayer</a> &nbsp;|&nbsp; <a href="../leaderboard/index.html">Leaderboard</a></p>
+  </div>
+</footer>
+
+<script>
+const nick=localStorage.getItem('player_nick');
+if(nick)document.getElementById('nick-stat').textContent=nick;
+
+const smap={
+  's-snake':'snake_best','s-tetris':'tetris_best','s-pong':'pong_best',
+  's-breakout':'breakout_best','s-2048':'2048_best','s-flappy':'flappy_best',
+  's-space':'space_best','s-memory':'memory_best','s-rps':'rps_best',
+  's-whack':'whack_best','s-pacman':'pacman_best','s-doodle':'doodle_best',
+  's-runner':'runner_best','s-ttt':'ttt_best','s-mine':'mine_best'
+};
+let set=0;
+for(const[id,key] of Object.entries(smap)){
+  const v=localStorage.getItem(key);
+  if(v){document.getElementById(id).textContent=Number(v).toLocaleString();set++;}
+}
+document.getElementById('scores-set').textContent=set;
+
+function filt(btn,type){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.gc').forEach(c=>{
+    const cat=c.dataset.cat||'';
+    const diff=c.dataset.diff||'';
+    const show=type==='all'||cat.includes(type)||diff===type;
+    c.style.display=show?'flex':'none';
+  });
+}
+</script>
+</body>
+</html>
