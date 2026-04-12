@@ -3,307 +3,290 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reaction Rush — Game Hub</title>
+<title>Game Hub</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
-html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column}
+:root{
+  --cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;
+  --yellow:#ffe600;--orange:#ff6b00;--red:#ff003c;--blue:#0088ff;
+  --bg:#050510;--card:#0a0a1a;--dim:#6677aa;
+}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
-@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
-@keyframes pulse-ring{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.5);opacity:0}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,0.04),transparent);animation:scanline 8s linear infinite;pointer-events:none;z-index:0}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow-pulse{0%,100%{opacity:0.7}50%{opacity:1}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px}
 
-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(0,245,255,0.08);background:rgba(5,5,16,0.95);flex-shrink:0}
-.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
-.logo span{color:var(--purple)}
-.nav-right{display:flex;gap:8px}
-.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 14px;border-radius:6px;transition:all 0.2s}
-.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid rgba(0,245,255,0.08)}
+.logo{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 20px rgba(0,245,255,0.6),0 0 40px rgba(0,245,255,0.3);letter-spacing:2px}
+.logo span{color:var(--purple);text-shadow:0 0 20px rgba(191,0,255,0.6)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{color:var(--dim);text-decoration:none;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s}
+.nav-links a:hover{color:var(--cyan)}
+.nav-cta{background:rgba(191,0,255,0.15);border:1px solid rgba(191,0,255,0.4);color:var(--purple);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all 0.2s;text-decoration:none}
+.nav-cta:hover{background:rgba(191,0,255,0.3);box-shadow:0 0 15px rgba(191,0,255,0.3)}
 
-.game-wrapper{position:relative;z-index:1;flex:1;display:flex;gap:20px;padding:16px;align-items:flex-start;justify-content:center}
+/* HERO */
+.hero{text-align:center;padding:80px 0 60px}
+.hero-eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--cyan);margin-bottom:20px;opacity:0.9;animation:glow-pulse 2s ease-in-out infinite}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(42px,9vw,88px);font-weight:900;line-height:1.05;color:#fff;margin-bottom:8px;text-shadow:0 0 30px rgba(0,245,255,0.2)}
+.hero h1 .c{color:var(--cyan);text-shadow:0 0 30px rgba(0,245,255,0.9),0 0 60px rgba(0,245,255,0.5)}
+.hero h1 .p{color:var(--purple);text-shadow:0 0 30px rgba(191,0,255,0.9),0 0 60px rgba(191,0,255,0.5)}
+.hero-sub{font-size:18px;color:var(--dim);margin:20px auto 40px;max-width:520px;line-height:1.7}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:linear-gradient(135deg,rgba(0,245,255,0.18),rgba(0,245,255,0.06));border:1px solid var(--cyan);color:var(--cyan);padding:15px 38px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:6px;text-decoration:none;display:inline-block;transition:all 0.2s;box-shadow:0 0 20px rgba(0,245,255,0.15)}
+.btn-primary:hover{background:rgba(0,245,255,0.18);box-shadow:0 0 35px rgba(0,245,255,0.4);transform:translateY(-2px)}
+.btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.15);color:#aabbdd;padding:15px 38px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:6px;text-decoration:none;display:inline-block;transition:all 0.2s}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.4);color:#fff;transform:translateY(-2px)}
 
-.side-panel{display:flex;flex-direction:column;gap:10px;width:160px;flex-shrink:0;padding-top:8px}
-.pc{background:var(--card);border:1px solid rgba(0,245,255,0.1);border-radius:10px;padding:12px;text-align:center}
-.pl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
-.pv{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px rgba(0,245,255,0.5)}
+/* STATS */
+.stats-bar{display:flex;justify-content:center;margin:0 auto 70px;max-width:580px;border:1px solid rgba(0,245,255,0.1);border-radius:10px;overflow:hidden;background:rgba(0,245,255,0.02)}
+.stat{flex:1;padding:20px;text-align:center;border-right:1px solid rgba(0,245,255,0.07)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Orbitron',monospace;font-size:28px;font-weight:700;color:var(--cyan);display:block;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+.stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 
-.arena-wrap{position:relative;flex-shrink:0}
-.arena-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(0,245,255,0.12);pointer-events:none;box-shadow:0 0 30px rgba(0,245,255,0.06)}
-canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(0,245,255,0.08);cursor:crosshair}
+/* SECTION */
+.sec-header{text-align:center;margin-bottom:40px}
+.sec-tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,30px);font-weight:700;color:#fff}
 
-.overlay{position:absolute;inset:0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.94);backdrop-filter:blur(5px);animation:fadeIn 0.3s ease;z-index:10;padding:24px;gap:0}
-.overlay.hidden{display:none}
-.ov-icon{font-size:52px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
-.ov-title{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:2px}
-.ov-sub{font-size:14px;color:var(--dim);margin-bottom:20px;text-align:center;line-height:1.6}
-.rules-box{background:rgba(0,245,255,0.05);border:1px solid rgba(0,245,255,0.12);border-radius:10px;padding:14px 18px;margin-bottom:22px;width:100%;max-width:360px}
-.rules-title{font-family:'Orbitron',monospace;font-size:11px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px}
-.rule-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.rule-icon{font-size:14px;flex-shrink:0}
-.rule-text{font-size:12px;color:#aabbdd;line-height:1.4}
-.stats-row{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;justify-content:center}
-.sbox{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}
-.slbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
-.sval{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
-.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
-.btn-cyan{background:rgba(0,245,255,0.12);color:var(--cyan);border:1px solid rgba(0,245,255,0.3)}
-.btn-cyan:hover{background:rgba(0,245,255,0.22);box-shadow:0 0 18px rgba(0,245,255,0.3);transform:translateY(-2px)}
-.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
-.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
-.new-best{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
-.new-best.show{display:block}
+/* MODES GRID */
+.modes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:80px}
+@media(max-width:800px){.modes-grid{grid-template-columns:1fr}}
+.mode-card{position:relative;overflow:hidden;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,0.05);text-decoration:none;color:inherit;transition:all 0.3s;display:block;animation:fadeInUp 0.4s ease both}
+.mode-card:hover{transform:translateY(-6px)}
+.mode-card .top-bar{height:3px;width:100%}
+.mc-cyan .top-bar{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.mc-purple .top-bar{background:var(--purple);box-shadow:0 0 12px var(--purple)}
+.mc-pink .top-bar{background:var(--pink);box-shadow:0 0 12px var(--pink)}
+.mc-cyan:hover{box-shadow:0 20px 60px rgba(0,245,255,0.15),0 0 0 1px rgba(0,245,255,0.2)}
+.mc-purple:hover{box-shadow:0 20px 60px rgba(191,0,255,0.15),0 0 0 1px rgba(191,0,255,0.2)}
+.mc-pink:hover{box-shadow:0 20px 60px rgba(255,0,110,0.15),0 0 0 1px rgba(255,0,110,0.2)}
+.mc-body{padding:28px 24px 22px}
+.mc-icon{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px;animation:float 3s ease-in-out infinite}
+.mc-cyan .mc-icon{background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25)}
+.mc-purple .mc-icon{background:rgba(191,0,255,0.1);border:1px solid rgba(191,0,255,0.25)}
+.mc-pink .mc-icon{background:rgba(255,0,110,0.1);border:1px solid rgba(255,0,110,0.25)}
+.mc-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:600}
+.mc-cyan .mc-tag{color:var(--cyan)}
+.mc-purple .mc-tag{color:var(--purple)}
+.mc-pink .mc-tag{color:var(--pink)}
+.mc-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:#fff;margin-bottom:10px}
+.mc-desc{font-size:14px;color:var(--dim);line-height:1.6;margin-bottom:22px}
+.mc-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.pill{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600}
+.mc-cyan .pill{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)}
+.mc-purple .pill{background:rgba(191,0,255,0.1);color:var(--purple);border:1px solid rgba(191,0,255,0.2)}
+.mc-pink .pill{background:rgba(255,0,110,0.1);color:var(--pink);border:1px solid rgba(255,0,110,0.2)}
+.mc-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.01)}
+.mc-count{font-size:12px;color:var(--dim)}
+.mc-arrow{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:#aabbdd;font-size:14px;transition:all 0.2s}
+.mode-card:hover .mc-arrow{background:rgba(255,255,255,0.08);color:#fff}
 
-/* round history */
-.rounds-card{background:var(--card);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px;flex:1;overflow:hidden}
-.rounds-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;text-align:center}
-.round-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.round-row:last-child{border-bottom:none}
-.round-n{font-size:11px;color:var(--dim)}
-.round-t{font-family:'Orbitron',monospace;font-size:12px;font-weight:700}
+/* FEATURED GAMES ROW */
+.featured-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:80px}
+@media(max-width:900px){.featured-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:550px){.featured-grid{grid-template-columns:1fr 1fr}}
+.feat-card{background:var(--card);border-radius:12px;border:1px solid rgba(255,255,255,0.05);padding:18px 14px;text-decoration:none;color:inherit;display:block;transition:all 0.25s;text-align:center;position:relative;overflow:hidden;animation:fadeInUp 0.4s ease both}
+.feat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
+.feat-card:hover::after{transform:scaleX(1)}
+.feat-card:hover{transform:translateY(-4px)}
+.fc-g::after{background:var(--green);box-shadow:0 0 8px var(--green)}
+.fc-c::after{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.fc-p::after{background:var(--purple);box-shadow:0 0 8px var(--purple)}
+.fc-pk::after{background:var(--pink);box-shadow:0 0 8px var(--pink)}
+.fc-y::after{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.fc-g:hover{box-shadow:0 10px 30px rgba(0,255,136,0.1)}
+.fc-c:hover{box-shadow:0 10px 30px rgba(0,245,255,0.1)}
+.fc-p:hover{box-shadow:0 10px 30px rgba(191,0,255,0.1)}
+.fc-pk:hover{box-shadow:0 10px 30px rgba(255,0,110,0.1)}
+.fc-y:hover{box-shadow:0 10px 30px rgba(255,230,0,0.1)}
+.feat-icon{font-size:28px;margin-bottom:10px;display:block}
+.feat-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#fff;margin-bottom:4px}
+.feat-score{font-size:10px;color:var(--dim)}
+.feat-score span{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;animation:glow-pulse 2s ease-in-out infinite}
+.fc-g .feat-score span{color:var(--green)}
+.fc-c .feat-score span{color:var(--cyan)}
+.fc-p .feat-score span{color:var(--purple)}
+.fc-pk .feat-score span{color:var(--pink)}
+.fc-y .feat-score span{color:var(--yellow)}
+
+/* LEADERBOARD STRIP */
+.lb-strip{background:rgba(255,230,0,0.04);border:1px solid rgba(255,230,0,0.12);border-radius:12px;padding:20px 28px;display:flex;align-items:center;gap:20px;margin-bottom:80px;flex-wrap:wrap}
+.lb-icon{font-size:32px;flex-shrink:0}
+.lb-text{flex:1}
+.lb-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--yellow);margin-bottom:4px}
+.lb-sub{font-size:13px;color:var(--dim)}
+.lb-btn{background:rgba(255,230,0,0.12);border:1px solid rgba(255,230,0,0.3);color:var(--yellow);padding:10px 22px;border-radius:8px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;transition:all 0.2s;white-space:nowrap}
+.lb-btn:hover{background:rgba(255,230,0,0.22);box-shadow:0 0 15px rgba(255,230,0,0.3)}
+
+/* FOOTER */
+footer{border-top:1px solid rgba(0,245,255,0.07);padding:32px 0;text-align:center;margin-top:20px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:10px;text-shadow:0 0 15px rgba(0,245,255,0.4)}
+footer p{font-size:13px;color:var(--dim)}
 </style>
 </head>
 <body>
 <div class="scanline"></div>
+<div class="container">
+
 <nav>
-  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
-  <div class="nav-right">
-    <a href="../index.html" class="nbtn">← Timed</a>
-    <a href="../../index.html" class="nbtn">🏠 Hub</a>
-  </div>
+  <a href="index.html" class="logo">GAME<span>HUB</span></a>
+  <ul class="nav-links">
+    <li><a href="MiniGames/index.html">Mini Games</a></li>
+    <li><a href="timed-challenge/index.html">Timed</a></li>
+    <li><a href="leaderboard/index.html">Scores</a></li>
+  </ul>
+  <a href="MiniGames/index.html" class="nav-cta">🎮 Play Now</a>
 </nav>
 
-<div class="game-wrapper">
-  <div class="side-panel">
-    <div class="pc"><div class="pl">Score</div><div class="pv" id="score-el">0</div></div>
-    <div class="pc" style="border-color:rgba(255,230,0,0.15)"><div class="pl">Best</div><div class="pv" style="font-size:18px;color:var(--yellow);text-shadow:0 0 10px rgba(255,230,0,0.5)" id="best-el">0</div></div>
-    <div class="pc" style="border-color:rgba(255,0,110,0.15)"><div class="pl">Timer</div><div class="pv" style="color:var(--pink);text-shadow:0 0 10px rgba(255,0,110,0.5)" id="timer-el">30</div></div>
-    <div class="pc" style="border-color:rgba(0,255,136,0.1)"><div class="pl">Hits</div><div class="pv" style="font-size:18px;color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.4)" id="hits-el">0</div></div>
-    <div class="pc" style="border-color:rgba(191,0,255,0.1)"><div class="pl">Combo</div><div class="pv" style="font-size:18px;color:var(--purple);text-shadow:0 0 10px rgba(191,0,255,0.4)" id="combo-el">x1</div></div>
+<section class="hero">
+  <p class="hero-eyebrow">⚡ The Ultimate Neon Arcade</p>
+  <h1><span class="c">GAME</span><span class="p">HUB</span></h1>
+  <p class="hero-sub">25+ neon arcade games across 3 modes. Classic mini games, timed challenges, and online multiplayer. Pick your battle.</p>
+  <div class="hero-btns">
+    <a href="MiniGames/index.html" class="btn-primary">Play Mini Games</a>
+    <a href="timed-challenge/index.html" class="btn-secondary">Timed Mode ⏱</a>
   </div>
+</section>
 
-  <div class="arena-wrap">
-    <div class="arena-glow"></div>
-    <canvas id="c" width="580" height="520"></canvas>
-
-    <!-- START -->
-    <div class="overlay" id="start-screen">
-      <div class="ov-icon">⚡</div>
-      <div class="ov-title" style="color:var(--cyan);text-shadow:0 0 20px rgba(0,245,255,0.6)">REACTION RUSH</div>
-      <div class="ov-sub">Click glowing targets before they vanish.<br>Miss = lose 3 seconds. 30 second timer.</div>
-      <div class="rules-box">
-        <div class="rules-title">📋 HOW TO PLAY</div>
-        <div class="rule-row"><span class="rule-icon">⚡</span><span class="rule-text">A glowing target appears at a random spot. Click it instantly.</span></div>
-        <div class="rule-row"><span class="rule-icon">✅</span><span class="rule-text">Hit = +10 pts × combo multiplier. Combos stack up fast.</span></div>
-        <div class="rule-row"><span class="rule-icon">❌</span><span class="rule-text">Miss (target vanishes) = −3 seconds from your timer.</span></div>
-        <div class="rule-row"><span class="rule-icon">🚀</span><span class="rule-text">Speed increases every 10 hits. Targets shrink and disappear faster.</span></div>
-        <div class="rule-row"><span class="rule-icon">🏆</span><span class="rule-text">Score = hits × accuracy. Beat your personal best!</span></div>
-      </div>
-      <div class="btns"><button class="btn btn-cyan" onclick="startGame()">Start Game</button></div>
-    </div>
-
-    <!-- GAME OVER -->
-    <div class="overlay hidden" id="gameover-screen">
-      <div class="ov-icon">🎯</div>
-      <div class="ov-title" style="color:var(--cyan)">ROUND OVER</div>
-      <div class="new-best" id="new-best">⚡ NEW BEST!</div>
-      <div class="stats-row">
-        <div class="sbox"><div class="slbl">Score</div><div class="sval" id="fs-score" style="color:var(--cyan)">0</div></div>
-        <div class="sbox"><div class="slbl">Best</div><div class="sval" id="fs-best" style="color:var(--yellow)">0</div></div>
-        <div class="sbox"><div class="slbl">Hits</div><div class="sval" id="fs-hits" style="color:var(--green)">0</div></div>
-        <div class="sbox"><div class="slbl">Accuracy</div><div class="sval" id="fs-acc" style="color:var(--purple)">0%</div></div>
-      </div>
-      <div class="btns">
-        <button class="btn btn-cyan" onclick="startGame()">Play Again</button>
-        <a href="../index.html" class="btn btn-dim">← Timed Hub</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="side-panel">
-    <div class="pc" style="border-color:rgba(255,107,0,0.1)"><div class="pl">Accuracy</div><div class="pv" style="font-size:18px;color:var(--orange)" id="acc-el">100%</div></div>
-    <div class="pc" style="border-color:rgba(255,0,60,0.1)"><div class="pl">Misses</div><div class="pv" style="font-size:18px;color:#ff003c" id="miss-el">0</div></div>
-    <div class="rounds-card">
-      <div class="rounds-title">Last Hits</div>
-      <div id="rounds-list"></div>
-    </div>
-  </div>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-n">25+</span><div class="stat-l">Games</div></div>
+  <div class="stat"><span class="stat-n">3</span><div class="stat-l">Modes</div></div>
+  <div class="stat"><span class="stat-n" id="total-scores">0</span><div class="stat-l">Scores Set</div></div>
+  <div class="stat"><span class="stat-n">∞</span><div class="stat-l">Replayability</div></div>
 </div>
 
+<!-- GAME MODES -->
+<div class="sec-header">
+  <div class="sec-tag" style="color:var(--cyan)">Choose Your Battle</div>
+  <div class="sec-title">Game Modes</div>
+</div>
+<div class="modes-grid">
+
+  <a href="MiniGames/index.html" class="mode-card mc-cyan">
+    <div class="top-bar"></div>
+    <div class="mc-body">
+      <div class="mc-icon">🎮</div>
+      <div class="mc-tag">Classic</div>
+      <div class="mc-title">Mini Games</div>
+      <div class="mc-desc">15 timeless arcade classics rebuilt with neon. Snake, Tetris, Pac-Man, Space Invaders, Flappy Bird and more. Pure skill, zero limits.</div>
+      <div class="mc-pills">
+        <span class="pill">Snake</span><span class="pill">Tetris</span><span class="pill">Pac-Man</span><span class="pill">+12 more</span>
+      </div>
+    </div>
+    <div class="mc-footer">
+      <span class="mc-count">15 games available</span>
+      <div class="mc-arrow">→</div>
+    </div>
+  </a>
+
+  <a href="timed-challenge/index.html" class="mode-card mc-purple">
+    <div class="top-bar"></div>
+    <div class="mc-body">
+      <div class="mc-icon">⏱</div>
+      <div class="mc-tag">Challenge</div>
+      <div class="mc-title">Timed Mode</div>
+      <div class="mc-desc">10 unique infinite challenge games. Race the clock, dodge bullets, flip gravity, type fast. No two games are alike. How long can you last?</div>
+      <div class="mc-pills">
+        <span class="pill">Reaction Rush</span><span class="pill">Bullet Hell</span><span class="pill">Beat Tap</span><span class="pill">+7 more</span>
+      </div>
+    </div>
+    <div class="mc-footer">
+      <span class="mc-count">10 infinite challenges</span>
+      <div class="mc-arrow">→</div>
+    </div>
+  </a>
+
+  <a href="multiplayer/index.html" class="mode-card mc-pink">
+    <div class="top-bar"></div>
+    <div class="mc-body">
+      <div class="mc-icon">🌐</div>
+      <div class="mc-tag">Coming Soon</div>
+      <div class="mc-title">Multiplayer</div>
+      <div class="mc-desc">Real-time online battles. Battle Pong, Snake Arena, Trivia Clash and more. Create a room, share the code, challenge anyone anywhere.</div>
+      <div class="mc-pills">
+        <span class="pill">Battle Pong</span><span class="pill">Trivia Clash</span><span class="pill">Snake Arena</span>
+      </div>
+    </div>
+    <div class="mc-footer">
+      <span class="mc-count">Dropping soon</span>
+      <div class="mc-arrow">→</div>
+    </div>
+  </a>
+
+</div>
+
+<!-- FEATURED GAMES -->
+<div class="sec-header">
+  <div class="sec-tag" style="color:var(--purple)">Jump Right In</div>
+  <div class="sec-title">Featured Games</div>
+</div>
+<div class="featured-grid">
+  <a href="MiniGames/snake/index.html" class="feat-card fc-g">
+    <span class="feat-icon">🐍</span>
+    <div class="feat-name">Snake</div>
+    <div class="feat-score">Best: <span id="f-snake">--</span></div>
+  </a>
+  <a href="MiniGames/tetris/index.html" class="feat-card fc-c">
+    <span class="feat-icon">🟦</span>
+    <div class="feat-name">Tetris</div>
+    <div class="feat-score">Best: <span id="f-tetris">--</span></div>
+  </a>
+  <a href="MiniGames/flappy-bird/index.html" class="feat-card fc-p">
+    <span class="feat-icon">🐦</span>
+    <div class="feat-name">Flappy Bird</div>
+    <div class="feat-score">Best: <span id="f-flappy">--</span></div>
+  </a>
+  <a href="timed-challenge/bullet-hell/index.html" class="feat-card fc-pk">
+    <span class="feat-icon">💀</span>
+    <div class="feat-name">Bullet Hell</div>
+    <div class="feat-score">Best: <span id="f-bh">--</span></div>
+  </a>
+  <a href="timed-challenge/color-clash/index.html" class="feat-card fc-y">
+    <span class="feat-icon">🎨</span>
+    <div class="feat-name">Color Clash</div>
+    <div class="feat-score">Best: <span id="f-cc">--</span></div>
+  </a>
+</div>
+
+<!-- LEADERBOARD STRIP -->
+<div class="lb-strip">
+  <span class="lb-icon">🏆</span>
+  <div class="lb-text">
+    <div class="lb-title">Global Leaderboard</div>
+    <div class="lb-sub">All your high scores in one place. Track your best across every game.</div>
+  </div>
+  <a href="leaderboard/index.html" class="lb-btn">View Scores →</a>
+</div>
+
+</div>
+<footer>
+  <div class="container">
+    <div class="footer-logo">GAMEHUB</div>
+    <p>Built with ⚡ by hrithivenkat-star &nbsp;|&nbsp; 25+ neon arcade games</p>
+  </div>
+</footer>
+
 <script>
-const canvas=document.getElementById('c');
-const ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height;
-let target=null,score,best,hits,misses,combo,timer,spawnTimer,gameRunning,animFrame,timerInterval;
-let reactionTimes=[];
-
-best=parseInt(localStorage.getItem('rr_best')||'0');
-document.getElementById('best-el').textContent=best;
-
-function startGame(){
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('gameover-screen').classList.add('hidden');
-  score=0;hits=0;misses=0;combo=0;timer=30;reactionTimes=[];
-  gameRunning=true;target=null;
-  updateUI();
-  clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
-    timer=Math.max(0,timer-1);
-    document.getElementById('timer-el').textContent=timer;
-    if(timer<=0)endGame();
-  },1000);
-  scheduleTarget();
-  if(animFrame)cancelAnimationFrame(animFrame);
-  animFrame=requestAnimationFrame(loop);
+const keys=['snake_best','tetris_best','pong_best','breakout_best','2048_best','flappy_best','space_best','pacman_best','doodle_best','runner_best','memory_best','rps_best','whack_best','ttt_best','mine_best','rr_best','cc_best','nb_best','bh_best','pl_best','tb_best','gf_best','bt_best','dtr_best','ms_best'];
+let set=0;
+keys.forEach(k=>{if(localStorage.getItem(k))set++});
+document.getElementById('total-scores').textContent=set;
+const fmap={
+  'f-snake':'snake_best','f-tetris':'tetris_best',
+  'f-flappy':'flappy_best','f-bh':'bh_best','f-cc':'cc_best'
+};
+for(const[id,key] of Object.entries(fmap)){
+  const v=localStorage.getItem(key);
+  if(v)document.getElementById(id).textContent=Number(v).toLocaleString();
 }
-
-function scheduleTarget(){
-  if(!gameRunning)return;
-  const delay=Math.max(400,1200-hits*20);
-  clearTimeout(spawnTimer);
-  spawnTimer=setTimeout(spawnTarget,delay);
-}
-
-function spawnTarget(){
-  if(!gameRunning)return;
-  const r=Math.max(18,36-Math.floor(hits/10)*2);
-  const x=r+30+Math.random()*(W-2*r-60);
-  const y=r+30+Math.random()*(H-2*r-60);
-  const life=Math.max(600,1500-hits*25);
-  const color=['#00f5ff','#bf00ff','#ff006e','#00ff88','#ffe600','#ff6b00'][Math.floor(Math.random()*6)];
-  target={x,y,r,life,maxLife:life,color,born:Date.now()};
-  setTimeout(()=>{
-    if(target&&target.born===target.born&&gameRunning){
-      if(target)missTarget();
-    }
-  },life);
-}
-
-function missTarget(){
-  misses++;
-  timer=Math.max(0,timer-3);
-  combo=0;
-  target=null;
-  updateUI();
-  scheduleTarget();
-}
-
-canvas.addEventListener('click',e=>{
-  if(!gameRunning||!target)return;
-  const rect=canvas.getBoundingClientRect();
-  const mx=e.clientX-rect.left;
-  const my=e.clientY-rect.top;
-  const dx=mx-target.x,dy=my-target.y;
-  if(Math.sqrt(dx*dx+dy*dy)<=target.r+8){
-    const rt=Date.now()-target.born;
-    reactionTimes.push(rt);
-    combo++;
-    const pts=10*Math.max(1,combo);
-    score+=pts;
-    hits++;
-    spawnHitEffect(target.x,target.y,target.color,pts);
-    target=null;
-    updateUI();
-    updateRoundsList(rt);
-    scheduleTarget();
-  }
-});
-
-const effects=[];
-function spawnHitEffect(x,y,color,pts){
-  effects.push({x,y,color,pts,life:1,r:0});
-}
-
-function loop(){
-  ctx.fillStyle='#020208';
-  ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(0,245,255,0.025)';
-  for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40)ctx.fillRect(x-1,y-1,2,2);
-
-  // effects
-  for(let i=effects.length-1;i>=0;i--){
-    const e=effects[i];
-    ctx.save();
-    ctx.globalAlpha=e.life;
-    ctx.strokeStyle=e.color;
-    ctx.lineWidth=2;
-    ctx.shadowColor=e.color;ctx.shadowBlur=10;
-    ctx.beginPath();ctx.arc(e.x,e.y,e.r*30,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle=e.color;
-    ctx.font='bold 14px Orbitron,monospace';ctx.textAlign='center';
-    ctx.fillText('+'+e.pts,e.x,e.y-e.r*30-10);
-    ctx.restore();
-    e.life-=0.05;e.r+=0.05;
-    if(e.life<=0)effects.splice(i,1);
-  }
-
-  if(target){
-    const age=Date.now()-target.born;
-    const ratio=1-(age/target.maxLife);
-    ctx.save();
-    ctx.shadowColor=target.color;ctx.shadowBlur=20*ratio;
-    // pulse ring
-    ctx.strokeStyle=target.color;ctx.lineWidth=1.5;ctx.globalAlpha=ratio*0.4;
-    ctx.beginPath();ctx.arc(target.x,target.y,target.r+10+age/100,0,Math.PI*2);ctx.stroke();
-    // main circle
-    ctx.globalAlpha=ratio;
-    ctx.fillStyle=target.color;
-    ctx.shadowBlur=25*ratio;
-    ctx.beginPath();ctx.arc(target.x,target.y,target.r,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.fillStyle='rgba(255,255,255,0.6)';
-    ctx.beginPath();ctx.arc(target.x-target.r*0.3,target.y-target.r*0.3,target.r*0.25,0,Math.PI*2);ctx.fill();
-    // timer arc
-    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=3;ctx.globalAlpha=1;
-    ctx.beginPath();ctx.arc(target.x,target.y,target.r+5,-Math.PI/2,-Math.PI/2+ratio*Math.PI*2);ctx.stroke();
-    ctx.restore();
-  }
-
-  if(gameRunning)animFrame=requestAnimationFrame(loop);
-}
-
-function updateUI(){
-  document.getElementById('score-el').textContent=score;
-  document.getElementById('hits-el').textContent=hits;
-  document.getElementById('miss-el').textContent=misses;
-  document.getElementById('combo-el').textContent='x'+Math.max(1,combo);
-  const total=hits+misses;
-  const acc=total>0?Math.round(hits/total*100):100;
-  document.getElementById('acc-el').textContent=acc+'%';
-}
-
-function updateRoundsList(rt){
-  const list=document.getElementById('rounds-list');
-  const row=document.createElement('div');
-  row.className='round-row';
-  const color=rt<300?'var(--green)':rt<600?'var(--yellow)':'var(--pink)';
-  row.innerHTML=`<span class="round-n">Hit #${hits}</span><span class="round-t" style="color:${color}">${rt}ms</span>`;
-  list.insertBefore(row,list.firstChild);
-  if(list.children.length>8)list.removeChild(list.lastChild);
-}
-
-function endGame(){
-  gameRunning=false;
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimer);
-  cancelAnimationFrame(animFrame);
-  const total=hits+misses;
-  const acc=total>0?Math.round(hits/total*100):100;
-  const finalScore=Math.round(score*(acc/100));
-  const isNew=finalScore>best;
-  if(isNew){best=finalScore;localStorage.setItem('rr_best',best);}
-  document.getElementById('fs-score').textContent=finalScore;
-  document.getElementById('fs-best').textContent=best;
-  document.getElementById('fs-hits').textContent=hits;
-  document.getElementById('fs-acc').textContent=acc+'%';
-  document.getElementById('new-best').classList.toggle('show',isNew);
-  document.getElementById('gameover-screen').classList.remove('hidden');
-}
-
-ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
 </script>
 </body>
 </html>
