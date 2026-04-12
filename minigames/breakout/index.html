@@ -16,11 +16,13 @@
     --neon-green: #00ff88;
     --neon-yellow: #ffe600;
     --neon-orange: #ff6b00;
+    --neon-red: #ff003c;
+    --bg-dark: #050510;
   }
 
   html, body {
     min-height: 100vh;
-    background: #050510;
+    background: var(--bg-dark);
     color: #e0e8ff;
     font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
@@ -37,13 +39,13 @@
     pointer-events: none;
   }
 
+  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
   .scanline {
     position: fixed; left: 0; right: 0; height: 2px;
     background: linear-gradient(transparent, rgba(0,245,255,0.03), transparent);
     animation: scanline 9s linear infinite;
     pointer-events: none; z-index: 0;
   }
-  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
 
   nav {
     position: relative; z-index: 10;
@@ -88,6 +90,14 @@
   .overlay-icon { font-size: 46px; margin-bottom: 10px; }
   .overlay-title { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 900; margin-bottom: 7px; letter-spacing: 2px; }
   .overlay-sub { font-size: 13px; color: #a0b0ff; text-align: center; line-height: 1.7; margin-top: 8px; }
+
+  .btn {
+    font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 12px 28px; border-radius: 7px; cursor: pointer; margin-top: 20px;
+  }
+  .btn-pink { background: rgba(255,0,110,0.12); color: var(--neon-pink); border: 1px solid rgba(255,0,110,0.3); }
+  .btn-cyan { background: rgba(0,245,255,0.12); color: var(--neon-cyan); border: 1px solid rgba(0,245,255,0.3); }
 </style>
 </head>
 <body>
@@ -113,6 +123,7 @@
   <div class="canvas-wrap">
     <canvas id="gameCanvas" width="500" height="560"></canvas>
 
+    <!-- Start Screen -->
     <div class="overlay" id="start-screen">
       <div class="overlay-icon">🧱</div>
       <div class="overlay-title" style="color:var(--neon-pink)">BREAKOUT</div>
@@ -121,7 +132,18 @@
         Break bricks to get Power-ups:<br>
         ❤️ Extra Life &nbsp; 📏 Bigger Paddle &nbsp; ⚡ Speed Up &nbsp; 🔥 Multi-Ball
       </div>
-      <button class="btn btn-pink" onclick="startGame()" style="margin-top:30px;padding:12px 28px;">START GAME</button>
+      <button class="btn btn-pink" onclick="startGame()">START GAME</button>
+    </div>
+
+    <!-- Game Over Screen (Neon Themed) -->
+    <div class="overlay hidden" id="gameover-screen">
+      <div class="overlay-icon">💥</div>
+      <div class="overlay-title" style="color:var(--neon-red)">GAME OVER</div>
+      <div class="overlay-sub" style="margin:15px 0">
+        Final Score: <span id="final-score" style="color:var(--neon-cyan);font-size:22px"></span><br>
+        Best: <span id="final-best" style="color:var(--neon-yellow);font-size:18px"></span>
+      </div>
+      <button class="btn btn-pink" onclick="startGame()">PLAY AGAIN</button>
     </div>
   </div>
 
@@ -221,16 +243,21 @@ function initRound() {
 
 function startGame() {
   document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('gameover-screen').classList.add('hidden');
+
   score = 0;
   lives = 3;
   level = 1;
   isInfinite = false;
   paddleWidth = PADDLE_W;
+
   bricks = createBricks(level);
   totalBricks = bricks.length;
   bricksLeft = totalBricks;
+
   initRound();
   updateUI();
+
   gameRunning = true;
   paused = false;
 }
@@ -273,7 +300,6 @@ function togglePause() {
 function update() {
   if (!gameRunning || paused || !paddle || balls.length === 0) return;
 
-  // Paddle movement
   if (keys['ArrowLeft'] || keys['a']) paddle.x = Math.max(0, paddle.x - 8);
   if (keys['ArrowRight'] || keys['d']) paddle.x = Math.min(W - paddle.w, paddle.x + 8);
   paddle.w = paddleWidth;
@@ -297,13 +323,10 @@ function update() {
 
     if (b.y > H + 50) {
       balls.splice(i, 1);
-      if (balls.length === 0) {
-        ballLost();
-      }
+      if (balls.length === 0) ballLost();
       continue;
     }
 
-    // Paddle hit
     if (b.dy > 0 && b.y + BALL_R >= paddle.y && b.y - BALL_R <= paddle.y + paddle.h &&
         b.x >= paddle.x && b.x <= paddle.x + paddle.w) {
       b.dy = -Math.abs(b.dy) * 1.02;
@@ -311,7 +334,6 @@ function update() {
       b.dx = hit * 7.5;
     }
 
-    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -351,7 +373,7 @@ function update() {
     }
   }
 
-  // Power-ups update & draw logic is in draw()
+  // Power-ups
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     p.y += p.vy;
@@ -418,14 +440,16 @@ function ballLost() {
       localStorage.setItem('breakout_best', bestScore);
       document.getElementById('best-display').textContent = bestScore;
     }
-    setTimeout(() => alert("Game Over!\nFinal Score: " + score), 400);
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('final-best').textContent = bestScore;
+    document.getElementById('gameover-screen').classList.remove('hidden');
   } else {
     // Reset for next life
     setTimeout(() => {
       initRound();
       gameRunning = true;
       paused = false;
-    }, 600);
+    }, 800);
   }
 }
 
@@ -519,10 +543,9 @@ function draw() {
   ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
   ctx.shadowBlur = 0;
 
-  // Power-ups - Made very visible
+  // Power-ups
   for (const p of powerups) {
     const glow = 19 + Math.sin(p.pulse) * 5;
-
     ctx.shadowBlur = 30;
     ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
