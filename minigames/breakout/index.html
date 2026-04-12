@@ -16,13 +16,11 @@
     --neon-green: #00ff88;
     --neon-yellow: #ffe600;
     --neon-orange: #ff6b00;
-    --neon-red: #ff003c;
-    --bg-dark: #050510;
   }
 
   html, body {
     min-height: 100vh;
-    background: var(--bg-dark);
+    background: #050510;
     color: #e0e8ff;
     font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
@@ -39,13 +37,13 @@
     pointer-events: none;
   }
 
-  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
   .scanline {
     position: fixed; left: 0; right: 0; height: 2px;
     background: linear-gradient(transparent, rgba(0,245,255,0.03), transparent);
     animation: scanline 9s linear infinite;
     pointer-events: none; z-index: 0;
   }
+  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
 
   nav {
     position: relative; z-index: 10;
@@ -64,7 +62,6 @@
     border: 1px solid rgba(255,230,0,0.3);
     background: rgba(255,230,0,0.08); color: var(--neon-yellow);
   }
-  .pause-btn:hover { background: rgba(255,230,0,0.18); box-shadow: 0 0 12px rgba(255,230,0,0.2); }
 
   .game-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 14px; gap: 18px; }
   .side-panel { display: flex; flex-direction: column; gap: 10px; width: 145px; flex-shrink: 0; }
@@ -81,7 +78,6 @@
   .heart.lost { opacity: 0.2; }
 
   canvas { display: block; border-radius: 8px; background: #020208; border: 1px solid rgba(0,245,255,0.08); }
-  canvas.shake { animation: shake 0.35s ease; }
 
   .overlay {
     position: absolute; inset: 0; border-radius: 8px;
@@ -106,7 +102,6 @@
 </nav>
 
 <div class="game-wrapper">
-  <!-- Left Panel -->
   <div class="side-panel">
     <div class="panel-card"><div class="panel-label">SCORE</div><div class="panel-value" id="score-display">0</div></div>
     <div class="panel-card" style="border-color:rgba(255,230,0,0.15)"><div class="panel-label">BEST</div><div class="panel-value" id="best-display" style="color:var(--neon-yellow)">0</div></div>
@@ -115,7 +110,6 @@
     <div class="panel-card" style="border-color:rgba(255,0,110,0.1)"><div class="panel-label">BRICKS</div><div class="panel-value" id="bricks-display" style="color:var(--neon-pink)">0</div><div class="progress-bar"><div class="progress-fill" id="brick-progress" style="width:100%"></div></div></div>
   </div>
 
-  <!-- Canvas -->
   <div class="canvas-wrap">
     <canvas id="gameCanvas" width="500" height="560"></canvas>
 
@@ -127,11 +121,10 @@
         Break bricks to get Power-ups:<br>
         ❤️ Extra Life &nbsp; 📏 Bigger Paddle &nbsp; ⚡ Speed Up &nbsp; 🔥 Multi-Ball
       </div>
-      <button class="btn btn-pink" onclick="startGame()" style="margin-top: 30px; padding: 12px 28px;">START GAME</button>
+      <button class="btn btn-pink" onclick="startGame()" style="margin-top:30px;padding:12px 28px;">START GAME</button>
     </div>
   </div>
 
-  <!-- Right Panel -->
   <div class="side-panel">
     <div class="panel-card" style="border-color:rgba(0,255,136,0.1)"><div class="panel-label">COMBO</div><div class="panel-value" id="combo-display" style="color:var(--neon-green)">x1</div></div>
     <div class="panel-card" style="border-color:rgba(255,107,0,0.1)"><div class="panel-label">SPEED</div><div id="speed-dots" style="display:flex;gap:3px;justify-content:center;margin-top:8px"></div></div>
@@ -150,10 +143,23 @@ const BRICK_W = 43, BRICK_H = 16, BRICK_GAP = 4;
 const BRICK_OFFSET_X = (W - (BRICK_COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP)) / 2;
 const BRICK_OFFSET_Y = 50;
 
-let paddle, balls = [], bricks = [], particles = [], powerups = [], scorePopups = [];
-let score = 0, bestScore = parseInt(localStorage.getItem('breakout_best') || '0'), lives = 3, level = 1, combo = 0;
-let gameRunning = false, paused = false, isInfinite = false;
-let totalBricks = 0, bricksLeft = 0;
+let paddle = null;
+let balls = [];
+let bricks = [];
+let particles = [];
+let powerups = [];
+let scorePopups = [];
+
+let score = 0;
+let bestScore = parseInt(localStorage.getItem('breakout_best') || '0');
+let lives = 3;
+let level = 1;
+let combo = 0;
+let gameRunning = false;
+let paused = false;
+let isInfinite = false;
+let totalBricks = 0;
+let bricksLeft = 0;
 let paddleWidth = PADDLE_W;
 let paddleExpandTimer = 0;
 let descendTimer = 0;
@@ -162,13 +168,16 @@ let ballLaunched = false;
 document.getElementById('best-display').textContent = bestScore;
 
 const keys = {};
+
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
   if (e.key === ' ' && gameRunning && !paused && !ballLaunched) launchBall();
   if (e.key.toLowerCase() === 'p') togglePause();
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
-canvas.addEventListener('click', () => { if (gameRunning && !paused && !ballLaunched) launchBall(); });
+canvas.addEventListener('click', () => {
+  if (gameRunning && !paused && !ballLaunched) launchBall();
+});
 
 function createBricks(lvl, isInf = false) {
   const arr = [];
@@ -195,15 +204,15 @@ function createBricks(lvl, isInf = false) {
 function initRound() {
   paddle = { x: W/2 - paddleWidth/2, y: PADDLE_Y, w: paddleWidth, h: PADDLE_H };
   balls = [{
-    x: W/2, 
+    x: W/2,
     y: PADDLE_Y - BALL_R - 2,
-    dx: 0, 
+    dx: 0,
     dy: 0,
     speed: 5.5 + (level-1)*0.7,
     trail: []
   }];
-  particles = []; 
-  powerups = []; 
+  particles = [];
+  powerups = [];
   scorePopups = [];
   combo = 0;
   ballLaunched = false;
@@ -212,13 +221,13 @@ function initRound() {
 
 function startGame() {
   document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
-  score = 0; 
-  lives = 3; 
-  level = 1; 
-  isInfinite = false; 
+  score = 0;
+  lives = 3;
+  level = 1;
+  isInfinite = false;
   paddleWidth = PADDLE_W;
   bricks = createBricks(level);
-  totalBricks = bricks.length; 
+  totalBricks = bricks.length;
   bricksLeft = totalBricks;
   initRound();
   updateUI();
@@ -241,7 +250,7 @@ function nextLevel() {
   totalBricks += newBricks.length;
   bricksLeft += newBricks.length;
 
-  initRound();
+  initRound();           // This is critical - full reset
   updateUI();
   gameRunning = true;
   paused = false;
@@ -262,14 +271,13 @@ function togglePause() {
 }
 
 function update() {
-  if (!gameRunning || paused || !paddle) return;
+  if (!gameRunning || paused || !paddle || balls.length === 0) return;
 
   // Paddle movement
   if (keys['ArrowLeft'] || keys['a']) paddle.x = Math.max(0, paddle.x - 8);
   if (keys['ArrowRight'] || keys['d']) paddle.x = Math.min(W - paddle.w, paddle.x + 8);
   paddle.w = paddleWidth;
 
-  // Update all balls
   for (let i = balls.length - 1; i >= 0; i--) {
     const b = balls[i];
 
@@ -301,7 +309,7 @@ function update() {
       b.dx = hit * 7.5;
     }
 
-    // Brick collision
+    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -364,7 +372,6 @@ function update() {
     if (paddleExpandTimer === 0) paddleWidth = PADDLE_W;
   }
 
-  // Infinite mode descend
   if (isInfinite) {
     descendTimer++;
     if (descendTimer > 85) {
@@ -385,12 +392,14 @@ function activatePowerUp(type) {
   }
   else if (type === 'speed') {
     balls.forEach(b => b.speed = Math.min(19, b.speed + 3));
-    updateSpeedDots(balls[0].speed);   // Important: update speed display
+    updateSpeedDots(balls[0] ? balls[0].speed : 5.5);
   }
   else if (type === 'multiball' && balls.length < 4) {
     const main = balls[0];
-    balls.push({x:main.x, y:main.y, dx:main.dx*0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
-    balls.push({x:main.x, y:main.y, dx:main.dx*-0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
+    if (main) {
+      balls.push({x:main.x, y:main.y, dx:main.dx*0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
+      balls.push({x:main.x, y:main.y, dx:main.dx*-0.9, dy:main.dy*-1.1, speed:main.speed, trail:[]});
+    }
   }
   updateLives();
   spawnParticles(paddle.x + paddle.w/2, paddle.y - 15, '#00ff88', 30);
@@ -418,132 +427,4 @@ function spawnParticles(x, y, color, count = 12) {
     particles.push({ 
       x, y, 
       vx: Math.cos(a)* (2.5 + Math.random()*3), 
-      vy: Math.sin(a)* (2.5 + Math.random()*3) - 2.5, 
-      life: 1, 
-      color 
-    });
-  }
-}
-
-function spawnScorePopup(x, y, text) {
-  scorePopups.push({ x, y, text, life: 1.3 });
-}
-
-function updateUI() {
-  document.getElementById('score-display').textContent = score;
-  document.getElementById('bricks-display').textContent = bricksLeft;
-  document.getElementById('combo-display').textContent = `x${Math.max(1, combo)}`;
-  document.getElementById('brick-progress').style.width = totalBricks ? (bricksLeft / totalBricks * 100) + '%' : '0%';
-  updateLives();
-}
-
-function updateLives() {
-  const el = document.getElementById('lives-display');
-  el.innerHTML = '';
-  for (let i = 0; i < 3; i++) {
-    const h = document.createElement('span');
-    h.className = 'heart' + (i >= lives ? ' lost' : '');
-    h.textContent = '❤️';
-    el.appendChild(h);
-  }
-}
-
-function updateSpeedDots(spd) {
-  const el = document.getElementById('speed-dots');
-  el.innerHTML = '';
-  const filled = Math.min(10, Math.floor((spd - 4) * 1.3) + 1);
-  for (let i = 0; i < 10; i++) {
-    const d = document.createElement('div');
-    d.style.cssText = `width:8px; height:8px; border-radius:50%; margin:1px; background:${i < filled ? 'var(--neon-orange)' : 'rgba(255,255,255,0.15)'};`;
-    el.appendChild(d);
-  }
-}
-
-function draw() {
-  ctx.fillStyle = '#020208';
-  ctx.fillRect(0, 0, W, H);
-
-  if (!paddle) return;
-
-  // Bricks
-  for (const b of bricks) {
-    if (!b.alive) continue;
-    ctx.shadowBlur = 14;
-    ctx.shadowColor = b.color;
-    ctx.fillStyle = b.color;
-    ctx.fillRect(b.x, b.y, b.w, b.h);
-  }
-  ctx.shadowBlur = 0;
-
-  // Balls
-  for (const b of balls) {
-    for (let i = 0; i < b.trail.length; i++) {
-      ctx.globalAlpha = i / b.trail.length * 0.6;
-      ctx.fillStyle = '#00f5ff';
-      ctx.beginPath();
-      ctx.arc(b.trail[i].x, b.trail[i].y, BALL_R * 0.75, 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    ctx.shadowBlur = 26;
-    ctx.shadowColor = '#00f5ff';
-    ctx.fillStyle = '#00f5ff';
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, BALL_R, 0, Math.PI*2);
-    ctx.fill();
-  }
-  ctx.shadowBlur = 0;
-
-  // Paddle
-  ctx.shadowBlur = 22;
-  ctx.shadowColor = '#00f5ff';
-  ctx.fillStyle = '#00f5ff';
-  ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-  ctx.shadowBlur = 0;
-
-  // Power-ups
-  for (const p of powerups) {
-    const glow = 18 + Math.sin(p.pulse) * 4;
-    ctx.shadowBlur = 28;
-    ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, glow, 0, Math.PI*2);
-    ctx.fill();
-
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 14, 0, Math.PI*2);
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-    ctx.font = 'bold 18px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    const emoji = p.type === 'life' ? '❤️' : p.type === 'expand' ? '📏' : p.type === 'speed' ? '⚡' : '🔥';
-    ctx.fillText(emoji, p.x, p.y + 6);
-  }
-
-  for (const p of particles) {
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
-  }
-  ctx.globalAlpha = 1;
-}
-
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-// Initialize
-updateLives();
-updateSpeedDots(5.5);
-gameLoop();
-</script>
-</body>
-</html>
+      vy: Math.sin(a)* (2.5 + Math.random()*3) - 2
