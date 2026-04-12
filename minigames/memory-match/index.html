@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Match – GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#0088ff;--cyan:#00f5ff;--green:#39ff14;--yellow:#ffe600;--pink:#ff006e;--purple:#bf00ff;--bg:#050a0f;--card:#0d1117;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,136,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,136,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .topbar{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(5,10,15,0.9);border-bottom:1px solid rgba(0,136,255,0.15);backdrop-filter:blur(12px);z-index:100;}
+  .back-btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--blue);padding:8px 18px;border:1px solid var(--blue);border-radius:4px;background:rgba(0,136,255,0.05);cursor:pointer;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(0,136,255,0.15);box-shadow:0 0 18px rgba(0,136,255,0.4);}
+  .logo{font-family:'Orbitron',monospace;font-weight:900;font-size:18px;}.logo span:first-child{color:#fff;}.logo span:last-child{color:var(--cyan);}
+  .diff-badge{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 14px;background:rgba(0,255,136,0.1);border:1px solid #00ff88;color:#00ff88;border-radius:4px;}
+  main{position:relative;z-index:1;padding-top:78px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .game-title{font-family:'Orbitron',monospace;font-weight:900;font-size:24px;background:linear-gradient(135deg,var(--blue),var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .hud{display:flex;gap:12px;}
+  .hud-card{background:var(--card);border-radius:8px;padding:10px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);min-width:90px;}
+  .hud-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:#555;margin-bottom:4px;}
+  .hud-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;}
+  .hud-val.mv{color:var(--blue);text-shadow:0 0 12px var(--blue);}
+  .hud-val.mt{color:var(--cyan);text-shadow:0 0 12px var(--cyan);}
+  .hud-val.be{color:var(--yellow);text-shadow:0 0 12px var(--yellow);}
+  .grid{display:grid;grid-template-columns:repeat(4,80px);grid-template-rows:repeat(4,80px);gap:10px;}
+  .card{width:80px;height:80px;perspective:600px;cursor:pointer;}
+  .card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.4s;}
+  .card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg);}
+  .card-front,.card-back{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;}
+  .card-back{background:var(--card);border:1px solid rgba(0,136,255,0.2);box-shadow:0 0 10px rgba(0,136,255,0.1);}
+  .card-back::after{content:'?';font-family:'Orbitron',monospace;font-size:22px;color:rgba(0,136,255,0.4);}
+  .card-front{background:#0a0a20;border:1px solid rgba(255,255,255,0.1);transform:rotateY(180deg);font-size:34px;}
+  .card.matched .card-front{border-color:rgba(57,255,20,0.4);box-shadow:0 0 18px rgba(57,255,20,0.2);background:#030a03;}
+  #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,10,15,0.93);z-index:200;gap:18px;}
+  .gtitle{font-family:'Orbitron',monospace;font-weight:900;font-size:28px;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .gsub{font-size:14px;color:#555;text-align:center;line-height:1.6;}
+  .pbtn{font-family:'Orbitron',monospace;font-weight:700;font-size:12px;letter-spacing:3px;padding:13px 36px;border:none;border-radius:6px;cursor:pointer;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#000;box-shadow:0 0 28px rgba(0,136,255,0.4);transition:transform 0.15s;}
+  .pbtn:hover{transform:scale(1.05);}
+  .fscore{font-family:'Orbitron',monospace;font-size:40px;font-weight:900;color:var(--blue);text-shadow:0 0 25px var(--blue);}
+  .nbest{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;color:var(--yellow);animation:blink 0.8s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .act-btn{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;padding:9px 20px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:transparent;color:#555;cursor:pointer;transition:all 0.2s;}
+  .act-btn:hover{border-color:var(--blue);color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← MINI GAMES</button>
+  <div class="logo"><span>GAME</span><span>HUB</span></div>
+  <div class="diff-badge">EASY</div>
+</div>
+
+<div id="overlay">
+  <div style="font-size:50px">🃏</div>
+  <div class="gtitle">MEMORY MATCH</div>
+  <div class="gsub">Flip and match neon symbol cards.<br>Clear the board in the fewest moves!</div>
+  <button class="pbtn" id="startBtn">▶ START GAME</button>
+</div>
+
+<main>
+  <div class="game-title">MEMORY MATCH</div>
+  <div class="hud">
+    <div class="hud-card"><div class="hud-label">MOVES</div><div class="hud-val mv" id="movesEl">0</div></div>
+    <div class="hud-card"><div class="hud-label">MATCHED</div><div class="hud-val mt" id="matchEl">0/8</div></div>
+    <div class="hud-card"><div class="hud-label">BEST</div><div class="hud-val be" id="bestEl">--</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <button class="act-btn" onclick="startGame()">↺ NEW GAME</button>
+</main>
+
+<script>
+const SYMBOLS=['🔥','⚡','💎','🎯','🌀','🎮','💜','🚀'];
+let cards=[],flipped=[],matched=0,moves=0,locked=false;
+let best=parseInt(localStorage.getItem('memory_best')||'0');
+document.getElementById('bestEl').textContent=best||'--';
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function startGame(){
+  document.getElementById('overlay').style.display='none';
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';flipped=[];matched=0;moves=0;locked=false;
+  document.getElementById('movesEl').textContent=0;
+  document.getElementById('matchEl').textContent='0/8';
+  const pairs=shuffle([...SYMBOLS,...SYMBOLS]);
+  cards=pairs.map((sym,i)=>{
+    const card=document.createElement('div');card.className='card';
+    card.innerHTML=`<div class="card-inner"><div class="card-back"></div><div class="card-front">${sym}</div></div>`;
+    card.dataset.sym=sym;card.dataset.idx=i;
+    card.onclick=()=>flipCard(card);
+    grid.appendChild(card);return card;
+  });
+}
+
+function flipCard(card){
+  if(locked||card.classList.contains('flipped')||card.classList.contains('matched'))return;
+  card.classList.add('flipped');flipped.push(card);
+  if(flipped.length===2){
+    moves++;document.getElementById('movesEl').textContent=moves;locked=true;
+    setTimeout(()=>{
+      if(flipped[0].dataset.sym===flipped[1].dataset.sym){
+        flipped.forEach(c=>c.classList.add('matched'));
+        matched++;document.getElementById('matchEl').textContent=`${matched}/8`;
+        if(matched===8)setTimeout(win,300);
+      } else {flipped.forEach(c=>c.classList.remove('flipped'));}
+      flipped=[];locked=false;
+    },700);
+  }
+}
+
+function win(){
+  const ol=document.getElementById('overlay');ol.style.display='flex';
+  const isNew=!best||moves<best;
+  if(isNew){best=moves;localStorage.setItem('memory_best',best);localStorage.setItem('total_plays',parseInt(localStorage.getItem('total_plays')||0)+1);document.getElementById('bestEl').textContent=best;}
+  ol.innerHTML=`
+    <div style="font-size:50px">🏆</div>
+    <div class="gtitle">BOARD CLEARED!</div>
+    <div style="text-align:center">
+      <div style="font-family:Orbitron,monospace;font-size:10px;letter-spacing:2px;color:#555;margin-bottom:6px">MOVES USED</div>
+      <div class="fscore">${moves}</div>
+      ${isNew?'<div class="nbest">✦ NEW BEST ✦</div>':''}
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="pbtn" id="startBtn" style="padding:11px 26px;font-size:10px">▶ PLAY AGAIN</button>
+      <button class="pbtn" onclick="history.back()" style="padding:11px 26px;font-size:10px;background:linear-gradient(135deg,#333,#222);color:#fff;box-shadow:none">← HUB</button>
+    </div>`;
+  document.getElementById('startBtn').onclick=startGame;
+}
+
+document.getElementById('startBtn').addEventListener('click',startGame);
+</script>
+</body>
+</html>
