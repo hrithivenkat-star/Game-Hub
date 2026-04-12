@@ -37,13 +37,13 @@
     pointer-events: none;
   }
 
+  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
   .scanline {
     position: fixed; left: 0; right: 0; height: 2px;
     background: linear-gradient(transparent, rgba(0,245,255,0.03), transparent);
     animation: scanline 9s linear infinite;
     pointer-events: none; z-index: 0;
   }
-  @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
 
   nav {
     position: relative; z-index: 10;
@@ -220,17 +220,21 @@ function initRound() {
 }
 
 function startGame() {
-  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('start-screen').classList.add('hidden');
+
   score = 0;
   lives = 3;
   level = 1;
   isInfinite = false;
   paddleWidth = PADDLE_W;
+
   bricks = createBricks(level);
   totalBricks = bricks.length;
   bricksLeft = totalBricks;
+
   initRound();
   updateUI();
+
   gameRunning = true;
   paused = false;
 }
@@ -250,7 +254,7 @@ function nextLevel() {
   totalBricks += newBricks.length;
   bricksLeft += newBricks.length;
 
-  initRound();           // This is critical - full reset
+  initRound();
   updateUI();
   gameRunning = true;
   paused = false;
@@ -301,7 +305,6 @@ function update() {
       continue;
     }
 
-    // Paddle hit
     if (b.dy > 0 && b.y + BALL_R >= paddle.y && b.y - BALL_R <= paddle.y + paddle.h &&
         b.x >= paddle.x && b.x <= paddle.x + paddle.w) {
       b.dy = -Math.abs(b.dy) * 1.02;
@@ -309,7 +312,6 @@ function update() {
       b.dx = hit * 7.5;
     }
 
-    // Brick hit
     for (let j = 0; j < bricks.length; j++) {
       const br = bricks[j];
       if (!br.alive) continue;
@@ -427,4 +429,132 @@ function spawnParticles(x, y, color, count = 12) {
     particles.push({ 
       x, y, 
       vx: Math.cos(a)* (2.5 + Math.random()*3), 
-      vy: Math.sin(a)* (2.5 + Math.random()*3) - 2
+      vy: Math.sin(a)* (2.5 + Math.random()*3) - 2.5, 
+      life: 1, 
+      color 
+    });
+  }
+}
+
+function spawnScorePopup(x, y, text) {
+  scorePopups.push({ x, y, text, life: 1.3 });
+}
+
+function updateUI() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('bricks-display').textContent = bricksLeft;
+  document.getElementById('combo-display').textContent = `x${Math.max(1, combo)}`;
+  document.getElementById('brick-progress').style.width = totalBricks ? (bricksLeft / totalBricks * 100) + '%' : '0%';
+  updateLives();
+}
+
+function updateLives() {
+  const el = document.getElementById('lives-display');
+  el.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart' + (i >= lives ? ' lost' : '');
+    h.textContent = '❤️';
+    el.appendChild(h);
+  }
+}
+
+function updateSpeedDots(spd) {
+  const el = document.getElementById('speed-dots');
+  el.innerHTML = '';
+  const filled = Math.min(10, Math.floor((spd - 4) * 1.3) + 1);
+  for (let i = 0; i < 10; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = `width:8px;height:8px;border-radius:50%;margin:1px;background:${i < filled ? 'var(--neon-orange)' : 'rgba(255,255,255,0.15)'};`;
+    el.appendChild(d);
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#020208';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!paddle || balls.length === 0) return;
+
+  // Bricks
+  for (const b of bricks) {
+    if (!b.alive) continue;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = b.color;
+    ctx.fillStyle = b.color;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+  }
+  ctx.shadowBlur = 0;
+
+  // Balls
+  for (const b of balls) {
+    for (let i = 0; i < b.trail.length; i++) {
+      ctx.globalAlpha = i / b.trail.length * 0.6;
+      ctx.fillStyle = '#00f5ff';
+      ctx.beginPath();
+      ctx.arc(b.trail[i].x, b.trail[i].y, BALL_R * 0.75, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.shadowBlur = 26;
+    ctx.shadowColor = '#00f5ff';
+    ctx.fillStyle = '#00f5ff';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, BALL_R, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Paddle
+  ctx.shadowBlur = 22;
+  ctx.shadowColor = '#00f5ff';
+  ctx.fillStyle = '#00f5ff';
+  ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+  ctx.shadowBlur = 0;
+
+  // Power-ups
+  for (const p of powerups) {
+    const glow = 18 + Math.sin(p.pulse) * 4;
+    ctx.shadowBlur = 28;
+    ctx.shadowColor = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, glow, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = p.type === 'life' ? '#ff006e' : p.type === 'expand' ? '#ffe600' : p.type === 'speed' ? '#ff6b00' : '#00ff88';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 14, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    const emoji = p.type === 'life' ? '❤️' : p.type === 'expand' ? '📏' : p.type === 'speed' ? '⚡' : '🔥';
+    ctx.fillText(emoji, p.x, p.y + 6);
+  }
+
+  for (const p of particles) {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+// Initialize
+updateLives();
+updateSpeedDots(5.5);
+gameLoop();
+</script>
+</body>
+</html>
