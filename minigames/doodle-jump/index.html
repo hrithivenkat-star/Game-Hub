@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Doodle Jump — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--border:rgba(0,245,255,0.2);}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:1000;}
+  nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(2,4,8,0.95);border-bottom:1px solid var(--border);z-index:100;}
+  nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:0.7;}
+  .nav-logo{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--green);letter-spacing:3px;text-shadow:0 0 20px var(--green);}
+  .stats-bar{position:fixed;top:52px;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:center;gap:40px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);z-index:99;}
+  .stat{display:flex;flex-direction:column;align-items:center;}
+  .stat-label{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:2px;}
+  .stat-value{font-size:15px;color:var(--cyan);font-family:'Orbitron',monospace;font-weight:700;text-shadow:0 0 10px var(--cyan);}
+  .game-wrap{position:fixed;top:96px;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;padding:8px;}
+  .canvas-box{position:relative;border:1px solid var(--border);box-shadow:0 0 40px rgba(0,245,255,0.08);border-radius:4px;overflow:hidden;}
+  canvas{display:block;}
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,4,8,0.92);gap:14px;}
+  .overlay.hidden{opacity:0;pointer-events:none;}
+  .ot{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(26px,5vw,46px);color:var(--green);text-shadow:0 0 30px var(--green);letter-spacing:4px;}
+  .os{font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-align:center;}
+  .oscore{font-family:'Orbitron',monospace;font-size:20px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+  .btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;}
+  .btn:hover{box-shadow:0 0 25px rgba(0,245,255,0.5);background:rgba(0,245,255,0.1);}
+  .new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  /* Tilt indicator */
+  .tilt-bar{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);width:120px;height:8px;background:rgba(0,245,255,0.1);border:1px solid var(--border);border-radius:4px;overflow:hidden;display:none;}
+  .tilt-fill{height:100%;width:50%;background:var(--cyan);transition:width .1s;}
+  @media(hover:none){.tilt-bar{display:block;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">🟢 DOODLE JUMP</span>
+  <a href="/minigames/index.html">MINI GAMES</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">HEIGHT</span><span class="stat-value" id="score">0</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="best">0</span></div>
+  <div class="stat"><span class="stat-label">COMBO</span><span class="stat-value" id="combo">0</span></div>
+</div>
+<div class="game-wrap">
+  <div class="canvas-box" id="cb">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="startOv">
+      <div class="ot">DOODLE JUMP</div>
+      <div class="os">JUMP. CLIMB. SURVIVE.</div>
+      <button class="btn" id="startBtn">▶ PLAY</button>
+      <div class="os">← → ARROWS / A D / TILT</div>
+    </div>
+    <div class="overlay hidden" id="gameoverOv">
+      <div class="ot" style="color:var(--pink);text-shadow:0 0 30px var(--pink)">SPLAT</div>
+      <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+      <div class="oscore">HEIGHT: <span id="finalScore">0</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4)">BEST: <span id="finalBest">0</span></div>
+      <button class="btn" id="reBtn">↺ JUMP AGAIN</button>
+      <a href="/minigames/index.html" style="color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:2px">← BACK</a>
+    </div>
+  </div>
+</div>
+<div class="tilt-bar"><div class="tilt-fill" id="tiltFill"></div></div>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),cb=document.getElementById('cb');
+let W=320,H=520;
+function resize(){
+  const wrap=cb.parentElement;
+  W=Math.min(360,wrap.clientWidth-16);
+  H=Math.min(560,wrap.clientHeight-16,W*1.7);
+  cv.width=W;cv.height=H;cb.style.width=W+'px';cb.style.height=H+'px';
+}
+resize(); window.addEventListener('resize',resize);
+
+let best=parseInt(localStorage.getItem('doodle_best')||'0');
+document.getElementById('best').textContent=best;
+
+// Platform types
+const PT={NORMAL:0,MOVING:1,SPRING:2,BREAKING:3,BOUNCER:4};
+const PCOLS={[PT.NORMAL]:'#00f5ff',[PT.MOVING]:'#ff9900',[PT.SPRING]:'#00ff88',[PT.BREAKING]:'#ff0080',[PT.BOUNCER]:'#ffee00'};
+
+let player,platforms,score,maxScore,combo,running,raf,cameraY,keys,tiltX,particles;
+let stars=[];
+for(let i=0;i<80;i++) stars.push({x:Math.random()*400,y:Math.random()*2000,r:Math.random()*1.2+0.3});
+
+function initPlatforms(){
+  platforms=[];
+  // Starting platform
+  platforms.push({x:W/2-30,y:H-60,w:80,h:12,type:PT.NORMAL,dx:0,broken:false,springComp:0});
+  let py=H-120;
+  while(py>H-H*15){
+    py-=60+Math.random()*40;
+    spawnPlatform(py);
+  }
+}
+
+function spawnPlatform(py){
+  const pw=50+Math.random()*40;
+  const px=Math.random()*(W-pw);
+  const rnd=Math.random();
+  let type=PT.NORMAL;
+  if(score>500&&rnd<0.12) type=PT.BREAKING;
+  else if(score>200&&rnd<0.15) type=PT.MOVING;
+  else if(rnd<0.1) type=PT.SPRING;
+  else if(score>800&&rnd<0.08) type=PT.BOUNCER;
+  platforms.push({x:px,y:py,w:pw,h:12,type,dx:(type===PT.MOVING?(Math.random()>0.5?1.2:-1.2):0),broken:false,springComp:0,breakTimer:0});
+}
+
+function initPlayer(){
+  player={x:W/2,y:H-80,vx:0,vy:0,w:28,h:28,onGround:false,squish:1,squishV:0,facing:1};
+}
+
+function start(){
+  score=0;maxScore=0;combo=0;
+  cameraY=0;
+  initPlatforms(); initPlayer();
+  particles=[];
+  running=true;
+  updateHUD();
+}
+
+function updateHUD(){
+  document.getElementById('score').textContent=Math.floor(score);
+  document.getElementById('best').textContent=best;
+  document.getElementById('combo').textContent=combo;
+}
+
+const GRAV=0.4, JUMP=-13, SPRING_JUMP=-20, BOUNCER_JUMP=-17;
+const MOVE_SPD=4.5;
+
+function update(){
+  if(!running) return;
+
+  // Input
+  let ax=0;
+  if(keys.left) ax=-1;
+  if(keys.right) ax=1;
+  if(tiltX!==0 && ax===0) ax=tiltX;
+  document.getElementById('tiltFill').style.width=(50+ax*40)+'%';
+
+  player.vx=ax*MOVE_SPD;
+  player.vy+=GRAV;
+  if(player.vy>18) player.vy=18;
+  player.x+=player.vx;
+  player.y+=player.vy;
+
+  // Wrap
+  if(player.x+player.w/2<0) player.x=W-player.w/2;
+  if(player.x-player.w/2>W) player.x=-player.w/2;
+
+  if(player.vx>0) player.facing=1; else if(player.vx<0) player.facing=-1;
+
+  // Squish
+  player.squishV+=(1-player.squish)*0.4; player.squishV*=0.7; player.squish+=player.squishV;
+
+  // Camera
+  const topEdge=H*0.4;
+  if(player.y-cameraY<topEdge){ cameraY=player.y-topEdge; }
+  const height=Math.max(0,-(cameraY));
+  score=Math.floor(height/5);
+  if(score>best){ best=score; localStorage.setItem('doodle_best',best); }
+  updateHUD();
+
+  // Platform collision
+  if(player.vy>0){
+    for(let p of platforms){
+      if(p.broken) continue;
+      const px=p.x-cameraY, pw=p.w, ph=p.h;
+      const py=p.y-cameraY; // wait, platform y is in world space
+      // World collision
+      const plWorldTop=p.y;
+      const plWorldBot=p.y+p.h;
+      const playerBot=player.y+player.h/2;
+      const playerTop=player.y-player.h/2;
+      const prevBot=playerBot-player.vy;
+
+      if(prevBot<=plWorldTop && playerBot>=plWorldTop && player.x+player.w/2-4>p.x && player.x-player.w/2+4<p.x+pw){
+        if(p.type===PT.BREAKING){
+          p.broken=true; p.breakTimer=20;
+          spawnJumpParticles(player.x,player.y+player.h/2,'#ff0080');
+        } else if(p.type===PT.SPRING){
+          player.vy=SPRING_JUMP; p.springComp=1;
+          combo++; updateHUD();
+          spawnJumpParticles(player.x,player.y+player.h/2,'#00ff88');
+        } else if(p.type===PT.BOUNCER){
+          player.vy=BOUNCER_JUMP;
+          spawnJumpParticles(player.x,player.y+player.h/2,'#ffee00');
+        } else {
+          player.vy=JUMP; player.y=plWorldTop-player.h/2;
+          combo++; updateHUD();
+          spawnJumpParticles(player.x,player.y+player.h/2,'#00f5ff');
+        }
+        player.squish=0.6; player.squishV=0.2;
+        break;
+      }
+    }
+  }
+
+  // Moving platforms
+  platforms.forEach(p=>{
+    if(p.type===PT.MOVING){ p.x+=p.dx; if(p.x<=0||p.x+p.w>=W) p.dx*=-1; }
+    if(p.springComp>0){ p.springComp-=0.08; }
+    if(p.breakTimer>0){ p.breakTimer--; }
+  });
+
+  // Spawn new platforms above camera
+  const topWorld=cameraY-100;
+  if(platforms[platforms.length-1] && platforms[platforms.length-1].y>topWorld){
+    let topY=platforms.reduce((m,p)=>Math.min(m,p.y),Infinity);
+    while(topY>topWorld){ topY-=60+Math.random()*40; spawnPlatform(topY); }
+  }
+  // Remove far-below platforms
+  platforms=platforms.filter(p=>p.y-cameraY<H+100);
+
+  // Particles
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.04;});
+  particles=particles.filter(p=>p.life>0);
+
+  // Fall death
+  if(player.y-cameraY>H+80){ die(); }
+}
+
+function spawnJumpParticles(x,y,col){
+  for(let i=0;i<8;i++) particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-1)*3,life:1,col});
+}
+
+function die(){
+  running=false;
+  const isNew=score>0;
+  document.getElementById('finalScore').textContent=Math.floor(score);
+  document.getElementById('finalBest').textContent=best;
+  document.getElementById('newBestMsg').style.display=isNew&&score>=best-1?'none':'none'; // show if actual new
+  // Actually check:
+  // already saved best above
+  document.getElementById('gameoverOv').classList.remove('hidden');
+}
+
+function drawPlatform(p){
+  const screenY=p.y-cameraY;
+  if(screenY>H+20||screenY<-20) return;
+  const col=PCOLS[p.type]||'#00f5ff';
+  ctx.save();
+  ctx.shadowBlur=10; ctx.shadowColor=col;
+  if(p.broken&&p.breakTimer>0){
+    ctx.globalAlpha=p.breakTimer/20;
+    ctx.translate(p.x+p.w/2,screenY+p.h/2);
+    ctx.rotate((20-p.breakTimer)*0.1);
+    ctx.translate(-(p.x+p.w/2),-(screenY+p.h/2));
+  }
+  const springH=p.type===PT.SPRING?(8+p.springComp*12):0;
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.roundRect(p.x,screenY,p.w,p.h-springH,4);
+  ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.fillRect(p.x+4,screenY+2,p.w-8,3);
+  if(p.type===PT.SPRING){
+    ctx.fillStyle='#00ff88';
+    ctx.fillRect(p.x+p.w/2-4,screenY-springH,8,springH);
+  }
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // BG
+  const gy=ctx.createLinearGradient(0,0,0,H);
+  gy.addColorStop(0,'#020408'); gy.addColorStop(1,'#040a18');
+  ctx.fillStyle=gy; ctx.fillRect(0,0,W,H);
+
+  // Stars (parallax)
+  stars.forEach(s=>{
+    const sy=((s.y-cameraY*0.2)%H+H)%H;
+    ctx.beginPath(); ctx.arc((s.x*W/400)%W,sy,s.r,0,Math.PI*2);
+    const alpha=0.2+0.3*Math.sin(Date.now()/1000+s.r);
+    ctx.fillStyle=`rgba(255,255,255,${alpha})`; ctx.fill();
+  });
+
+  // Height lines (parallax grid)
+  ctx.strokeStyle='rgba(0,245,255,0.04)'; ctx.lineWidth=1;
+  for(let i=0;i<10;i++){
+    const y=((i*80-cameraY*0.5)%H+H)%H;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // Platforms
+  platforms.forEach(drawPlatform);
+
+  // Particles
+  particles.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y-cameraY,3*p.life,0,Math.PI*2);
+    ctx.fillStyle=p.col+(Math.floor(p.life*200).toString(16).padStart(2,'0'));
+    ctx.fill();
+  });
+
+  // Player
+  if(running || true){
+    ctx.save();
+    const px=player.x, py=player.y-cameraY;
+    ctx.shadowBlur=18; ctx.shadowColor='#00ff88';
+    ctx.translate(px,py);
+    ctx.scale(player.facing*(2-player.squish*0.5), player.squish);
+    ctx.translate(-px,-py);
+
+    // Body
+    ctx.fillStyle='#00ff88';
+    ctx.beginPath(); ctx.ellipse(px,py,player.w/2,player.h/2,0,0,Math.PI*2); ctx.fill();
+    // Eye
+    ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.arc(px+player.w*0.18*player.facing,py-player.h*0.08,player.w*0.15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(px+player.w*0.22*player.facing,py-player.h*0.12,player.w*0.07,0,Math.PI*2); ctx.fill();
+    // Nose
+    ctx.fillStyle='#00ff88';
+    ctx.beginPath(); ctx.moveTo(px+player.w*0.35*player.facing,py); ctx.lineTo(px+player.w*0.5*player.facing,py-4); ctx.lineTo(px+player.w*0.5*player.facing,py+4); ctx.fill();
+    ctx.restore();
+  }
+
+  // Score
+  ctx.save();
+  ctx.font=`bold 20px 'Orbitron',monospace`;
+  ctx.fillStyle='rgba(0,245,255,0.6)'; ctx.textAlign='left';
+  ctx.fillText(Math.floor(score)+'m',10,20);
+  ctx.restore();
+}
+
+function loop(){ update(); draw(); raf=requestAnimationFrame(loop); }
+
+// Controls
+keys={left:false,right:false};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=true;
+  if(['ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=false;
+});
+
+// Touch tilt
+tiltX=0;
+let touchStartX=0;
+cv.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+cv.addEventListener('touchmove',e=>{
+  const dx=(e.touches[0].clientX-touchStartX)/60;
+  tiltX=Math.max(-1,Math.min(1,dx));
+},{passive:true});
+cv.addEventListener('touchend',()=>tiltX=0,{passive:true});
+
+// Device tilt
+if(window.DeviceOrientationEvent){
+  window.addEventListener('deviceorientation',e=>{
+    if(e.gamma!=null) tiltX=Math.max(-1,Math.min(1,e.gamma/25));
+  });
+}
+
+document.getElementById('startBtn').addEventListener('click',()=>{ document.getElementById('startOv').classList.add('hidden'); start(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop); });
+document.getElementById('reBtn').addEventListener('click',()=>{ document.getElementById('gameoverOv').classList.add('hidden'); start(); });
+
+// Idle
+cameraY=0; initPlatforms(); initPlayer(); particles=[]; running=false;
+raf=requestAnimationFrame(function idle(){ draw(); raf=requestAnimationFrame(idle); });
+</script>
+</body>
+</html>
