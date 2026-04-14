@@ -1,0 +1,441 @@
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const CELL = canvas.width / 28;
+
+// Maze remains unchanged
+const MAZE_TEMPLATE = [ /* ... your original MAZE_TEMPLATE ... */ ];
+
+const GHOST_COLORS = ['#ff006e', '#00f5ff', '#ff6b00', '#bf00ff'];
+const GHOST_NAMES = ['Blinky', 'Inky', 'Clyde', 'Pinky'];
+
+let maze, pac, ghosts, score, best, lives, level, totalDots, eatenDots, powerTimer, paused, gameRunning, animFrame;
+let nextDir = { x: 0, y: 0 };
+let currentDir = { x: 0, y: 0 };
+best = parseInt(localStorage.getItem('pacman_best') || '0');
+document.getElementById('best-el').textContent = best;
+
+function initLevel() {
+  maze = MAZE_TEMPLATE.map(r => [...r]);
+  totalDots = 0; eatenDots = 0; powerTimer = 0;
+  maze.forEach(r => r.forEach(c => { if (c === 0 || c === 3) totalDots++; }));
+
+  pac = {
+    x: 14, y: 23,
+    dx: 0, dy: 0,
+    mouth: 0.2, mouthDir: 1,
+    dead: false, deathAnim: 0
+  };
+
+  nextDir = { x: 1, y: 0 };
+  currentDir = { x: 1, y: 0 };
+
+  const baseSpeed = 0.085 + level * 0.013;
+
+  ghosts = [
+    { x: 11, y: 13, dx: 1, dy: 0, color: GHOST_COLORS[0], scatter: { x: 25, y: 0 }, frightened: false, eaten: false, speed: baseSpeed, homeX: 11, homeY: 13, name: 'Blinky' },
+    { x: 13, y: 13, dx: 0, dy: -1, color: GHOST_COLORS[1], scatter: { x: 2, y: 0 }, frightened: false, eaten: false, speed: baseSpeed * 0.92, homeX: 13, homeY: 13, name: 'Inky' },
+    { x: 14, y: 13, dx: 0, dy: 1, color: GHOST_COLORS[2], scatter: { x: 0, y: 27 }, frightened: false, eaten: false, speed: baseSpeed * 0.88, homeX: 14, homeY: 13, name: 'Clyde' },
+    { x: 15, y: 13, dx: -1, dy: 0, color: GHOST_COLORS[3], scatter: { x: 27, y: 27 }, frightened: false, eaten: false, speed: baseSpeed * 0.95, homeX: 15, homeY: 13, name: 'Pinky' }
+  ];
+
+  updateLivesUI();
+  updatePowerBar();
+}
+
+function startGame() {
+  ['start-screen', 'gameover-screen', 'level-screen', 'pause-screen'].forEach(id =>
+    document.getElementById(id).classList.add('hidden')
+  );
+  score = 0; lives = 3; level = 1;
+  initLevel();
+  gameRunning = true;
+  paused = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(loop);
+}
+
+function nextLevel() {
+  document.getElementById('level-screen').classList.add('hidden');
+  level++;
+  initLevel();
+  gameRunning = true;
+  animFrame = requestAnimationFrame(loop);
+}
+
+function togglePause() {
+  if (!gameRunning) return;
+  paused = !paused;
+  document.getElementById('pause-screen').classList.toggle('hidden', !paused);
+  if (!paused) animFrame = requestAnimationFrame(loop);
+}
+
+let frameCount = 0;
+
+function loop() {
+  if (paused || !gameRunning) return;
+  frameCount++;
+  update();
+  draw();
+  animFrame = requestAnimationFrame(loop);
+}
+
+function canMove(x, y) {
+  const gx = Math.floor(x + 0.5);
+  const gy = Math.floor(y + 0.5);
+  if (gy < 0 || gy >= 28 || gx < 0 || gx >= 28) return false;
+  return maze[gy][gx] !== 1;
+}
+
+function update() {
+  if (pac.dead) {
+    pac.deathAnim += 0.04;
+    if (pac.deathAnim >= 1) {
+      lives--;
+      updateLivesUI();
+      if (lives <= 0) {
+        endGame();
+        return;
+      }
+      initLevel();
+    }
+    return;
+  }
+
+  // === PAC-MAN MOVEMENT ===
+  // Apply queued direction when possible
+  const snapX = Math.round(pac.x);
+  const snapY = Math.round(pac.y);
+
+  if (nextDir.x !== 0 || nextDir.y !== 0) {
+    if ((nextDir.x !== 0 && Math.abs(pac.y - snapY) < 0.25 && canMove(snapX + nextDir.x, snapY)) ||
+        (nextDir.y !== 0 && Math.abs(pac.x - snapX) < 0.25 && canMove(snapX, snapY + nextDir.y))) {
+      currentDir = { ...nextDir };
+    }
+  }
+
+  // Move in current direction
+  let newX = pac.x + currentDir.x * 0.14;
+  let newY = pac.y + currentDir.y * 0.14;
+
+  if (canMove(newX, pac.y)) pac.x = newX;
+  if (canMove(pac.x, newY)) pac.y = newY;
+
+  // Tunnel
+  if (pac.x < 0) pac.x = 27;
+  if (pac.x > 27) pac.x = 0;
+
+  // Eat dots & power pellets
+  const cx = Math.round(pac.x);
+  const cy = Math.round(pac.y);
+
+  if (maze[cy] && (maze[cy][cx] === 0 || maze[cy][cx] === 3)) {
+    if (maze[cy][cx] === 0) score += 10;
+    else {
+      score += 50;
+      powerTimer = 280;
+      ghosts.forEach(g => { g.frightened = true; g.eaten = false; });
+      document.getElementById('power-label').className = 'power-label power-active';
+    }
+    maze[cy][cx] = 2;
+    eatenDots++;
+    updateScore();
+  }
+
+  // Power timer
+  if (powerTimer > 0) {
+    powerTimer--;
+    if (powerTimer === 0) {
+      ghosts.forEach(g => g.frightened = false);
+      document.getElementById('power-label').className = 'power-label';
+    }
+    updatePowerBar();
+  }
+
+  // Mouth animation
+  pac.mouth += 0.09 * pac.mouthDir;
+  if (pac.mouth > 0.38 || pac.mouth < 0.02) pac.mouthDir *= -1;
+
+  // === GHOST MOVEMENT ===
+  ghosts.forEach(g => moveGhost(g));
+
+  // === COLLISION ===
+  ghosts.forEach(g => {
+    if (g.eaten) return;
+    const dx = g.x - pac.x;
+    const dy = g.y - pac.y;
+    if (dx * dx + dy * dy < 0.75) {
+      if (g.frightened) {
+        g.eaten = true;
+        const bonuses = [200, 400, 800, 1600];
+        score += bonuses[ghosts.filter(gh => gh.eaten).length - 1] || 200;
+        updateScore();
+        setTimeout(() => {
+          g.eaten = false;
+          g.x = g.homeX;
+          g.y = g.homeY;
+        }, 1800);
+      } else {
+        pac.dead = true;
+      }
+    }
+  });
+
+  // Level clear
+  if (eatenDots >= totalDots) {
+    gameRunning = false;
+    cancelAnimationFrame(animFrame);
+    document.getElementById('level-screen').classList.remove('hidden');
+    document.getElementById('next-level-badge').textContent = `Level ${level + 1}`;
+  }
+}
+
+function moveGhost(g) {
+  if (g.eaten) return;
+
+  const speed = g.frightened ? g.speed * 0.55 : g.speed;
+  const gx = Math.round(g.x);
+  const gy = Math.round(g.y);
+
+  // Decide new direction when near center of tile
+  if (Math.abs(g.x - gx) < 0.15 && Math.abs(g.y - gy) < 0.15) {
+    const dirs = [
+      { x: 1, y: 0 }, { x: -1, y: 0 },
+      { x: 0, y: 1 }, { x: 0, y: -1 }
+    ];
+
+    const validDirs = dirs.filter(d => {
+      if (d.x === -g.dx && d.y === -g.dy) return false; // no immediate reverse
+      return canMove(gx + d.x, gy + d.y);
+    });
+
+    if (validDirs.length === 0) return;
+
+    let bestDir = validDirs[0];
+    let bestDist = Infinity;
+
+    if (g.frightened) {
+      // Random movement when frightened
+      bestDir = validDirs[Math.floor(Math.random() * validDirs.length)];
+    } else {
+      // Chase logic - Blinky chases directly, others have scatter/target
+      const targetX = g.name === 'Blinky' ? pac.x : g.scatter.x;
+      const targetY = g.name === 'Blinky' ? pac.y : g.scatter.y;
+
+      for (let d of validDirs) {
+        const dist = Math.hypot(gx + d.x - targetX, gy + d.y - targetY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestDir = d;
+        }
+      }
+    }
+
+    g.dx = bestDir.x;
+    g.dy = bestDir.y;
+  }
+
+  // Move
+  const newX = g.x + g.dx * speed;
+  const newY = g.y + g.dy * speed;
+
+  if (canMove(newX, g.y)) g.x = newX;
+  if (canMove(g.x, newY)) g.y = newY;
+
+  // Tunnel
+  if (g.x < 0) g.x = 27;
+  if (g.x > 27) g.x = 0;
+}
+
+// Draw function remains mostly the same (only small tweaks if needed)
+function draw() {
+  ctx.fillStyle = '#020208';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Maze drawing (unchanged)
+  for (let row = 0; row < 28; row++) {
+    for (let col = 0; col < 28; col++) {
+      const cell = maze[row][col];
+      const px = col * CELL, py = row * CELL;
+
+      if (cell === 1) {
+        ctx.fillStyle = '#0a0a2a';
+        ctx.fillRect(px, py, CELL, CELL);
+        ctx.strokeStyle = 'rgba(0,245,255,0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 0.5, py + 0.5, CELL - 1, CELL - 1);
+      } else if (cell === 0) {
+        ctx.fillStyle = 'rgba(255,230,0,0.75)';
+        ctx.shadowColor = 'rgba(255,230,0,0.6)';
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(px + CELL/2, py + CELL/2, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if (cell === 3) {
+        const pulse = Math.sin(frameCount * 0.12) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(0,245,255,${pulse})`;
+        ctx.shadowColor = 'rgba(0,245,255,0.9)';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(px + CELL/2, py + CELL/2, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+  }
+
+  // Pac-Man (unchanged)
+  if (!pac.dead) {
+    const px = pac.x * CELL + CELL / 2;
+    const py = pac.y * CELL + CELL / 2;
+    const angle = Math.atan2(pac.dy || currentDir.y, pac.dx || currentDir.x) || 0;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(angle);
+    ctx.shadowColor = 'rgba(255,230,0,0.85)';
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = '#ffe600';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, CELL * 0.45, pac.mouth * Math.PI, (2 - pac.mouth) * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else {
+    // Death animation
+    const px = pac.x * CELL + CELL / 2;
+    const py = pac.y * CELL + CELL / 2;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = `rgba(255,230,0,${1 - pac.deathAnim})`;
+    ctx.shadowColor = 'rgba(255,60,0,0.9)';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(0, 0, CELL * 0.45 * (1 - pac.deathAnim * 0.6), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Ghosts (unchanged)
+  ghosts.forEach(g => {
+    if (g.eaten) return;
+    const px = g.x * CELL + CELL / 2;
+    const py = g.y * CELL + CELL / 2;
+    const r = CELL * 0.42;
+
+    ctx.save();
+    let ghostColor = g.color;
+    if (g.frightened) {
+      ghostColor = (powerTimer < 70 && Math.floor(powerTimer / 6) % 2 === 0) ? '#ffffff' : '#0088ff';
+    }
+    ctx.shadowColor = ghostColor;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = ghostColor;
+
+    ctx.beginPath();
+    ctx.arc(px, py - r * 0.08, r, Math.PI, 0);
+    ctx.lineTo(px + r, py + r * 0.6);
+    for (let i = 0; i < 3; i++) {
+      ctx.arc(px + r - (i + 0.5) * (r * 2 / 3), py + r * 0.6, r / 3, 0, Math.PI, true);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    if (!g.frightened) {
+      // Eyes
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(px - r * 0.28, py - r * 0.18, r * 0.21, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + r * 0.28, py - r * 0.18, r * 0.21, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#000044';
+      ctx.beginPath(); ctx.arc(px - r * 0.28 + g.dx * 1.8, py - r * 0.18 + g.dy * 1.8, r * 0.11, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + r * 0.28 + g.dx * 1.8, py - r * 0.18 + g.dy * 1.8, r * 0.11, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+function updateScore() {
+  document.getElementById('score-el').textContent = score;
+  if (score > best) {
+    best = score;
+    localStorage.setItem('pacman_best', best);
+  }
+  document.getElementById('best-el').textContent = best;
+}
+
+function updateLivesUI() {
+  const el = document.getElementById('lives-el');
+  el.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const d = document.createElement('span');
+    d.className = `life-icon${i >= lives ? ' lost' : ''}`;
+    d.textContent = '🟡';
+    el.appendChild(d);
+  }
+  document.getElementById('level-el').textContent = level;
+}
+
+function updatePowerBar() {
+  document.getElementById('power-fill').style.width = (powerTimer / 280 * 100) + '%';
+}
+
+function endGame() {
+  gameRunning = false;
+  cancelAnimationFrame(animFrame);
+  const isNew = score > (parseInt(localStorage.getItem('pacman_best')) || 0);
+  if (isNew) localStorage.setItem('pacman_best', score);
+
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-best').textContent = Math.max(best, score);
+  document.getElementById('final-level').textContent = level;
+  document.getElementById('nb-badge').classList.toggle('show', isNew);
+  document.getElementById('gameover-screen').classList.remove('hidden');
+}
+
+// Input handling
+function setDir(dx, dy) {
+  nextDir = { x: dx, y: dy };
+}
+
+document.addEventListener('keydown', e => {
+  const map = {
+    ArrowLeft: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 },
+    ArrowUp: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 },
+    a: { x: -1, y: 0 }, d: { x: 1, y: 0 },
+    w: { x: 0, y: -1 }, s: { x: 0, y: 1 }
+  };
+  if (map[e.key]) {
+    e.preventDefault();
+    nextDir = map[e.key];
+  }
+  if (e.key.toLowerCase() === 'p') togglePause();
+});
+
+// Touch swipe support
+let tx0, ty0;
+canvas.addEventListener('touchstart', e => {
+  tx0 = e.touches[0].clientX;
+  ty0 = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('touchend', e => {
+  if (!tx0) return;
+  const dx = e.changedTouches[0].clientX - tx0;
+  const dy = e.changedTouches[0].clientY - ty0;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    setDir(dx > 0 ? 1 : -1, 0);
+  } else {
+    setDir(0, dy > 0 ? 1 : -1);
+  }
+  tx0 = ty0 = null;
+}, { passive: true });
+
+// Initial draw
+ctx.fillStyle = '#020208';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+</script>
