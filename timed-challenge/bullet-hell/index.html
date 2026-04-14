@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Bullet Hell — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;touch-action:none;cursor:none;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--pink);letter-spacing:3px;text-shadow:0 0 18px var(--pink);}
+.stats-bar{position:fixed;top:52px;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:center;gap:36px;background:rgba(2,4,8,0.92);border-bottom:1px solid var(--border);z-index:99;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.stat-value{font-size:16px;font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+.game-wrap{position:fixed;top:98px;bottom:0;left:0;right:0;}
+canvas{display:block;width:100%;height:100%;}
+
+/* Overlays */
+.ov{position:fixed;inset:0;top:98px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(28px,6vw,54px);color:var(--pink);text-shadow:0 0 30px var(--pink),0 0 60px rgba(255,0,128,.4);letter-spacing:4px;}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-align:center;max-width:280px;line-height:1.8;}
+.ov-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.tips-box{background:rgba(255,0,128,.06);border:1px solid rgba(255,0,128,.25);border-radius:6px;padding:12px 16px;max-width:300px;width:100%;}
+.tips-title{font-size:9px;color:var(--pink);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--pink);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Joystick hint */
+#joystick-area{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:none;width:120px;height:120px;border-radius:50%;border:2px solid rgba(0,245,255,.2);background:rgba(0,245,255,.04);z-index:200;touch-action:none;}
+#joystick-thumb{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(0,245,255,.3);border:2px solid var(--cyan);top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 15px var(--cyan);}
+@media(hover:none){#joystick-area{display:block;}.game-wrap{bottom:160px;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">💀 BULLET HELL</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">TIME</span><span class="stat-value" id="timeEl">0.0s</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="bestEl">0.0s</span></div>
+  <div class="stat"><span class="stat-label">BULLETS</span><span class="stat-value" id="bulletsEl" style="color:var(--pink);text-shadow:0 0 10px var(--pink)">0</span></div>
+</div>
+
+<div class="game-wrap"><canvas id="c"></canvas></div>
+
+<div id="joystick-area" id="jsa">
+  <div id="joystick-thumb"></div>
+</div>
+
+<!-- START -->
+<div class="ov" id="startOv">
+  <div class="ov-title">BULLET HELL</div>
+  <div class="ov-sub">Neon bullets fire from all edges. You dodge. No shooting. Pure survival — gets insane fast.</div>
+  <div class="tips-box">
+    <div class="tips-title">💡 TIPS & RULES</div>
+    <div class="tip">Move mouse or drag to control your ship</div>
+    <div class="tip">Bullets fire faster & more often every second</div>
+    <div class="tip">Spiral, circular, and scatter patterns spawn over time</div>
+    <div class="tip">Stay near the center — don't get cornered</div>
+    <div class="tip">One hit = death. No shields. No mercy.</div>
+  </div>
+  <button class="btn" id="startBtn">▶ SURVIVE</button>
+</div>
+
+<!-- DEATH -->
+<div class="ov hidden" id="deathOv">
+  <div class="ov-title">DEAD</div>
+  <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+  <div class="ov-score">SURVIVED: <span id="finalTime">0.0s</span></div>
+  <div style="font-size:12px;color:rgba(255,255,255,.4)">Best: <span id="finalBest">0.0s</span></div>
+  <button class="btn" id="reBtn">↺ DODGE AGAIN</button>
+  <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+</div>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+resize(); window.addEventListener('resize',resize);
+
+let best=parseFloat(localStorage.getItem('bullethell_best')||'0');
+document.getElementById('bestEl').textContent=best.toFixed(1)+'s';
+
+let player={x:0,y:0,r:8,trail:[]};
+let bullets=[],particles=[],running=false,startTime=0,elapsed=0,raf,shakeT=0;
+let targetX=0,targetY=0; // mouse/touch target
+let keys={};
+
+// Joystick
+const jsa=document.getElementById('joystick-area');
+const jst=document.getElementById('joystick-thumb');
+let joystick={active:false,cx:0,cy:0,dx:0,dy:0};
+const JR=60; // joystick radius
+
+jsa.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.touches[0]; const r=jsa.getBoundingClientRect();
+  joystick.active=true; joystick.cx=r.left+r.width/2; joystick.cy=r.top+r.height/2;
+},{passive:false});
+jsa.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!joystick.active) return;
+  const t=e.touches[0];
+  const dx=t.clientX-joystick.cx, dy=t.clientY-joystick.cy;
+  const dist=Math.hypot(dx,dy);
+  const clamped=Math.min(dist,JR);
+  const ang=Math.atan2(dy,dx);
+  joystick.dx=Math.cos(ang); joystick.dy=Math.sin(ang);
+  const tx=Math.cos(ang)*clamped, ty=Math.sin(ang)*clamped;
+  jst.style.transform=`translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
+},{passive:false});
+jsa.addEventListener('touchend',()=>{
+  joystick.active=false; joystick.dx=0; joystick.dy=0;
+  jst.style.transform='translate(-50%,-50%)';
+},{passive:true});
+
+// Mouse
+cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();targetX=e.clientX-r.left;targetY=e.clientY-r.top;});
+cv.addEventListener('touchmove',e=>{
+  if(joystick.active) return;
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  targetX=e.touches[0].clientX-r.left; targetY=e.touches[0].clientY-r.top;
+},{passive:false});
+
+const BULLET_COLS=['#ff0080','#ff4400','#ff9900','#ffee00','#ff0040'];
+
+let spawnTimer=0, waveTimer=0, waveType=0, spiralAngle=0;
+
+function spawnBullets(t){
+  const density=Math.min(8,1+Math.floor(elapsed/8));
+  const speed=Math.min(7,2.5+elapsed*.12);
+
+  if(waveTimer<=0){
+    waveType=Math.floor(Math.random()*5); waveTimer=Math.max(120,300-elapsed*5);
+  }
+  waveTimer--;
+
+  // Always spawn edge bullets
+  if(t%Math.max(4,20-Math.floor(elapsed))===0){
+    for(let i=0;i<density;i++){
+      const side=Math.floor(Math.random()*4);
+      let bx,by,ang;
+      if(side===0){bx=Math.random()*W;by=-10;ang=Math.PI/2+.5*(Math.random()-.5);}
+      else if(side===1){bx=W+10;by=Math.random()*H;ang=Math.PI+.5*(Math.random()-.5);}
+      else if(side===2){bx=Math.random()*W;by=H+10;ang=-Math.PI/2+.5*(Math.random()-.5);}
+      else{bx=-10;by=Math.random()*H;ang:.5*(Math.random()-.5);}
+      if(side===3) ang=.5*(Math.random()-.5);
+      const spd=speed*(0.8+Math.random()*.4);
+      bullets.push({x:bx,y:by,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,r:5,col:BULLET_COLS[Math.floor(Math.random()*BULLET_COLS.length)],t:0});
+    }
+  }
+
+  // Spiral pattern
+  if(elapsed>10 && t%6===0){
+    spiralAngle+=.35;
+    const cx=W/2,cy=H/2;
+    for(let k=0;k<3;k++){
+      const ang=spiralAngle+k*(Math.PI*2/3);
+      const spd=speed*1.2;
+      bullets.push({x:cx,y:cy,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,r:6,col:'#ff0080',t:0});
+    }
+  }
+
+  // Aimed at player
+  if(elapsed>20 && t%Math.max(8,40-Math.floor(elapsed))===0){
+    const ang=Math.atan2(player.y-H*.1,player.x-W*.5)+((Math.random()-.5)*.3);
+    bullets.push({x:W/2,y:0,vx:Math.cos(ang)*speed*.8,vy:Math.sin(ang)*speed*.8,r:7,col:'#ffee00',t:0,aimed:true});
+  }
+}
+
+let ticker=0;
+function update(){
+  if(!running) return;
+  ticker++;
+  elapsed=(Date.now()-startTime)/1000;
+  document.getElementById('timeEl').textContent=elapsed.toFixed(1)+'s';
+
+  // Move player
+  const speed=joystick.active?4:5;
+  if(joystick.active){
+    player.x=Math.max(player.r,Math.min(W-player.r,player.x+joystick.dx*speed));
+    player.y=Math.max(player.r,Math.min(H-player.r,player.y+joystick.dy*speed));
+  } else {
+    // Smooth follow mouse
+    const dx=targetX-player.x,dy=targetY-player.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist>2){player.x+=dx*.15;player.y+=dy*.15;}
+  }
+
+  // Trail
+  player.trail.push({x:player.x,y:player.y,t:1});
+  if(player.trail.length>20) player.trail.shift();
+  player.trail.forEach(t=>t.t-=.05);
+
+  // Spawn bullets
+  spawnBullets(ticker);
+
+  // Move bullets
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.x+=b.vx; b.y+=b.vy; b.t++;
+    // Remove offscreen
+    if(b.x<-30||b.x>W+30||b.y<-30||b.y>H+30){bullets.splice(i,1);continue;}
+    // Collision
+    const dist=Math.hypot(b.x-player.x,b.y-player.y);
+    if(dist<b.r+player.r-2){ die(); return; }
+  }
+
+  document.getElementById('bulletsEl').textContent=bullets.length;
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.04;});
+  particles=particles.filter(p=>p.life>0);
+  if(shakeT>0) shakeT--;
+}
+
+function die(){
+  running=false;
+  shakeT=18;
+  for(let i=0;i<25;i++) particles.push({x:player.x,y:player.y,vx:(Math.random()-.5)*12,vy:(Math.random()-.5)*12,life:1,col:Math.random()<.5?'#ff0080':'#ff4400'});
+  if(elapsed>best){best=elapsed;localStorage.setItem('bullethell_best',elapsed.toFixed(2));}
+  setTimeout(()=>{
+    document.getElementById('finalTime').textContent=elapsed.toFixed(1)+'s';
+    document.getElementById('finalBest').textContent=best.toFixed(1)+'s';
+    document.getElementById('newBestMsg').style.display=elapsed>=best&&elapsed>.5?'block':'none';
+    document.getElementById('deathOv').classList.remove('hidden');
+  },800);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shakeT>0) ctx.translate((Math.random()-.5)*shakeT,(Math.random()-.5)*shakeT);
+
+  // BG
+  ctx.fillStyle='#020408'; ctx.fillRect(-20,-20,W+40,H+40);
+
+  // Grid
+  ctx.strokeStyle='rgba(0,245,255,0.03)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Danger border (pulses when many bullets)
+  const danger=Math.min(1,bullets.length/60);
+  if(danger>.3){
+    ctx.save();
+    ctx.strokeStyle=`rgba(255,0,${Math.floor(128*danger)},${danger*.4})`;
+    ctx.lineWidth=4+danger*6;
+    ctx.shadowBlur=15*danger; ctx.shadowColor='#ff0080';
+    ctx.strokeRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  // Bullets
+  bullets.forEach(b=>{
+    ctx.save();
+    ctx.shadowBlur=12; ctx.shadowColor=b.col;
+    ctx.fillStyle=b.col;
+    if(b.aimed){
+      // Diamond shape for aimed
+      ctx.beginPath();
+      ctx.moveTo(b.x,b.y-b.r*1.5);ctx.lineTo(b.x+b.r*.8,b.y);
+      ctx.lineTo(b.x,b.y+b.r*1.5);ctx.lineTo(b.x-b.r*.8,b.y);
+      ctx.closePath();ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+      // Trail
+      ctx.globalAlpha=.3; ctx.beginPath(); ctx.arc(b.x-b.vx*2,b.y-b.vy*2,b.r*.7,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  // Explosion particles
+  particles.forEach(p=>{
+    ctx.save(); ctx.globalAlpha=p.life; ctx.shadowBlur=10; ctx.shadowColor=p.col;
+    ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(p.x,p.y,4*p.life,0,Math.PI*2); ctx.fill(); ctx.restore();
+  });
+
+  // Player trail
+  player.trail.forEach(t=>{
+    if(t.t<=0) return;
+    ctx.save(); ctx.globalAlpha=t.t*.35; ctx.shadowBlur=6; ctx.shadowColor='#00f5ff';
+    ctx.fillStyle='#00f5ff'; ctx.beginPath(); ctx.arc(t.x,t.y,player.r*t.t,0,Math.PI*2); ctx.fill(); ctx.restore();
+  });
+
+  // Player ship
+  if(running||particles.length>0){
+    const t=Date.now()/300;
+    ctx.save();
+    ctx.translate(player.x,player.y);
+    ctx.shadowBlur=25; ctx.shadowColor='#00f5ff';
+    // Ship body
+    ctx.fillStyle='#00f5ff';
+    ctx.beginPath();
+    ctx.moveTo(0,-player.r*1.5); ctx.lineTo(player.r*.8,player.r*.8);
+    ctx.lineTo(0,player.r*.3); ctx.lineTo(-player.r*.8,player.r*.8);
+    ctx.closePath(); ctx.fill();
+    // Engine glow
+    ctx.shadowBlur=15; ctx.shadowColor='#ff6600'; ctx.fillStyle='#ff6600';
+    ctx.beginPath(); ctx.ellipse(0,player.r*.5,player.r*.3,player.r*.2+Math.sin(t)*.5,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Time display
+  if(running){
+    ctx.save(); ctx.font=`bold ${Math.min(W*.06,30)}px Orbitron,monospace`;
+    ctx.fillStyle='rgba(0,245,255,0.08)'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(elapsed.toFixed(1)+'s',W/2,H/2); ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function loop(){update();draw();raf=requestAnimationFrame(loop);}
+
+function init(){
+  player.x=W/2; player.y=H/2; targetX=W/2; targetY=H/2;
+  bullets=[]; particles=[]; player.trail=[];
+  spiralAngle=0; ticker=0; waveTimer=0;
+  elapsed=0; running=true; startTime=Date.now();
+}
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startOv').classList.add('hidden');
+  init(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('deathOv').classList.add('hidden'); init();
+});
+
+resize(); draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gravity Flip — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--orange:#ff6600;--purple:#bf00ff;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;touch-action:none;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;backdrop-filter:blur(10px);}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;transition:opacity .2s;}
+nav a:hover{opacity:1;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--orange);letter-spacing:3px;text-shadow:0 0 18px var(--orange);}
+
+.stats-bar{position:fixed;top:52px;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:center;gap:36px;background:rgba(2,4,8,0.92);border-bottom:1px solid var(--border);z-index:99;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.stat-value{font-size:16px;font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+
+.game-wrap{position:fixed;top:98px;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;}
+canvas{display:block;border:1px solid var(--border);box-shadow:0 0 40px rgba(255,102,0,.1);border-radius:4px;}
+
+/* Overlay */
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(28px,5vw,50px);color:var(--orange);text-shadow:0 0 30px var(--orange);letter-spacing:4px;}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:2px;text-align:center;max-width:280px;line-height:1.7;}
+.ov-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.btn:active{transform:scale(.97);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Tips box */
+.tips-box{background:rgba(255,102,0,.06);border:1px solid rgba(255,102,0,.25);border-radius:6px;padding:12px 16px;max-width:280px;width:100%;}
+.tips-title{font-size:9px;color:var(--orange);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--orange);}
+
+/* Tap btn for mobile */
+.tap-zone{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:none;width:180px;height:60px;background:rgba(255,102,0,.1);border:2px solid rgba(255,102,0,.5);border-radius:12px;color:var(--orange);font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;z-index:200;align-items:center;justify-content:center;}
+@media(hover:none){.tap-zone{display:flex;}.game-wrap{bottom:100px;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">🌊 GRAVITY FLIP</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">SCORE</span><span class="stat-value" id="scoreEl">0</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="bestEl">0</span></div>
+  <div class="stat"><span class="stat-label">SPEED</span><span class="stat-value" id="speedEl">1×</span></div>
+</div>
+
+<div class="game-wrap" id="gameWrap">
+  <canvas id="c"></canvas>
+
+  <!-- START -->
+  <div class="ov" id="startOv">
+    <div class="ov-title">GRAVITY FLIP</div>
+    <div class="ov-sub">ONE TAP flips gravity.<br>Navigate the neon cube through the corridor without hitting walls.</div>
+    <div class="tips-box">
+      <div class="tips-title">💡 TIPS & RULES</div>
+      <div class="tip">Tap/Space to flip gravity up or down</div>
+      <div class="tip">The gap gets smaller as speed increases</div>
+      <div class="tip">Double-flipping quickly can save you</div>
+      <div class="tip">Watch the wall color — it hints the gap side</div>
+    </div>
+    <button class="btn" id="startBtn">▶ PLAY</button>
+  </div>
+
+  <!-- DEATH -->
+  <div class="ov hidden" id="deathOv">
+    <div class="ov-title" style="color:var(--pink);text-shadow:0 0 30px var(--pink)">CRASHED</div>
+    <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+    <div class="ov-score">SCORE: <span id="finalScore">0</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4)">BEST: <span id="finalBest">0</span></div>
+    <button class="btn" id="reBtn">↺ TRY AGAIN</button>
+    <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+  </div>
+</div>
+
+<div class="tap-zone" id="tapZone">▲▼ FLIP</div>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),wrap=document.getElementById('gameWrap');
+let W,H;
+function resize(){
+  const ww=wrap.clientWidth,wh=wrap.clientHeight;
+  W=Math.min(520,ww-10); H=Math.min(340,wh-10,W*.65);
+  cv.width=W; cv.height=H;
+}
+resize(); window.addEventListener('resize',resize);
+
+let best=parseInt(localStorage.getItem('gravflip_best')||'0');
+document.getElementById('bestEl').textContent=best;
+
+const CUBE_SIZE=()=>Math.max(16,W*.035);
+const BASE_SPEED=()=>W*.004;
+
+let player,walls,score,speed,grav,running,raf,particles,bgOffset,shakeT;
+
+function init(){
+  score=0; speed=BASE_SPEED(); grav=1; shakeT=0; bgOffset=0;
+  player={x:W*.18,y:H*.5,vy:0,trail:[]};
+  walls=[]; particles=[];
+  for(let i=0;i<5;i++) walls.push(makeWall(W+i*200));
+  running=true;
+  updateHUD();
+}
+
+function makeWall(x){
+  const gap=Math.max(H*.22, H*.42-(score/30)*H*.005);
+  const topH=Math.random()*(H-gap-40)+20;
+  return{x,gap,topH,w:Math.max(18,W*.04),scored:false,col:score>50?'#ff0080':score>20?'#bf00ff':'#00f5ff'};
+}
+
+let flip=false;
+function doFlip(){
+  if(!running) return;
+  grav*=-1; player.vy=grav*(CUBE_SIZE()*-.6);
+  for(let i=0;i<6;i++) particles.push({x:player.x,y:player.y,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:1,col:'#ff6600'});
+}
+
+function update(){
+  if(!running) return;
+  score+=speed*.7; speed=BASE_SPEED()*(1+score/400); bgOffset-=speed*.5;
+  player.vy+=grav*.45; player.y+=player.vy;
+
+  // Clamp
+  const cs=CUBE_SIZE();
+  if(player.y-cs<0){player.y=cs;player.vy=0;}
+  if(player.y+cs>H){player.y=H-cs;player.vy=0;}
+
+  // Trail
+  player.trail.push({x:player.x,y:player.y,t:1});
+  if(player.trail.length>18) player.trail.shift();
+  player.trail.forEach(t=>t.t-=.06);
+
+  // Walls
+  walls.forEach(w=>{
+    w.x-=speed*3;
+    if(!w.scored && w.x+w.w<player.x){w.scored=true;score+=10;updateHUD();}
+    // Collision
+    const px=player.x, py=player.y;
+    if(px+cs>w.x && px-cs<w.x+w.w){
+      if(py-cs<w.topH || py+cs>w.topH+w.gap){ die(); return; }
+    }
+  });
+  walls=walls.filter(w=>w.x>-80);
+  while(walls.length<5){
+    const last=walls[walls.length-1];
+    walls.push(makeWall(last?last.x+160+Math.random()*60:W+100));
+  }
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.05;});
+  particles=particles.filter(p=>p.life>0);
+  if(shakeT>0) shakeT--;
+  updateHUD();
+}
+
+function updateHUD(){
+  document.getElementById('scoreEl').textContent=Math.floor(score);
+  document.getElementById('bestEl').textContent=best;
+  document.getElementById('speedEl').textContent=(1+score/400).toFixed(1)+'×';
+}
+
+function die(){
+  running=false;
+  shakeT=14;
+  if(score>best){best=Math.floor(score);localStorage.setItem('gravflip_best',best);}
+  setTimeout(()=>{
+    document.getElementById('finalScore').textContent=Math.floor(score);
+    document.getElementById('finalBest').textContent=best;
+    document.getElementById('newBestMsg').style.display=(Math.floor(score)>=best&&score>5)?'block':'none';
+    document.getElementById('deathOv').classList.remove('hidden');
+  },600);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shakeT>0) ctx.translate((Math.random()-.5)*shakeT,(Math.random()-.5)*shakeT);
+
+  // BG grid
+  ctx.fillStyle='#020408'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,245,255,0.04)'; ctx.lineWidth=1;
+  const bg=(bgOffset%60+60)%60;
+  for(let x=bg-60;x<W+60;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Gravity indicator
+  const t=Date.now()/400; const ga=.5+.5*Math.sin(t*Math.PI*2);
+  ctx.save(); ctx.globalAlpha=.3+ga*.2; ctx.font='11px Orbitron,monospace'; ctx.fillStyle=grav>0?'#ff0080':'#00f5ff';
+  ctx.fillText(grav>0?'▼ GRAVITY':'▲ GRAVITY',8,18); ctx.restore();
+
+  // Walls
+  walls.forEach(w=>{
+    ctx.save(); ctx.shadowBlur=12; ctx.shadowColor=w.col; ctx.fillStyle=w.col+'33';
+    ctx.fillRect(w.x,0,w.w,w.topH);
+    ctx.fillRect(w.x,w.topH+w.gap,w.w,H-(w.topH+w.gap));
+    ctx.fillStyle=w.col; ctx.shadowBlur=15;
+    ctx.fillRect(w.x,w.topH-4,w.w,4);
+    ctx.fillRect(w.x,w.topH+w.gap,w.w,4);
+    ctx.restore();
+  });
+
+  // Particles
+  particles.forEach(p=>{
+    ctx.save(); ctx.globalAlpha=p.life; ctx.shadowBlur=8; ctx.shadowColor=p.col;
+    ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(p.x,p.y,3*p.life,0,Math.PI*2); ctx.fill(); ctx.restore();
+  });
+
+  // Trail
+  player.trail.forEach((t,i)=>{
+    if(t.t<=0) return;
+    ctx.save(); ctx.globalAlpha=t.t*.3; ctx.shadowBlur=6; ctx.shadowColor='#ff6600';
+    ctx.fillStyle='#ff6600';
+    const cs=CUBE_SIZE()*.8;
+    ctx.fillRect(t.x-cs/2,t.y-cs/2,cs,cs); ctx.restore();
+  });
+
+  // Player cube
+  const cs=CUBE_SIZE();
+  ctx.save(); ctx.shadowBlur=22; ctx.shadowColor='#ff6600';
+  // Squish based on velocity
+  const sqx=1+Math.abs(player.vy)*0.02, sqy=1/sqx;
+  ctx.translate(player.x,player.y); ctx.scale(sqx,sqy); ctx.translate(-player.x,-player.y);
+  ctx.fillStyle='#ff6600';
+  ctx.fillRect(player.x-cs,player.y-cs,cs*2,cs*2);
+  ctx.fillStyle='rgba(255,255,255,.25)';
+  ctx.fillRect(player.x-cs+3,player.y-cs+3,cs*.7,cs*.3);
+  ctx.restore();
+
+  // Score on canvas
+  ctx.save(); ctx.font=`bold ${W*.04}px Orbitron,monospace`; ctx.fillStyle='rgba(255,102,0,.15)';
+  ctx.textAlign='right'; ctx.fillText(Math.floor(score),W-10,H-10); ctx.restore();
+
+  ctx.restore(); // shake
+}
+
+let raf2;
+function loop(){update();draw();raf2=requestAnimationFrame(loop);}
+
+// Input
+document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();doFlip();}});
+cv.addEventListener('click',doFlip);
+cv.addEventListener('touchstart',e=>{e.preventDefault();doFlip();},{passive:false});
+document.getElementById('tapZone').addEventListener('touchstart',e=>{e.preventDefault();doFlip();},{passive:false});
+document.getElementById('tapZone').addEventListener('click',doFlip);
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startOv').classList.add('hidden');
+  init(); cancelAnimationFrame(raf2); raf2=requestAnimationFrame(loop);
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('deathOv').classList.add('hidden');
+  init();
+});
+
+resize(); draw();
+</script>
+</body>
+</html>

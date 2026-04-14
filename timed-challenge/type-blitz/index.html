@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Type Blitz — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--purple:#bf00ff;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--cyan);letter-spacing:3px;text-shadow:0 0 18px var(--cyan);}
+.stats-bar{position:fixed;top:52px;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:center;gap:32px;background:rgba(2,4,8,0.92);border-bottom:1px solid var(--border);z-index:99;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.stat-value{font-size:15px;font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+
+.game-area{position:fixed;top:98px;bottom:0;left:0;right:0;display:flex;flex-direction:column;}
+.play-field{flex:1;position:relative;overflow:hidden;}
+.ground{height:3px;background:linear-gradient(90deg,transparent,var(--pink),transparent);box-shadow:0 0 10px var(--pink);}
+
+/* Words */
+.word{position:absolute;font-family:'Orbitron',monospace;font-weight:700;border-radius:6px;padding:4px 10px;border:2px solid;white-space:nowrap;user-select:none;transition:opacity .2s;}
+.word.targeted{filter:brightness(1.8);transform:scale(1.05);}
+
+/* Input zone */
+.input-zone{padding:10px 14px;background:rgba(0,0,0,.4);border-top:1px solid var(--border);}
+.lives-row{display:flex;justify-content:center;gap:8px;margin-bottom:8px;}
+.life{width:12px;height:12px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);transition:all .3s;}
+.life.dead{background:rgba(255,0,128,.15);box-shadow:none;}
+.input-wrap{display:flex;gap:8px;align-items:center;}
+#typeInput{flex:1;padding:12px 16px;font-family:'Orbitron',monospace;font-size:16px;font-weight:700;background:rgba(0,245,255,.05);border:2px solid rgba(0,245,255,.3);border-radius:8px;color:var(--cyan);outline:none;letter-spacing:2px;}
+#typeInput:focus{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,245,255,.2);}
+#typeInput.match{border-color:var(--green);color:var(--green);}
+.target-word{font-family:'Orbitron',monospace;font-size:12px;color:rgba(255,255,255,.4);letter-spacing:1px;text-align:center;margin-bottom:4px;height:18px;}
+
+/* Mobile keyboard trigger */
+.kb-btn{display:none;padding:12px 20px;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;background:rgba(0,245,255,.1);border:2px solid var(--cyan);color:var(--cyan);border-radius:8px;cursor:pointer;}
+@media(hover:none){.kb-btn{display:block;}}
+
+/* Overlays */
+.ov{position:fixed;inset:0;top:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(26px,5vw,48px);color:var(--cyan);text-shadow:0 0 30px var(--cyan);letter-spacing:4px;}
+.ov-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.tips-box{background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.25);border-radius:6px;padding:12px 16px;max-width:300px;width:100%;}
+.tips-title{font-size:9px;color:var(--cyan);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--cyan);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);text-align:center;max-width:280px;line-height:1.8;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">⌨️ TYPE BLITZ</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">SCORE</span><span class="stat-value" id="scoreEl">0</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="bestEl">0</span></div>
+  <div class="stat"><span class="stat-label">WPM</span><span class="stat-value" id="wpmEl" style="color:var(--green);text-shadow:0 0 10px var(--green)">0</span></div>
+  <div class="stat"><span class="stat-label">WORDS</span><span class="stat-value" id="wordsEl">0</span></div>
+</div>
+
+<div class="game-area" id="gameArea" style="display:none">
+  <div class="play-field" id="playField"></div>
+  <div class="ground"></div>
+  <div class="input-zone">
+    <div class="lives-row" id="livesRow"></div>
+    <div class="target-word" id="targetWordEl"></div>
+    <div class="input-wrap">
+      <input type="text" id="typeInput" placeholder="TYPE HERE..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" id="kbBtn">⌨</button>
+    </div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="ov" id="startOv">
+  <div class="ov-title">TYPE BLITZ</div>
+  <div class="ov-sub">Neon words fall from the top. Type them before they hit the ground!</div>
+  <div class="tips-box">
+    <div class="tips-title">💡 TIPS & RULES</div>
+    <div class="tip">Type the falling word exactly (no case sensitivity)</div>
+    <div class="tip">Word turns green when matched — then it explodes</div>
+    <div class="tip">Miss a word hitting ground = lose 1 life (3 lives total)</div>
+    <div class="tip">Faster words = more points per destroy</div>
+    <div class="tip">On mobile, tap ⌨ to open keyboard</div>
+  </div>
+  <button class="btn" id="startBtn">▶ TYPE TO WIN</button>
+</div>
+
+<!-- GAMEOVER -->
+<div class="ov hidden" id="deathOv">
+  <div class="ov-title" style="color:var(--pink);text-shadow:0 0 30px var(--pink)">GAME OVER</div>
+  <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+  <div class="ov-score">SCORE: <span id="finalScore">0</span></div>
+  <div style="font-size:12px;color:rgba(255,255,255,.4)">Best: <span id="finalBest">0</span> &nbsp;|&nbsp; Words: <span id="finalWords">0</span></div>
+  <button class="btn" id="reBtn">↺ TYPE AGAIN</button>
+  <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+</div>
+
+<script>
+const WORDS_EASY=['cat','dog','sun','moon','star','fire','ice','sky','run','win','neon','code','game','blue','red'];
+const WORDS_MED=['cyber','pixel','flash','blast','turbo','ghost','laser','power','ultra','chaos','speed','crash','surge','pulse','storm'];
+const WORDS_HARD=['quantum','digital','reactor','network','cascade','voltage','critical','infinity','blazing','electron','circuit','terminal'];
+const WORDS_EPIC=['hyperdrive','megawatt','stormbreaker','lightspeed','blackhole','cyberstrike','megaforce','thunderbolt'];
+
+const WORD_COLS=['#00f5ff','#ff0080','#00ff88','#ffee00','#bf00ff','#ff6600','#ff9900'];
+
+let words=[],score=0,lives=3,running=false,raf,spawnT=0,elapsed=0,wordsDestroyed=0,startTime=0;
+let best=parseInt(localStorage.getItem('typeblitz_best')||'0');
+let particles=[];
+document.getElementById('bestEl').textContent=best;
+
+function pickWord(score){
+  let pool;
+  if(score<50) pool=[...WORDS_EASY,...WORDS_MED];
+  else if(score<150) pool=[...WORDS_MED,...WORDS_HARD];
+  else if(score<300) pool=[...WORDS_HARD,...WORDS_EPIC];
+  else pool=[...WORDS_HARD,...WORDS_EPIC,...WORDS_EPIC];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function getField(){return document.getElementById('playField');}
+
+function spawnWord(){
+  const text=pickWord(score);
+  const col=WORD_COLS[Math.floor(Math.random()*WORD_COLS.length)];
+  const fs=Math.max(13,18-Math.floor(text.length*.5));
+  const el=document.createElement('div');
+  el.className='word'; el.textContent=text;
+  el.style.fontSize=fs+'px'; el.style.color=col; el.style.borderColor=col+'66'; el.style.background=col+'11';
+  el.style.textShadow=`0 0 12px ${col}`;
+  const field=getField(), fw=field.clientWidth, ew=text.length*fs*.7+24;
+  const x=Math.random()*(fw-ew-10)+5;
+  el.style.left=x+'px'; el.style.top='-50px';
+  field.appendChild(el);
+
+  const spd=Math.max(.4,(.7+score/400))*(0.8+Math.random()*.4);
+  words.push({el,text,y:-50,spd,col,typed:0,matched:false});
+}
+
+let inputEl=document.getElementById('typeInput');
+
+function checkInput(){
+  const val=inputEl.value.toLowerCase().trim();
+  // Find target word that starts with typed
+  let target=null;
+  for(const w of words){
+    if(!w.matched && w.text.startsWith(val) && val.length>0){
+      if(!target||w.y>target.y) target=w;
+    }
+  }
+  // Highlight target
+  words.forEach(w=>{
+    w.el.classList.toggle('targeted',w===target&&val.length>0);
+    if(w===target&&val.length>0){
+      // Color the typed portion
+      const typed=val, rest=w.text.slice(typed.length);
+      w.el.innerHTML=`<span style="color:#fff;text-shadow:0 0 15px #fff">${typed}</span>${rest}`;
+    } else {
+      w.el.textContent=w.text;
+    }
+  });
+  document.getElementById('targetWordEl').textContent=target?`TARGET: ${target.text.toUpperCase()}`:'';
+  inputEl.classList.toggle('match', target&&val===target.text);
+
+  if(target && val===target.text){
+    // Destroy!
+    destroyWord(target);
+    inputEl.value='';
+    inputEl.classList.remove('match');
+  }
+}
+
+function destroyWord(w){
+  w.matched=true;
+  const rect=w.el.getBoundingClientRect();
+  const field=getField(), fr=field.getBoundingClientRect();
+  const cx=rect.left-fr.left+rect.width/2, cy=rect.top-fr.top+rect.height/2;
+  // Particles
+  for(let i=0;i<12;i++) particles.push({x:cx,y:cy,vx:(Math.random()-.5)*7,vy:(Math.random()-1)*5,life:1,col:w.col});
+  // Score
+  const pts=Math.max(10,Math.floor(30+w.spd*20+(w.text.length*5)));
+  score+=pts; wordsDestroyed++;
+  if(score>best){best=score;localStorage.setItem('typeblitz_best',best);}
+  updateHUD();
+  // Explosion animation
+  w.el.style.transition='all .2s';
+  w.el.style.transform='scale(1.6)'; w.el.style.opacity='0';
+  setTimeout(()=>w.el.remove(),200);
+  showFloatScore(cx,cy,'+'+pts,w.col);
+  words=words.filter(x=>x!==w);
+  document.getElementById('targetWordEl').textContent='';
+}
+
+function showFloatScore(x,y,text,col){
+  const el=document.createElement('div');
+  el.style.cssText=`position:absolute;left:${x}px;top:${y}px;font-family:Orbitron,monospace;font-size:16px;font-weight:700;color:${col};text-shadow:0 0 12px ${col};pointer-events:none;transform:translateX(-50%);transition:all .7s;`;
+  el.textContent=text;
+  getField().appendChild(el);
+  setTimeout(()=>{el.style.transform='translateX(-50%) translateY(-60px)';el.style.opacity='0';},10);
+  setTimeout(()=>el.remove(),720);
+}
+
+function updateHUD(){
+  document.getElementById('scoreEl').textContent=score;
+  document.getElementById('bestEl').textContent=best;
+  document.getElementById('wordsEl').textContent=wordsDestroyed;
+  const mins=(Date.now()-startTime)/60000||.001;
+  document.getElementById('wpmEl').textContent=Math.round(wordsDestroyed/mins);
+}
+
+function loseLife(){
+  lives--;
+  renderLives();
+  if(lives<=0) gameOver();
+}
+
+function renderLives(){
+  const row=document.getElementById('livesRow');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const d=document.createElement('div');
+    d.className='life'+(i>=lives?' dead':'');
+    row.appendChild(d);
+  }
+}
+
+let raf2,spawnInt;
+function update(ts){
+  elapsed=(Date.now()-startTime)/1000;
+  const field=getField(), fh=field.clientHeight;
+
+  for(let i=words.length-1;i>=0;i--){
+    const w=words[i];
+    if(w.matched) continue;
+    w.y+=w.spd;
+    w.el.style.top=w.y+'px';
+    // Urgency color
+    const pct=w.y/fh;
+    if(pct>.7) w.el.style.opacity=(1-(pct-.7)/.4*.3).toString();
+    if(w.y>fh-10){
+      w.el.style.opacity='0';
+      w.el.remove();
+      words.splice(i,1);
+      loseLife();
+    }
+  }
+
+  // Particles
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.15;p.life-=.04;});
+  particles=particles.filter(p=>p.life>0);
+  // Draw particles on canvas? No, DOM-based. Let CSS handle.
+
+  updateHUD();
+  raf2=requestAnimationFrame(update);
+}
+
+function gameOver(){
+  running=false; clearInterval(spawnInt); cancelAnimationFrame(raf2);
+  words.forEach(w=>w.el.remove()); words=[];
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalBest').textContent=best;
+  document.getElementById('finalWords').textContent=wordsDestroyed;
+  document.getElementById('newBestMsg').style.display=score>=best&&score>0?'block':'none';
+  document.getElementById('deathOv').classList.remove('hidden');
+}
+
+function startGame(){
+  score=0;lives=3;wordsDestroyed=0;running=true;particles=[];startTime=Date.now();
+  words.forEach(w=>{try{w.el.remove();}catch(e){}});words=[];
+  clearInterval(spawnInt); cancelAnimationFrame(raf2);
+  renderLives();
+  inputEl.value=''; inputEl.focus();
+  updateHUD();
+  // Spawn loop
+  let spawnDelay=1800;
+  const reschedule=()=>{
+    if(!running) return;
+    spawnWord();
+    spawnDelay=Math.max(600,1800-score*4);
+    spawnInt=setTimeout(reschedule,spawnDelay);
+  };
+  setTimeout(reschedule,800);
+  raf2=requestAnimationFrame(update);
+}
+
+inputEl.addEventListener('input',checkInput);
+inputEl.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();}});
+document.getElementById('kbBtn').addEventListener('click',()=>inputEl.focus());
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startOv').classList.add('hidden');
+  document.getElementById('gameArea').style.display='flex';
+  startGame();
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('deathOv').classList.add('hidden');
+  startGame();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pattern Lock — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--purple:#bf00ff;--orange:#ff6600;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--purple);letter-spacing:3px;text-shadow:0 0 18px var(--purple);}
+
+.game-wrap{position:fixed;top:52px;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:12px;}
+
+/* Status */
+.status-panel{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:360px;}
+.status-pill{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;border:1px solid var(--border);background:rgba(0,245,255,.03);border-radius:20px;}
+.sp-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.sp-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+
+/* Phase indicator */
+.phase-bar{width:100%;max-width:360px;text-align:center;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px;height:24px;transition:all .3s;}
+
+/* Grid */
+.grid{display:grid;gap:10px;width:100%;max-width:360px;}
+.tile{border-radius:10px;cursor:pointer;border:2px solid;position:relative;overflow:hidden;transition:all .1s;user-select:none;-webkit-user-select:none;aspect-ratio:1;}
+.tile::before{content:'';position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .1s;}
+.tile.lit::before{opacity:.3;}
+.tile.lit{filter:brightness(2.5);}
+.tile.wrong-flash{animation:wrongPulse .4s ease;}
+@keyframes wrongPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08);filter:brightness(3);}}
+.tile-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:clamp(14px,3vw,20px);font-weight:700;opacity:.5;}
+
+/* Progress bar */
+.progress-row{width:100%;max-width:360px;}
+.prog-track{height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:3px;transition:width .3s;}
+
+/* Overlays */
+.ov{position:fixed;inset:0;top:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(24px,5vw,46px);color:var(--purple);text-shadow:0 0 30px var(--purple);letter-spacing:4px;}
+.ov-score{font-family:'Orbitron',monospace;font-size:20px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.tips-box{background:rgba(191,0,255,.06);border:1px solid rgba(191,0,255,.25);border-radius:6px;padding:12px 16px;max-width:300px;width:100%;}
+.tips-title{font-size:9px;color:var(--purple);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--purple);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);text-align:center;max-width:280px;line-height:1.8;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">🧩 PATTERN LOCK</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+
+<div class="game-wrap" id="gameWrap" style="display:none">
+  <div class="status-panel">
+    <div class="status-pill"><span class="sp-label">ROUND</span><span class="sp-val" id="roundEl">1</span></div>
+    <div class="status-pill"><span class="sp-label">STREAK</span><span class="sp-val" id="streakEl" style="color:var(--yellow);text-shadow:0 0 10px var(--yellow)">0</span></div>
+    <div class="status-pill"><span class="sp-label">BEST</span><span class="sp-val" id="bestEl">0</span></div>
+  </div>
+  <div class="phase-bar" id="phaseBar">WATCH THE PATTERN</div>
+  <div class="progress-row"><div class="prog-track"><div class="prog-fill" id="progFill"></div></div></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- START -->
+<div class="ov" id="startOv">
+  <div class="ov-title">PATTERN LOCK</div>
+  <div class="ov-sub">Watch the tiles light up in sequence. Then repeat it exactly!</div>
+  <div class="tips-box">
+    <div class="tips-title">💡 TIPS & RULES</div>
+    <div class="tip">Watch carefully — each round adds 1 more tile</div>
+    <div class="tip">Repeat the exact same sequence in order</div>
+    <div class="tip">Speed increases every 5 rounds</div>
+    <div class="tip">One wrong tap = game over</div>
+    <div class="tip">Can you reach round 20? 🏆</div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn" data-size="4" id="startBtn4">2×2</button>
+    <button class="btn" data-size="9" id="startBtn9" style="color:var(--yellow);border-color:var(--yellow)">3×3</button>
+    <button class="btn" data-size="16" id="startBtn16" style="color:var(--pink);border-color:var(--pink)">4×4</button>
+  </div>
+  <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1px">EASY &nbsp;|&nbsp; MEDIUM &nbsp;|&nbsp; HARD</div>
+</div>
+
+<!-- FAIL -->
+<div class="ov hidden" id="failOv">
+  <div class="ov-title" style="color:var(--pink);text-shadow:0 0 30px var(--pink)">WRONG!</div>
+  <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+  <div class="ov-score">ROUND: <span id="finalRound">0</span></div>
+  <div style="font-size:12px;color:rgba(255,255,255,.4)">Best Round: <span id="finalBest">0</span></div>
+  <button class="btn" id="reBtn">↺ TRY AGAIN</button>
+  <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+</div>
+
+<script>
+const TILE_COLS=['#00f5ff','#ff0080','#00ff88','#ffee00','#bf00ff','#ff6600','#ff9900','#00cfff','#ff4488','#88ffbb','#fff200','#dd44ff','#ff8800','#44ffff','#ff6688','#aaff44'];
+let sequence=[],playerSeq=[],round=0,gridSize=9,watching=false,running=false,best=0,streak=0;
+const bestKey=()=>'plock_best_'+gridSize;
+
+function buildGrid(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  const cols=Math.sqrt(gridSize);
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  for(let i=0;i<gridSize;i++){
+    const t=document.createElement('div');
+    t.className='tile'; t.dataset.i=i;
+    t.style.background=TILE_COLS[i%TILE_COLS.length]+'22';
+    t.style.borderColor=TILE_COLS[i%TILE_COLS.length]+'44';
+    const num=document.createElement('div');
+    num.className='tile-num'; num.style.color=TILE_COLS[i%TILE_COLS.length]; num.textContent=i+1;
+    t.appendChild(num);
+    t.addEventListener('click',()=>playerTap(i));
+    t.addEventListener('touchstart',e=>{e.preventDefault();playerTap(i);},{passive:false});
+    grid.appendChild(t);
+  }
+}
+
+function lightTile(i,on){
+  const t=document.querySelector(`.tile[data-i="${i}"]`);
+  if(!t) return;
+  if(on){t.classList.add('lit');t.style.boxShadow=`0 0 25px ${TILE_COLS[i%TILE_COLS.length]}`;}
+  else{t.classList.remove('lit');t.style.boxShadow='';}
+}
+
+function flashTile(i,col,dur=180){
+  return new Promise(res=>{lightTile(i,true);setTimeout(()=>{lightTile(i,false);res();},dur);});
+}
+
+async function playSequence(){
+  watching=true;
+  setPhase('WATCH THE PATTERN','var(--purple)');
+  const speed=Math.max(250,500-Math.floor(round/5)*80);
+  for(let idx of sequence){
+    await flashTile(idx,'lit',speed);
+    await delay(speed*.4);
+  }
+  watching=false;
+  playerSeq=[];
+  setPhase('YOUR TURN — REPEAT IT!','var(--cyan)');
+  updateProg();
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+function setPhase(msg,col='#e0f0ff'){const el=document.getElementById('phaseBar');el.textContent=msg;el.style.color=col;}
+function updateProg(){document.getElementById('progFill').style.width=(playerSeq.length/sequence.length*100)+'%';}
+
+function playerTap(i){
+  if(watching||!running) return;
+  const expected=sequence[playerSeq.length];
+  playerSeq.push(i);
+  flashTile(i,'lit',120);
+
+  if(i!==expected){
+    // Wrong
+    const t=document.querySelector(`.tile[data-i="${i}"]`);
+    if(t){t.classList.add('wrong-flash');setTimeout(()=>t.classList.remove('wrong-flash'),400);}
+    running=false;
+    const bk=bestKey();
+    const cur=parseInt(localStorage.getItem(bk)||'0');
+    if(round>cur){best=round;localStorage.setItem(bk,round);}
+    streak=0;
+    setTimeout(showFail,500);
+    return;
+  }
+  updateProg();
+
+  if(playerSeq.length===sequence.length){
+    // Correct full sequence
+    streak++; round++;
+    document.getElementById('roundEl').textContent=round;
+    document.getElementById('streakEl').textContent=streak;
+    const bk=bestKey();
+    const cur=parseInt(localStorage.getItem(bk)||'0');
+    if(round>cur){localStorage.setItem(bk,round);}
+    best=parseInt(localStorage.getItem(bk)||'0');
+    document.getElementById('bestEl').textContent=best;
+    setPhase('✅ CORRECT! NEXT ROUND...','var(--green)');
+    setTimeout(nextRound,700);
+  }
+}
+
+function nextRound(){
+  sequence.push(Math.floor(Math.random()*gridSize));
+  playSequence();
+}
+
+function showFail(){
+  document.getElementById('finalRound').textContent=round;
+  document.getElementById('finalBest').textContent=best;
+  document.getElementById('newBestMsg').style.display=round>=best&&round>1?'block':'none';
+  document.getElementById('failOv').classList.remove('hidden');
+}
+
+function startGame(size){
+  gridSize=size; round=1; sequence=[]; playerSeq=[]; watching=false; running=true; streak=0;
+  best=parseInt(localStorage.getItem(bestKey())||'0');
+  document.getElementById('bestEl').textContent=best;
+  document.getElementById('roundEl').textContent=1;
+  document.getElementById('streakEl').textContent=0;
+  document.getElementById('gameWrap').style.display='flex';
+  buildGrid();
+  sequence.push(Math.floor(Math.random()*size));
+  setTimeout(()=>playSequence(),600);
+}
+
+[4,9,16].forEach(size=>{
+  document.getElementById('startBtn'+size).addEventListener('click',()=>{
+    document.getElementById('startOv').classList.add('hidden');
+    startGame(size);
+  });
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('failOv').classList.add('hidden');
+  startGame(gridSize);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Don't Touch Red — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;touch-action:none;cursor:none;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;backdrop-filter:blur(10px);}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--pink);letter-spacing:3px;text-shadow:0 0 18px var(--pink);}
+.stats-bar{position:fixed;top:52px;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:center;gap:36px;background:rgba(2,4,8,0.92);border-bottom:1px solid var(--border);z-index:99;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.stat-value{font-size:16px;font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+.game-wrap{position:fixed;top:98px;bottom:0;left:0;right:0;}
+canvas{display:block;width:100%;height:100%;}
+
+.ov{position:fixed;inset:0;top:98px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(28px,5vw,50px);color:var(--pink);text-shadow:0 0 30px var(--pink);letter-spacing:4px;}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-align:center;max-width:280px;line-height:1.8;}
+.ov-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.tips-box{background:rgba(255,0,128,.06);border:1px solid rgba(255,0,128,.25);border-radius:6px;padding:12px 16px;max-width:280px;width:100%;}
+.tips-title{font-size:9px;color:var(--pink);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--pink);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Warning flash */
+.warn-overlay{position:fixed;inset:0;top:98px;background:rgba(255,0,0,0);pointer-events:none;z-index:90;transition:background .1s;}
+/* Spawn warning */
+#spawnWarn{position:fixed;top:108px;right:12px;font-family:'Orbitron',monospace;font-size:10px;color:var(--pink);letter-spacing:2px;opacity:0;z-index:95;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">🔴 DON'T TOUCH RED</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">TIME</span><span class="stat-value" id="timeEl">0.0s</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="bestEl">0.0s</span></div>
+  <div class="stat"><span class="stat-label">ZONES</span><span class="stat-value" id="zonesEl" style="color:var(--pink);text-shadow:0 0 10px var(--pink)">1</span></div>
+</div>
+
+<div class="game-wrap"><canvas id="c"></canvas></div>
+<div class="warn-overlay" id="warnOv"></div>
+<div id="spawnWarn">⚠ NEW ZONE</div>
+
+<!-- START -->
+<div class="ov" id="startOv">
+  <div class="ov-title">DON'T TOUCH RED</div>
+  <div class="ov-sub">Move your cursor (or drag on phone) through the arena. Don't touch the red zones — instant death!</div>
+  <div class="tips-box">
+    <div class="tips-title">💡 TIPS & RULES</div>
+    <div class="tip">Move mouse or drag finger to control the cursor</div>
+    <div class="tip">New red zone spawns every 5 seconds</div>
+    <div class="tip">Zones grow slowly over time — survive longer!</div>
+    <div class="tip">Red zones bounce off walls — predict their path</div>
+    <div class="tip">The bigger your cursor glows, the safer you are</div>
+  </div>
+  <button class="btn" id="startBtn">▶ START SURVIVING</button>
+</div>
+
+<!-- DEATH -->
+<div class="ov hidden" id="deathOv">
+  <div class="ov-title">DEAD</div>
+  <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+  <div class="ov-score">SURVIVED: <span id="finalTime">0.0s</span></div>
+  <div style="font-size:12px;color:rgba(255,255,255,.4)">BEST: <span id="finalBest">0.0s</span></div>
+  <button class="btn" id="reBtn">↺ TRY AGAIN</button>
+  <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+</div>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+resize(); window.addEventListener('resize',resize);
+
+let best=parseFloat(localStorage.getItem('dtr_best')||'0');
+document.getElementById('bestEl').textContent=best.toFixed(1)+'s';
+
+let cursor={x:-100,y:-100}, zones=[], running=false, startTime=0, elapsed=0, raf, spawnInterval, trail=[];
+let particles=[];
+
+function makeZone(){
+  const r=Math.max(28,Math.min(W,H)*.08);
+  let x,y,ok=false,tries=0;
+  while(!ok&&tries<30){
+    x=r+Math.random()*(W-r*2); y=r+Math.random()*(H-r*2);
+    ok=Math.hypot(x-cursor.x,y-cursor.y)>r*4;
+    tries++;
+  }
+  const speed=(1+Math.random())*1.8;
+  const ang=Math.random()*Math.PI*2;
+  zones.push({x,y,r,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,baseR:r,t:0});
+}
+
+function init(){
+  elapsed=0; zones=[]; trail=[]; particles=[];
+  // Start cursor in center
+  cursor={x:W/2,y:H/2};
+  zones=[]; makeZone();
+  startTime=Date.now();
+  running=true;
+  clearInterval(spawnInterval);
+  spawnInterval=setInterval(()=>{
+    if(!running) return;
+    makeZone();
+    showSpawnWarn();
+    document.getElementById('zonesEl').textContent=zones.length;
+  },5000);
+}
+
+function showSpawnWarn(){
+  const el=document.getElementById('spawnWarn');
+  el.style.opacity='1'; el.style.color='#ff0080';
+  setTimeout(()=>el.style.opacity='0',1200);
+}
+
+function update(){
+  if(!running) return;
+  elapsed=(Date.now()-startTime)/1000;
+  document.getElementById('timeEl').textContent=elapsed.toFixed(1)+'s';
+
+  // Trail
+  trail.push({x:cursor.x,y:cursor.y,t:1});
+  if(trail.length>25) trail.shift();
+  trail.forEach(t=>t.t-=.04);
+
+  zones.forEach(z=>{
+    z.t+=0.005;
+    z.r=z.baseR*(1+z.t*.1); // slowly grow
+    z.x+=z.vx; z.y+=z.vy;
+    if(z.x-z.r<0){z.x=z.r;z.vx*=-1;}
+    if(z.x+z.r>W){z.x=W-z.r;z.vx*=-1;}
+    if(z.y-z.r<0){z.y=z.r;z.vy*=-1;}
+    if(z.y+z.r>H){z.y=H-z.r;z.vy*=-1;}
+
+    const dist=Math.hypot(cursor.x-z.x,cursor.y-z.y);
+    if(dist<z.r+10 && cursor.x>0){ die(); return; }
+    // Near warning
+    if(dist<z.r+50){
+      document.getElementById('warnOv').style.background='rgba(255,0,0,0.04)';
+    }
+  });
+  document.getElementById('warnOv').style.background='rgba(255,0,0,0)';
+
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.04;});
+  particles=particles.filter(p=>p.life>0);
+}
+
+function die(){
+  running=false;
+  clearInterval(spawnInterval);
+  for(let i=0;i<20;i++) particles.push({x:cursor.x,y:cursor.y,vx:(Math.random()-.5)*8,vy:(Math.random()-.5)*8,life:1,col:'#ff0080'});
+  if(elapsed>best){best=elapsed;localStorage.setItem('dtr_best',best.toFixed(2));}
+  setTimeout(()=>{
+    document.getElementById('finalTime').textContent=elapsed.toFixed(1)+'s';
+    document.getElementById('finalBest').textContent=best.toFixed(1)+'s';
+    document.getElementById('newBestMsg').style.display=elapsed>=best&&elapsed>.5?'block':'none';
+    document.getElementById('deathOv').classList.remove('hidden');
+  },700);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#020408'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='rgba(0,245,255,0.03)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Zones
+  zones.forEach(z=>{
+    const t=Date.now()/800;
+    const pulse=.85+.15*Math.sin(t*Math.PI*2);
+    ctx.save();
+    ctx.shadowBlur=30*pulse; ctx.shadowColor='#ff0000';
+    // Outer glow
+    const grad=ctx.createRadialGradient(z.x,z.y,0,z.x,z.y,z.r*pulse);
+    grad.addColorStop(0,'rgba(255,0,0,0.7)');
+    grad.addColorStop(0.6,'rgba(255,0,0,0.4)');
+    grad.addColorStop(1,'rgba(255,0,0,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(z.x,z.y,z.r*pulse*1.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,0,80,0.9)';
+    ctx.beginPath(); ctx.arc(z.x,z.y,z.r*pulse,0,Math.PI*2); ctx.fill();
+    // Inner detail
+    ctx.fillStyle='rgba(255,120,120,0.4)';
+    ctx.beginPath(); ctx.arc(z.x-z.r*.2,z.y-z.r*.2,z.r*.25,0,Math.PI*2); ctx.fill();
+    // Danger text
+    ctx.fillStyle='rgba(0,0,0,0.7)';
+    ctx.font=`bold ${Math.max(9,z.r*.25)}px Orbitron,monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('☠',z.x,z.y);
+    ctx.restore();
+  });
+
+  // Particle explosion
+  particles.forEach(p=>{
+    ctx.save(); ctx.globalAlpha=p.life; ctx.shadowBlur=10; ctx.shadowColor=p.col;
+    ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(p.x,p.y,4*p.life,0,Math.PI*2); ctx.fill(); ctx.restore();
+  });
+
+  // Cursor trail
+  trail.forEach((t,i)=>{
+    if(t.t<=0) return;
+    ctx.save(); ctx.globalAlpha=t.t*.4; ctx.shadowBlur=8; ctx.shadowColor='#00f5ff';
+    ctx.fillStyle='#00f5ff'; ctx.beginPath(); ctx.arc(t.x,t.y,6*t.t,0,Math.PI*2); ctx.fill(); ctx.restore();
+  });
+
+  // Cursor
+  if(running||particles.length){
+    const pulse=.8+.2*Math.sin(Date.now()/200);
+    ctx.save(); ctx.shadowBlur=25*pulse; ctx.shadowColor='#00f5ff';
+    ctx.fillStyle='#00f5ff';
+    ctx.beginPath(); ctx.arc(cursor.x,cursor.y,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(cursor.x,cursor.y,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Time display on canvas
+  if(running){
+    ctx.save(); ctx.font=`bold 28px Orbitron,monospace`; ctx.fillStyle='rgba(0,245,255,0.12)';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(elapsed.toFixed(1)+'s',W/2,H/2); ctx.restore();
+  }
+}
+
+function loop(){update();draw();raf=requestAnimationFrame(loop);}
+
+// Mouse
+cv.addEventListener('mousemove',e=>{
+  const r=cv.getBoundingClientRect();
+  cursor.x=e.clientX-r.left; cursor.y=e.clientY-r.top;
+});
+// Touch
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  cursor.x=e.touches[0].clientX-r.left; cursor.y=e.touches[0].clientY-r.top;
+},{passive:false});
+cv.addEventListener('touchstart',e=>{
+  const r=cv.getBoundingClientRect();
+  cursor.x=e.touches[0].clientX-r.left; cursor.y=e.touches[0].clientY-r.top;
+},{passive:true});
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startOv').classList.add('hidden');
+  init(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('deathOv').classList.add('hidden'); init();
+});
+
+raf=requestAnimationFrame(loop);
+</script>
+</body>
+</html>

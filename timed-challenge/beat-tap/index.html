@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Beat Tap — GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020408;--cyan:#00f5ff;--pink:#ff0080;--yellow:#ffee00;--green:#00ff88;--purple:#bf00ff;--border:rgba(0,245,255,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Share Tech Mono',monospace;color:#e0f0ff;touch-action:none;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:999;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(2,4,8,0.96);border-bottom:1px solid var(--border);z-index:100;backdrop-filter:blur(10px);}
+nav a{color:var(--cyan);text-decoration:none;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.7;}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--purple);letter-spacing:3px;text-shadow:0 0 18px var(--purple);}
+.stats-bar{position:fixed;top:52px;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:center;gap:32px;background:rgba(2,4,8,0.92);border-bottom:1px solid var(--border);z-index:99;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;}
+.stat-value{font-size:15px;font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);}
+.game-wrap{position:fixed;top:98px;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;padding:8px;}
+
+/* Game layout */
+.game-area{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px;height:100%;gap:8px;}
+.lanes-wrap{flex:1;width:100%;position:relative;display:flex;gap:6px;min-height:0;}
+.lane{flex:1;border-radius:8px;border:2px solid;position:relative;overflow:hidden;cursor:pointer;transition:background .05s;}
+.lane:active,.lane.hit-flash{filter:brightness(1.6);}
+.lane-label{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:1px;}
+.hit-zone{position:absolute;bottom:60px;left:0;right:0;height:18px;border-radius:4px;}
+.note{position:absolute;left:10%;width:80%;border-radius:8px;transition:none;}
+.feedback{position:absolute;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:13px;font-weight:700;pointer-events:none;opacity:0;white-space:nowrap;}
+
+.combo-bar{width:100%;max-width:420px;}
+.combo-track{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.combo-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:3px;transition:width .1s;}
+
+/* Key labels at bottom */
+.key-row{display:flex;gap:6px;width:100%;max-width:420px;}
+.key-btn{flex:1;padding:14px 0;font-family:'Orbitron',monospace;font-size:18px;font-weight:900;border-radius:8px;border:2px solid;cursor:pointer;user-select:none;-webkit-user-select:none;transition:filter .05s;text-align:center;}
+.key-btn:active{filter:brightness(1.8);}
+
+/* Overlays */
+.ov{position:fixed;inset:0;top:98px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(2,4,8,.93);z-index:50;}
+.ov.hidden{display:none;}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(26px,5vw,48px);color:var(--purple);text-shadow:0 0 30px var(--purple);letter-spacing:4px;}
+.ov-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-align:center;max-width:300px;line-height:1.8;}
+.ov-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--yellow);text-shadow:0 0 15px var(--yellow);}
+.btn{padding:12px 32px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:transparent;color:var(--cyan);border:2px solid var(--cyan);cursor:pointer;transition:all .2s;text-transform:uppercase;border-radius:3px;}
+.btn:hover{box-shadow:0 0 25px rgba(0,245,255,.5);background:rgba(0,245,255,.1);}
+.tips-box{background:rgba(191,0,255,.06);border:1px solid rgba(191,0,255,.25);border-radius:6px;padding:12px 16px;max-width:300px;width:100%;}
+.tips-title{font-size:9px;color:var(--purple);letter-spacing:3px;margin-bottom:8px;}
+.tip{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;padding-left:12px;position:relative;}
+.tip::before{content:'›';position:absolute;left:0;color:var(--purple);}
+.new-best{color:var(--yellow);font-family:'Orbitron',monospace;font-size:13px;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html">← GAMEHUB</a>
+  <span class="nav-logo">🎵 BEAT TAP</span>
+  <a href="/timed-challenge/index.html">TIMED</a>
+</nav>
+<div class="stats-bar">
+  <div class="stat"><span class="stat-label">SCORE</span><span class="stat-value" id="scoreEl">0</span></div>
+  <div class="stat"><span class="stat-label">COMBO</span><span class="stat-value" id="comboEl">0×</span></div>
+  <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="bestEl">0</span></div>
+  <div class="stat"><span class="stat-label">MISS</span><span class="stat-value" id="missEl" style="color:var(--pink);text-shadow:0 0 10px var(--pink)">0</span></div>
+</div>
+
+<div class="game-wrap">
+  <div class="game-area">
+    <div class="lanes-wrap" id="lanesWrap">
+      <!-- lanes injected by JS -->
+    </div>
+    <div class="combo-bar">
+      <div class="combo-track"><div class="combo-fill" id="comboFill"></div></div>
+    </div>
+    <div class="key-row" id="keyRow"></div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="ov" id="startOv">
+  <div class="ov-title">BEAT TAP</div>
+  <div class="ov-sub">Neon circles fall down 4 lanes.<br>Hit the HIT ZONE at the right moment!</div>
+  <div class="tips-box">
+    <div class="tips-title">💡 TIPS & RULES</div>
+    <div class="tip">Tap the lane button when the note reaches the glowing bar</div>
+    <div class="tip">PERFECT = 100pts, GOOD = 50pts, MISS = 0 & breaks combo</div>
+    <div class="tip">Combo multiplier stacks up to 8× — don't miss!</div>
+    <div class="tip">Max 10 misses — then game over</div>
+    <div class="tip">Keyboard: D F J K for lanes 1–4</div>
+  </div>
+  <button class="btn" id="startBtn">▶ PLAY</button>
+</div>
+
+<!-- GAMEOVER -->
+<div class="ov hidden" id="deathOv">
+  <div class="ov-title" style="color:var(--pink);text-shadow:0 0 30px var(--pink)">GAME OVER</div>
+  <div id="newBestMsg" class="new-best" style="display:none">⚡ NEW BEST!</div>
+  <div class="ov-score">SCORE: <span id="finalScore">0</span></div>
+  <div style="font-size:12px;color:rgba(255,255,255,.4)">BEST: <span id="finalBest">0</span></div>
+  <button class="btn" id="reBtn">↺ PLAY AGAIN</button>
+  <a href="/timed-challenge/index.html" style="color:rgba(255,255,255,.35);font-size:11px;letter-spacing:2px">← BACK</a>
+</div>
+
+<script>
+const LANE_COLS=['#00f5ff','#ff0080','#00ff88','#bf00ff'];
+const LANE_KEYS=['D','F','J','K'];
+const LANE_KEY_CODES=['KeyD','KeyF','KeyJ','KeyK'];
+const MAX_MISS=10;
+const HIT_ZONE_FRAC=0.82; // fraction down the lane
+
+let lanes=[], notes=[], score=0, combo=0, maxCombo=0, misses=0, running=false, raf, spawnTimer=0, speed=3, level=0;
+let best=parseInt(localStorage.getItem('beattap_best')||'0');
+document.getElementById('bestEl').textContent=best;
+
+// Build lanes
+const lanesWrap=document.getElementById('lanesWrap');
+const keyRow=document.getElementById('keyRow');
+
+for(let i=0;i<4;i++){
+  const col=LANE_COLS[i];
+  const lane=document.createElement('div');
+  lane.className='lane'; lane.dataset.i=i;
+  lane.style.borderColor=col+'55';
+  lane.style.background=col+'08';
+
+  const hitZone=document.createElement('div');
+  hitZone.className='hit-zone'; hitZone.style.background=col+'33'; hitZone.style.border=`2px solid ${col}66`;
+  lane.appendChild(hitZone);
+
+  const lbl=document.createElement('div');
+  lbl.className='lane-label'; lbl.style.color=col+'99'; lbl.textContent=LANE_KEYS[i];
+  lane.appendChild(lbl);
+
+  lane.addEventListener('click',()=>hitLane(i));
+  lane.addEventListener('touchstart',e=>{e.preventDefault();hitLane(i);},{passive:false});
+  lanesWrap.appendChild(lane);
+  lanes.push({el:lane,hitZone,col});
+
+  // Key button
+  const kb=document.createElement('div');
+  kb.className='key-btn'; kb.textContent=LANE_KEYS[i];
+  kb.style.color=col; kb.style.borderColor=col+'66'; kb.style.background=col+'0a';
+  kb.addEventListener('click',()=>hitLane(i));
+  kb.addEventListener('touchstart',e=>{e.preventDefault();hitLane(i);},{passive:false});
+  keyRow.appendChild(kb);
+}
+
+function getLaneH(){return lanesWrap.clientHeight;}
+function getHitY(){return getLaneH()*HIT_ZONE_FRAC;}
+function getNoteH(){return Math.max(28,getLaneH()*0.1);}
+
+function spawnNote(laneIdx){
+  const col=LANE_COLS[laneIdx];
+  const noteEl=document.createElement('div');
+  noteEl.className='note';
+  noteEl.style.height=getNoteH()+'px';
+  noteEl.style.background=`linear-gradient(180deg,${col}dd,${col}66)`;
+  noteEl.style.boxShadow=`0 0 18px ${col}88, inset 0 0 8px rgba(255,255,255,.2)`;
+  noteEl.style.top='-60px';
+  noteEl.style.borderRadius='10px';
+  noteEl.style.border=`2px solid ${col}`;
+  lanes[laneIdx].el.appendChild(noteEl);
+  notes.push({lane:laneIdx,el:noteEl,y:-60,hit:false,missed:false});
+}
+
+function hitLane(i){
+  if(!running) return;
+  // Flash lane
+  const laneEl=lanes[i].el;
+  laneEl.classList.add('hit-flash');
+  setTimeout(()=>laneEl.classList.remove('hit-flash'),80);
+
+  const laneH=getLaneH(), hitY=getHitY(), nh=getNoteH();
+  const hitCenter=hitY+nh/2;
+  // Find closest note in this lane
+  let best_note=null, best_dist=Infinity;
+  for(const n of notes){
+    if(n.lane!==i||n.hit||n.missed) continue;
+    const noteCenter=n.y+nh/2;
+    const dist=Math.abs(noteCenter-hitCenter);
+    if(dist<best_dist){best_dist=dist;best_note=n;}
+  }
+  if(!best_note) return;
+  const window_px=getNoteH()*1.1;
+  if(best_dist<window_px*.5){
+    // PERFECT
+    doHit(best_note,'PERFECT',100,'#ffee00');
+  } else if(best_dist<window_px){
+    // GOOD
+    doHit(best_note,'GOOD',50,'#00ff88');
+  }
+}
+
+function doHit(note,label,pts,col){
+  note.hit=true;
+  const mult=1+Math.min(combo,7);
+  const earned=pts*mult;
+  score+=earned;
+  combo++; if(combo>maxCombo) maxCombo=combo;
+  if(score>best){best=score;localStorage.setItem('beattap_best',best);}
+  showFeedback(note.lane,label,col);
+  note.el.style.transition='all .15s'; note.el.style.transform='scale(1.4)'; note.el.style.opacity='0';
+  setTimeout(()=>note.el.remove(),150);
+  updateHUD();
+}
+
+function showFeedback(laneIdx,label,col){
+  const fb=document.createElement('div');
+  fb.className='feedback'; fb.textContent=label; fb.style.color=col; fb.style.textShadow=`0 0 12px ${col}`;
+  fb.style.bottom=(getHitY()-20)+'px'; fb.style.fontSize=label==='PERFECT'?'14px':'12px';
+  lanes[laneIdx].el.appendChild(fb);
+  fb.style.transition='all .5s'; fb.style.opacity='1';
+  setTimeout(()=>{fb.style.opacity='0';fb.style.transform='translateY(-30px) translateX(-50%)';},50);
+  setTimeout(()=>fb.remove(),600);
+}
+
+function doMiss(note){
+  note.missed=true; misses++;
+  combo=0;
+  note.el.style.opacity='0';
+  setTimeout(()=>note.el.remove(),200);
+  // Flash miss
+  lanes[note.lane].el.style.background=LANE_COLS[note.lane]+'22';
+  setTimeout(()=>{lanes[note.lane].el.style.background=LANE_COLS[note.lane]+'08';},200);
+  updateHUD();
+  if(misses>=MAX_MISS) gameOver();
+}
+
+let lastTime=0;
+function gameLoop(ts){
+  const dt=ts-lastTime; lastTime=ts;
+  if(!running){raf=requestAnimationFrame(gameLoop);return;}
+
+  level+=dt*.0001; speed=3+level*.8;
+  spawnTimer-=dt;
+  if(spawnTimer<=0){
+    const laneIdx=Math.floor(Math.random()*4);
+    spawnNote(laneIdx);
+    spawnTimer=Math.max(400,900-level*60);
+  }
+
+  const laneH=getLaneH(), hitY=getHitY(), nh=getNoteH();
+  for(const n of notes){
+    if(n.hit||n.missed) continue;
+    n.y+=speed*(dt/16);
+    n.el.style.top=n.y+'px';
+    if(n.y>laneH+10) doMiss(n);
+  }
+  notes=notes.filter(n=>!n.missed||n.el.parentNode);
+
+  // Combo fill
+  document.getElementById('comboFill').style.width=Math.min(100,(combo/64)*100)+'%';
+  raf=requestAnimationFrame(gameLoop);
+}
+
+function updateHUD(){
+  document.getElementById('scoreEl').textContent=score;
+  document.getElementById('comboEl').textContent=combo+'×';
+  document.getElementById('bestEl').textContent=best;
+  document.getElementById('missEl').textContent=misses;
+}
+
+function startGame(){
+  score=0;combo=0;maxCombo=0;misses=0;level=0;speed=3;
+  notes.forEach(n=>{try{n.el.remove();}catch(e){}});
+  notes=[]; spawnTimer=500; running=true; lastTime=performance.now();
+  updateHUD();
+}
+
+function gameOver(){
+  running=false;
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalBest').textContent=best;
+  document.getElementById('newBestMsg').style.display=score>=best&&score>0?'block':'none';
+  document.getElementById('deathOv').classList.remove('hidden');
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  const idx=LANE_KEY_CODES.indexOf(e.code);
+  if(idx!==-1){e.preventDefault();hitLane(idx);}
+});
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startOv').classList.add('hidden');
+  startGame(); raf=requestAnimationFrame(gameLoop);
+});
+document.getElementById('reBtn').addEventListener('click',()=>{
+  document.getElementById('deathOv').classList.add('hidden');
+  startGame();
+});
+</script>
+</body>
+</html>
