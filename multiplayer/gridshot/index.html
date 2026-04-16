@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GridShot — Multiplayer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column;touch-action:none}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,230,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,230,0,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,230,0,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes pop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes shrink{0%{transform:scale(1)}100%{transform:scale(0);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes hit-ring{0%{transform:scale(1);opacity:0.8}100%{transform:scale(3);opacity:0}}
+@keyframes lb-row{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes score-pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid rgba(255,230,0,0.08);background:rgba(5,5,16,0.98);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 12px rgba(0,245,255,0.5)}
+.logo span{color:var(--purple)}
+.nav-right{display:flex;gap:6px;align-items:center}
+.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 12px;border-radius:6px;transition:all 0.2s;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+.nick-tag{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);padding:6px 14px;border-radius:20px}
+
+.game-wrap{position:relative;z-index:1;flex:1;display:flex;gap:16px;padding:12px 16px;overflow:hidden;align-items:flex-start;justify-content:center}
+
+/* SIDE PANEL */
+.side-panel{display:flex;flex-direction:column;gap:10px;width:170px;flex-shrink:0;padding-top:4px}
+.pc{background:var(--card);border-radius:10px;padding:12px;text-align:center}
+.pl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.pv{font-family:'Orbitron',monospace;font-size:22px;font-weight:700}
+.score-pop{animation:score-pop 0.25s ease}
+
+/* TIMER RING */
+.timer-ring-wrap{position:relative;width:70px;height:70px;margin:0 auto}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:5}
+.timer-ring-fill{fill:none;stroke:var(--yellow);stroke-width:5;stroke-linecap:round;stroke-dasharray:188;transition:stroke-dashoffset 0.1s linear}
+.timer-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--yellow)}
+
+/* LEADERBOARD PANEL */
+.lb-panel{background:var(--card);border-radius:10px;padding:12px;flex:1}
+.lb-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.live-badge{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green)}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1s ease-in-out infinite}
+.lb-entry{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);animation:lb-row 0.3s ease both}
+.lb-entry:last-child{border-bottom:none}
+.lb-r{font-family:'Orbitron',monospace;font-size:10px;width:18px;flex-shrink:0}
+.r1{color:var(--yellow)}.r2{color:#c0c8d8}.r3{color:var(--orange)}.rn{color:var(--dim)}
+.lb-n{font-size:12px;flex:1;color:#dde4f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-s{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--yellow)}
+.lb-you{color:var(--green)!important}
+.you-star{font-size:9px;margin-left:3px}
+
+/* ARENA */
+.arena-wrap{position:relative;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.arena-top{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:520px}
+.combo-display{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--orange);text-shadow:0 0 10px rgba(255,107,0,0.5)}
+.acc-display{font-size:12px;color:var(--dim)}
+.acc-display span{color:var(--green);font-family:'Orbitron',monospace;font-weight:700}
+
+.grid-canvas-wrap{position:relative}
+.canvas-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(255,230,0,0.12);pointer-events:none;box-shadow:0 0 30px rgba(255,230,0,0.05)}
+canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(255,230,0,0.08);cursor:crosshair}
+@media(max-width:700px){canvas{width:300px!important;height:300px!important}}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.95);backdrop-filter:blur(6px);animation:fadeIn 0.3s ease;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.ov-icon{font-size:48px;margin-bottom:10px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;margin-bottom:7px;letter-spacing:2px;text-align:center}
+.ov-sub{font-size:13px;color:var(--dim);margin-bottom:16px;text-align:center;line-height:1.5;max-width:300px}
+.rules{background:rgba(255,230,0,0.04);border:1px solid rgba(255,230,0,0.12);border-radius:9px;padding:12px 16px;margin-bottom:16px;width:100%;max-width:320px}
+.rt{font-family:'Orbitron',monospace;font-size:9px;color:var(--yellow);letter-spacing:2px;margin-bottom:8px}
+.rule{display:flex;gap:7px;margin-bottom:5px}
+.ri{font-size:12px;flex-shrink:0}
+.rv{font-size:11px;color:#aabbdd;line-height:1.35}
+.stats-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.sbox{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:9px 14px;text-align:center;min-width:70px}
+.slbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sval{font-family:'Orbitron',monospace;font-size:17px;font-weight:700}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;border-radius:7px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
+.btn-y{background:rgba(255,230,0,0.12);color:var(--yellow);border:1px solid rgba(255,230,0,0.3)}
+.btn-y:hover{background:rgba(255,230,0,0.22);box-shadow:0 0 14px rgba(255,230,0,0.3);transform:translateY(-2px)}
+.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
+.nb-badge{font-family:'Orbitron',monospace;font-size:10px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:4px 12px;margin-bottom:10px;display:none}
+.nb-badge.show{display:block}
+.rank-badge{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;padding:10px 20px;border-radius:8px;margin-bottom:12px;text-align:center;width:100%;max-width:300px}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<nav>
+  <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
+  <div class="nav-right">
+    <div class="nick-tag">🎯 <span id="nick-show">Player</span></div>
+    <a href="../index.html" class="nbtn">← Arena</a>
+    <a href="../../index.html" class="nbtn">🏠</a>
+  </div>
+</nav>
+
+<div class="game-wrap">
+
+  <!-- LEFT PANEL -->
+  <div class="side-panel">
+    <div class="pc" style="border:1px solid rgba(255,230,0,0.15)">
+      <div class="pl">Score</div>
+      <div class="pv" style="color:var(--yellow);text-shadow:0 0 10px rgba(255,230,0,0.5)" id="score-el">0</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(0,245,255,0.12)">
+      <div class="pl">Best</div>
+      <div class="pv" style="color:var(--cyan);font-size:18px" id="best-el">0</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(191,0,255,0.12)">
+      <div class="pl">Timer</div>
+      <div class="timer-ring-wrap">
+        <svg width="70" height="70" class="timer-ring">
+          <circle class="timer-ring-bg" cx="35" cy="35" r="30"/>
+          <circle class="timer-ring-fill" cx="35" cy="35" r="30" id="timer-ring-fill"/>
+        </svg>
+        <div class="timer-ring-text" id="timer-el">30</div>
+      </div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,107,0,0.12)">
+      <div class="pl">Hits</div>
+      <div class="pv" style="color:var(--orange);font-size:18px" id="hits-el">0</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,0,60,0.1)">
+      <div class="pl">Misses</div>
+      <div class="pv" style="color:#ff3355;font-size:18px" id="miss-el">0</div>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena-wrap">
+    <div class="arena-top">
+      <div class="combo-display" id="combo-el">Combo ×1</div>
+      <div class="acc-display">Accuracy: <span id="acc-el">100%</span></div>
+    </div>
+    <div class="grid-canvas-wrap">
+      <div class="canvas-glow"></div>
+      <canvas id="c" width="520" height="520"></canvas>
+
+      <!-- START -->
+      <div class="overlay" id="start-screen">
+        <div class="ov-icon">🎯</div>
+        <div class="ov-title" style="color:var(--yellow);text-shadow:0 0 20px rgba(255,230,0,0.6)">GRIDSHOT</div>
+        <div class="ov-sub">Click glowing neon targets as fast as possible! 30 seconds. Score goes on the global leaderboard!</div>
+        <div class="rules">
+          <div class="rt">📋 HOW TO PLAY</div>
+          <div class="rule"><span class="ri">🎯</span><span class="rv">Glowing targets appear randomly. Click/tap them instantly.</span></div>
+          <div class="rule"><span class="ri">⚡</span><span class="rv">Hit fast = more points. Combo multiplier stacks up!</span></div>
+          <div class="rule"><span class="ri">❌</span><span class="rv">Missing (clicking empty space) resets your combo.</span></div>
+          <div class="rule"><span class="ri">🔥</span><span class="rv">3+ hit combo = ×2 bonus. 5+ = ×3. 10+ = ×5!</span></div>
+          <div class="rule"><span class="ri">🏆</span><span class="rv">Your final score is saved to the LIVE global leaderboard!</span></div>
+        </div>
+        <div class="btns"><button class="btn btn-y" onclick="startGame()">Start!</button></div>
+      </div>
+
+      <!-- GAME OVER -->
+      <div class="overlay hidden" id="end-screen">
+        <div class="ov-icon">🎯</div>
+        <div class="ov-title" id="end-title" style="color:var(--yellow)">ROUND OVER!</div>
+        <div class="rank-badge" id="rank-badge"></div>
+        <div class="nb-badge" id="nb-badge">⚡ NEW PERSONAL BEST!</div>
+        <div class="stats-row">
+          <div class="sbox"><div class="slbl">Score</div><div class="sval" id="e-score" style="color:var(--yellow)">0</div></div>
+          <div class="sbox"><div class="slbl">Hits</div><div class="sval" id="e-hits" style="color:var(--green)">0</div></div>
+          <div class="sbox"><div class="slbl">Accuracy</div><div class="sval" id="e-acc" style="color:var(--cyan)">0%</div></div>
+          <div class="sbox"><div class="slbl">Best</div><div class="sval" id="e-best" style="color:var(--orange)">0</div></div>
+        </div>
+        <div class="btns">
+          <button class="btn btn-y" onclick="startGame()">Play Again</button>
+          <a href="../index.html" class="btn btn-dim">← Arena</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT LEADERBOARD -->
+  <div class="side-panel">
+    <div class="lb-panel">
+      <div class="lb-title">🌐 LIVE LEADERBOARD <div class="live-badge"><div class="ldot"></div>LIVE</div></div>
+      <div id="lb-list"><div style="font-size:11px;color:var(--dim);text-align:center;padding:8px">Loading...</div></div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,0,110,0.1);padding:10px">
+      <div class="pl">Your Rank</div>
+      <div class="pv" style="color:var(--pink);font-size:18px" id="rank-el">--</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, get, set, runTransaction }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",
+  authDomain: "gamehub234.firebaseapp.com",
+  databaseURL: "https://gamehub234-default-rtdb.firebaseio.com",
+  projectId: "gamehub234",
+  storageBucket: "gamehub234.firebasestorage.app",
+  messagingSenderId: "902315908438",
+  appId: "1:902315908438:web:7ff2c34487b24c71998af7"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+const nick = localStorage.getItem('player_nick') || 'Anonymous';
+document.getElementById('nick-show').textContent = nick;
+
+const MEDALS = ['🥇','🥈','🥉'];
+const RANK_CLS = ['r1','r2','r3'];
+
+// Live leaderboard listener
+const lbQuery = query(ref(db,'scores/gridshot'), orderByChild('score'), limitToLast(15));
+onValue(lbQuery, snap => {
+  const rows = [];
+  snap.forEach(c => rows.push(c.val()));
+  rows.sort((a,b) => b.score - a.score);
+  const el = document.getElementById('lb-list');
+  if (!rows.length) { el.innerHTML = '<div style="font-size:11px;color:var(--dim);text-align:center;padding:8px">No scores yet!</div>'; return; }
+  el.innerHTML = rows.slice(0,12).map((e,i) => `
+    <div class="lb-entry" style="animation-delay:${i*0.04}s">
+      <span class="lb-r ${RANK_CLS[i]||'rn'}">${MEDALS[i]||i+1}</span>
+      <span class="lb-n ${e.nick===nick?'lb-you':''}">${e.nick||'Anon'}${e.nick===nick?'<span class="you-star">⭐</span>':''}</span>
+      <span class="lb-s">${e.score.toLocaleString()}</span>
+    </div>`).join('');
+  // Calculate rank
+  const myRank = rows.findIndex(e => e.nick === nick) + 1;
+  document.getElementById('rank-el').textContent = myRank > 0 ? '#' + myRank : '--';
+});
+
+// Save score to Firebase
+window._saveScore = async function(score, hits, misses) {
+  const entry = {
+    nick, score, hits, misses,
+    date: new Date().toLocaleDateString(),
+    ts: Date.now()
+  };
+  // Save to scores/gridshot
+  await push(ref(db, 'scores/gridshot'), entry);
+  // Save to recent feed
+  await push(ref(db, 'recent'), { nick, score, game: 'gridshot', ts: Date.now() });
+  // Update global stats
+  await runTransaction(ref(db, 'stats/scores'), v => (v || 0) + 1);
+};
+</script>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const GRID_COLS = 5, GRID_ROWS = 5;
+const CELL_W = W / GRID_COLS, CELL_H = H / GRID_ROWS;
+const GAME_TIME = 30;
+const TARGET_COLORS = ['#ffe600','#00f5ff','#ff006e','#00ff88','#ff6b00','#bf00ff'];
+
+let score, best, hits, misses, combo, maxCombo, timer, gameRunning, animFrame, timerInterval;
+let targets = [], effects = [];
+let localBest = parseInt(localStorage.getItem('gs_best') || '0');
+let frameCount = 0;
+
+document.getElementById('best-el').textContent = localBest;
+
+function getComboMult(c) {
+  if (c >= 10) return 5;
+  if (c >= 5)  return 3;
+  if (c >= 3)  return 2;
+  return 1;
+}
+
+function startGame() {
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('end-screen').classList.add('hidden');
+  score = 0; hits = 0; misses = 0; combo = 0; maxCombo = 0; timer = GAME_TIME;
+  targets = []; effects = []; frameCount = 0;
+  gameRunning = true;
+  updateHUD();
+  spawnTarget();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timer--;
+    updateTimer();
+    if (timer <= 0) endGame();
+  }, 1000);
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(loop);
+}
+
+function spawnTarget() {
+  if (!gameRunning) return;
+  const occupied = targets.map(t => t.col * GRID_ROWS + t.row);
+  const available = [];
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (!occupied.includes(c * GRID_ROWS + r)) available.push({col:c, row:r});
+  if (!available.length) return;
+  const pos = available[Math.floor(Math.random() * available.length)];
+  const color = TARGET_COLORS[Math.floor(Math.random() * TARGET_COLORS.length)];
+  targets.push({ col: pos.col, row: pos.row, color, born: Date.now(), lifeMs: Math.max(700, 1800 - hits * 20), size: 1 });
+  // Spawn 1-3 targets simultaneously
+  const maxTargets = Math.min(3, 1 + Math.floor(hits / 8));
+  if (targets.length < maxTargets) setTimeout(spawnTarget, 120);
+}
+
+function hitTarget(t, x, y) {
+  const age = Date.now() - t.born;
+  const timeBonus = Math.max(10, Math.round((1 - age / t.lifeMs) * 60));
+  combo++;
+  if (combo > maxCombo) maxCombo = combo;
+  const mult = getComboMult(combo);
+  const pts = (10 + timeBonus) * mult;
+  score += pts;
+  hits++;
+  spawnEffect(x, y, '+' + pts, t.color, mult > 1 ? '×' + mult : '');
+  targets = targets.filter(tt => tt !== t);
+  updateHUD();
+  setTimeout(spawnTarget, 60);
+}
+
+function clickMiss(x, y) {
+  combo = 0;
+  misses++;
+  spawnEffect(x, y, 'MISS', '#ff003c', '');
+  updateHUD();
+}
+
+function spawnEffect(x, y, text, color, sub) {
+  effects.push({ x, y, text, color, sub, life: 1, vy: -2 });
+  // Hit ring
+  effects.push({ type: 'ring', x, y, color, life: 1, r: 10 });
+}
+
+function loop() {
+  frameCount++;
+  ctx.fillStyle = '#020208';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let c = 1; c < GRID_COLS; c++) {
+    ctx.beginPath(); ctx.moveTo(c * CELL_W, 0); ctx.lineTo(c * CELL_W, H); ctx.stroke();
+  }
+  for (let r = 1; r < GRID_ROWS; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r * CELL_H); ctx.lineTo(W, r * CELL_H); ctx.stroke();
+  }
+
+  // Targets
+  const now = Date.now();
+  targets = targets.filter(t => {
+    const age = now - t.born;
+    if (age > t.lifeMs) {
+      combo = 0;
+      misses++;
+      updateHUD();
+      setTimeout(spawnTarget, 80);
+      return false;
+    }
+    const progress = age / t.lifeMs;
+    const fade = 1 - progress * 0.4;
+    const px = t.col * CELL_W + CELL_W / 2;
+    const py = t.row * CELL_H + CELL_H / 2;
+    const r = (CELL_W * 0.38) * (1 - progress * 0.2);
+    const pulse = Math.sin(frameCount * 0.18) * 0.1 + 0.9;
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.shadowColor = t.color; ctx.shadowBlur = 20 * pulse;
+    // Outer ring (shrinking timer)
+    ctx.strokeStyle = t.color + '66';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(px, py, r + 8, -Math.PI/2, -Math.PI/2 + (1 - progress) * Math.PI * 2); ctx.stroke();
+    // Main target
+    ctx.fillStyle = t.color + '22';
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = t.color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.stroke();
+    // Crosshair
+    ctx.strokeStyle = t.color;
+    ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
+    const cr = r * 0.5;
+    ctx.beginPath(); ctx.moveTo(px - cr, py); ctx.lineTo(px + cr, py); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px, py - cr); ctx.lineTo(px, py + cr); ctx.stroke();
+    // Center dot
+    ctx.shadowColor = t.color; ctx.shadowBlur = 10;
+    ctx.fillStyle = t.color;
+    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    return true;
+  });
+
+  // Effects
+  effects = effects.filter(e => {
+    e.life -= 0.04;
+    if (e.life <= 0) return false;
+    ctx.save(); ctx.globalAlpha = e.life;
+    if (e.type === 'ring') {
+      e.r += 3;
+      ctx.strokeStyle = e.color; ctx.lineWidth = 2;
+      ctx.shadowColor = e.color; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      e.y += e.vy;
+      ctx.fillStyle = e.color; ctx.shadowColor = e.color; ctx.shadowBlur = 8;
+      ctx.font = 'bold 16px Orbitron,monospace'; ctx.textAlign = 'center';
+      ctx.fillText(e.text, e.x, e.y);
+      if (e.sub) {
+        ctx.font = 'bold 12px Orbitron,monospace';
+        ctx.fillStyle = '#fff'; ctx.shadowBlur = 0;
+        ctx.fillText(e.sub, e.x, e.y + 16);
+      }
+    }
+    ctx.restore(); return true;
+  });
+
+  if (gameRunning) animFrame = requestAnimationFrame(loop);
+}
+
+canvas.addEventListener('click', e => {
+  if (!gameRunning) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  let hit = false;
+  for (const t of targets) {
+    const px = t.col * CELL_W + CELL_W / 2;
+    const py = t.row * CELL_H + CELL_H / 2;
+    const r  = CELL_W * 0.38;
+    if (Math.hypot(mx - px, my - py) <= r) { hitTarget(t, mx, my); hit = true; break; }
+  }
+  if (!hit) clickMiss(mx, my);
+});
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  canvas.dispatchEvent(new MouseEvent('click', { clientX: t.clientX, clientY: t.clientY }));
+}, { passive: false });
+
+function updateHUD() {
+  const se = document.getElementById('score-el');
+  se.textContent = score;
+  se.classList.remove('score-pop'); void se.offsetWidth; se.classList.add('score-pop');
+  document.getElementById('hits-el').textContent  = hits;
+  document.getElementById('miss-el').textContent  = misses;
+  const mult = getComboMult(combo);
+  const ce = document.getElementById('combo-el');
+  ce.textContent = combo > 0 ? `Combo ×${mult} 🔥${combo}` : 'Combo ×1';
+  ce.style.color = mult >= 3 ? 'var(--pink)' : mult === 2 ? 'var(--orange)' : 'var(--dim)';
+  const total = hits + misses;
+  const acc = total > 0 ? Math.round(hits / total * 100) : 100;
+  document.getElementById('acc-el').textContent = acc + '%';
+}
+
+function updateTimer() {
+  document.getElementById('timer-el').textContent = timer;
+  const fill = document.getElementById('timer-ring-fill');
+  const circumference = 188;
+  fill.style.strokeDashoffset = circumference * (1 - timer / GAME_TIME);
+  fill.style.stroke = timer <= 5 ? 'var(--pink)' : timer <= 10 ? 'var(--orange)' : 'var(--yellow)';
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(timerInterval);
+  cancelAnimationFrame(animFrame);
+  const total = hits + misses;
+  const acc   = total > 0 ? Math.round(hits / total * 100) : 0;
+  const isNew = score > localBest;
+  if (isNew) { localBest = score; localStorage.setItem('gs_best', score); }
+
+  document.getElementById('e-score').textContent = score.toLocaleString();
+  document.getElementById('e-hits').textContent  = hits;
+  document.getElementById('e-acc').textContent   = acc + '%';
+  document.getElementById('e-best').textContent  = localBest.toLocaleString();
+  document.getElementById('nb-badge').classList.toggle('show', isNew);
+
+  const rank = document.getElementById('rank-badge');
+  const stars = score >= 2000 ? '🏅' : score >= 1000 ? '🥇' : score >= 500 ? '🥈' : score >= 200 ? '🥉' : '🎯';
+  rank.textContent = stars + ' ' + (score >= 2000 ? 'ELITE!' : score >= 1000 ? 'EXCELLENT!' : score >= 500 ? 'GREAT RUN!' : 'KEEP GOING!');
+  rank.style.background = score >= 1000 ? 'rgba(255,230,0,0.1)' : 'rgba(0,245,255,0.06)';
+  rank.style.color = score >= 1000 ? 'var(--yellow)' : 'var(--cyan)';
+  rank.style.border = score >= 1000 ? '1px solid rgba(255,230,0,0.3)' : '1px solid rgba(0,245,255,0.2)';
+
+  document.getElementById('end-screen').classList.remove('hidden');
+
+  // Save to Firebase
+  if (window._saveScore) window._saveScore(score, hits, misses);
+}
+
+// Initial draw
+ctx.fillStyle = '#020208'; ctx.fillRect(0, 0, W, H);
+document.getElementById('best-el').textContent = localBest;
+updateTimer();
+</script>
+</body>
+</html>
