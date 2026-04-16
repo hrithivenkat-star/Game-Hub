@@ -2,359 +2,359 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Survival Race — Multiplayer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Survival Race — Arena</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
-html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column;touch-action:none}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,.02)1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.02)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,255,136,0.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
-@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,255,136,.03),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes dead-flash{0%{opacity:1}50%{opacity:0.2}100%{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 
-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:11px 24px;border-bottom:1px solid rgba(0,255,136,0.08);background:rgba(5,5,16,0.95);flex-shrink:0}
-.logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 12px rgba(0,245,255,0.5)}
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(0,255,136,.08);background:rgba(5,5,16,.98);flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--cyan);text-decoration:none}
 .logo span{color:var(--purple)}
-.nav-right{display:flex;gap:8px;align-items:center}
-.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 13px;border-radius:6px;transition:all 0.2s}
-.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
-.nick-pill{font-family:'Orbitron',monospace;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(0,255,136,0.25);background:rgba(0,255,136,0.08);color:var(--green)}
+.nav-r{display:flex;gap:6px;align-items:center}
+.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:6px 12px;border-radius:6px;transition:all .2s;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,.3)}
+.nick-tag{font-family:'Orbitron',monospace;font-size:11px;color:var(--green);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);padding:6px 13px;border-radius:20px}
 
-.game-wrap{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;gap:18px;padding:12px}
+.wrap{position:relative;z-index:1;flex:1;display:flex;gap:14px;padding:10px 14px;overflow:hidden;align-items:flex-start;justify-content:center}
 
-.side-panel{display:flex;flex-direction:column;gap:10px;width:150px;flex-shrink:0}
-.pc{background:var(--card);border-radius:10px;padding:12px;text-align:center}
-.pl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
-.pv{font-family:'Orbitron',monospace;font-size:22px;font-weight:700}
+.sp{display:flex;flex-direction:column;gap:9px;width:162px;flex-shrink:0}
+.pc{background:var(--card);border-radius:10px;padding:11px;text-align:center}
+.pl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.pv{font-family:'Orbitron',monospace;font-size:21px;font-weight:700}
+.lb-panel{background:var(--card);border-radius:10px;padding:11px}
+.lb-hdr{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between}
+.lbdot{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green)}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1s ease-in-out infinite}
+.lb-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);animation:rowIn .3s ease both}
+.lb-row:last-child{border-bottom:none}
+.lr{font-family:'Orbitron',monospace;font-size:10px;width:18px;flex-shrink:0}
+.r1{color:var(--yellow)}.r2{color:#c0c8d8}.r3{color:var(--orange)}.rn{color:var(--dim)}
+.ln{font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--green)}
+.you-n{color:var(--green)!important;font-weight:700}
+.lbmsg{font-size:11px;color:var(--dim);text-align:center;padding:8px 0}
+.lberr{font-size:11px;color:var(--pink);text-align:center;padding:8px;line-height:1.4}
 
 .arena-wrap{position:relative;flex-shrink:0}
-.arena-glow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(0,255,136,0.15);pointer-events:none;box-shadow:0 0 30px rgba(0,255,136,0.06)}
-canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(0,255,136,0.08)}
-canvas.shake-anim{animation:shake 0.3s ease}
+.aglow{position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(0,255,136,.12);pointer-events:none}
+canvas{display:block;border-radius:10px;background:#020208;border:1px solid rgba(0,255,136,.08)}
+@media(max-width:720px){canvas{width:290px!important;height:440px!important}}
 
-.rivals-card{background:var(--card);border-radius:10px;padding:12px}
-.r-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
-.rival-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.rival-row:last-child{border-bottom:none}
-.rival-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.rival-name{font-size:11px;flex:1}
-.rival-time{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--green)}
-.rival-time.dead{color:var(--dim);text-decoration:line-through}
-.you-row .rival-name{color:var(--green);font-weight:600}
-
-.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,0.95);backdrop-filter:blur(6px);animation:fadeIn 0.3s ease;z-index:50;padding:24px}
-.overlay.hidden{display:none}
-.ov-icon{font-size:52px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
-.ov-title{font-family:'Orbitron',monospace;font-size:25px;font-weight:900;margin-bottom:7px;letter-spacing:2px;text-align:center}
-.ov-sub{font-size:14px;color:var(--dim);margin-bottom:20px;text-align:center;line-height:1.6;max-width:440px}
-.rules-box{background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:10px;padding:16px 20px;margin-bottom:20px;width:100%;max-width:440px}
-.rules-title{font-family:'Orbitron',monospace;font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:12px}
-.r-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
-.ri{font-size:14px;flex-shrink:0}
-.rt{font-size:13px;color:#aabbdd;line-height:1.4}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;width:100%;max-width:440px}
-.sg{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px;text-align:center}
-.sg-l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.sg-v{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
-.lb-section{width:100%;max-width:440px;margin-bottom:18px}
-.lb-title-s{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;margin-bottom:10px}
-.lb-list{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden}
-.lb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04)}
-.lb-item:last-child{border-bottom:none}
-.lb-item.you{background:rgba(0,255,136,0.04)}
-.lb-r{font-family:'Orbitron',monospace;font-size:12px;width:20px}
-.lb-n{font-size:13px;flex:1}
-.lb-s{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--green)}
-.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;border:none}
-.btn-g{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.3)}
-.btn-g:hover{background:rgba(0,255,136,0.22);box-shadow:0 0 18px rgba(0,255,136,0.3);transform:translateY(-2px)}
-.btn-dim{background:rgba(255,255,255,0.04);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
-.btn-dim:hover{background:rgba(255,255,255,0.08);color:#fff;transform:translateY(-2px)}
-.nb-badge{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:5px 14px;margin-bottom:14px;display:none}
-.nb-badge.show{display:block}
-.rank-banner{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;padding:10px 24px;border-radius:8px;margin-bottom:14px;letter-spacing:1px;text-align:center;width:100%;max-width:440px}
+.ov{position:absolute;inset:0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,2,8,.95);backdrop-filter:blur(6px);animation:fadeIn .3s ease;z-index:20;padding:18px}
+.ov.hidden{display:none}
+.ov-icon{font-size:46px;margin-bottom:9px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:21px;font-weight:900;margin-bottom:6px;letter-spacing:2px;text-align:center}
+.ov-sub{font-size:12px;color:var(--dim);margin-bottom:14px;text-align:center;line-height:1.5;max-width:280px}
+.rules{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.12);border-radius:9px;padding:11px 15px;margin-bottom:14px;width:100%;max-width:290px}
+.rt{font-family:'Orbitron',monospace;font-size:9px;color:var(--green);letter-spacing:2px;margin-bottom:7px}
+.rule{display:flex;gap:7px;margin-bottom:5px}.ri{font-size:12px;flex-shrink:0}.rv{font-size:11px;color:#aabbdd;line-height:1.35}
+.stats-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+.sbox{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px 12px;text-align:center;min-width:70px}
+.slbl{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sval{font-family:'Orbitron',monospace;font-size:17px;font-weight:700}
+.rank-banner{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;padding:9px 18px;border-radius:7px;margin-bottom:10px;text-align:center;width:100%;max-width:290px}
+.nb{font-family:'Orbitron',monospace;font-size:10px;color:var(--yellow);letter-spacing:2px;background:rgba(255,230,0,.08);border:1px solid rgba(255,230,0,.2);border-radius:6px;padding:4px 12px;margin-bottom:10px;display:none}
+.nb.show{display:block}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 18px;border-radius:7px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;border:none}
+.btn-g{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.btn-g:hover{background:rgba(0,255,136,.22);box-shadow:0 0 14px rgba(0,255,136,.3);transform:translateY(-2px)}
+.btn-d{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.btn-d:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateY(-2px)}
+.save-msg{font-size:11px;color:var(--dim);text-align:center;margin-top:8px;animation:pulse 1s ease-in-out infinite}
+.ctrl-hint{font-size:10px;color:var(--dim);text-align:center}
 </style>
 </head>
 <body>
 <div class="scanline"></div>
 <nav>
   <a href="../../index.html" class="logo">GAME<span>HUB</span></a>
-  <div class="nav-right">
-    <div class="nick-pill">💀 <span id="nick-show">Player</span></div>
+  <div class="nav-r">
+    <div class="nick-tag">💀 <span id="nick-show">Player</span></div>
     <a href="../index.html" class="nbtn">← Arena</a>
-    <a href="../../index.html" class="nbtn">🏠 Hub</a>
+    <a href="../../index.html" class="nbtn">🏠</a>
   </div>
 </nav>
 
-<div class="game-wrap">
-  <div class="side-panel">
-    <div class="pc" style="border:1px solid rgba(0,255,136,0.15)">
+<div class="wrap">
+  <div class="sp">
+    <div class="pc" style="border:1px solid rgba(0,255,136,.18)">
       <div class="pl">Survived</div>
-      <div class="pv" style="color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.5);font-size:26px" id="timer-el">0.0s</div>
+      <div class="pv" style="color:var(--green);font-size:24px" id="time-el">0.0s</div>
     </div>
-    <div class="pc" style="border:1px solid rgba(255,230,0,0.12)">
+    <div class="pc" style="border:1px solid rgba(255,230,0,.12)">
       <div class="pl">Best</div>
-      <div class="pv" style="color:var(--yellow);font-size:18px" id="best-el">--</div>
+      <div class="pv" style="color:var(--yellow);font-size:17px" id="best-el">--</div>
     </div>
-    <div class="pc" style="border:1px solid rgba(191,0,255,0.12)">
+    <div class="pc" style="border:1px solid rgba(191,0,255,.1)">
       <div class="pl">Wave</div>
       <div class="pv" style="color:var(--purple);font-size:18px" id="wave-el">1</div>
     </div>
-    <div class="rivals-card">
-      <div class="r-title">Players</div>
-      <div id="rivals-list"></div>
+    <div class="pc" style="border:1px solid rgba(255,107,0,.1);padding:10px 8px">
+      <div class="pl">Speed</div>
+      <div id="speed-dots" style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-top:5px"></div>
+    </div>
+    <div class="lb-panel">
+      <div class="lb-hdr">🌐 LEADERBOARD <div class="lbdot"><div class="ldot"></div>LIVE</div></div>
+      <div id="lb-list"><div class="lbmsg">Connecting...</div></div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(255,0,110,.1)">
+      <div class="pl">Your Rank</div>
+      <div class="pv" style="color:var(--pink);font-size:18px" id="rank-el">--</div>
     </div>
   </div>
 
   <div class="arena-wrap">
-    <div class="arena-glow"></div>
-    <canvas id="c" width="480" height="520"></canvas>
+    <div class="aglow"></div>
+    <canvas id="c" width="440" height="500"></canvas>
 
-    <div class="overlay" id="start-screen">
+    <div class="ov" id="start-screen">
       <div class="ov-icon">💀</div>
-      <div class="ov-title" style="color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.6)">SURVIVAL RACE</div>
-      <div class="ov-sub">Dodge falling obstacles. Survive longer than everyone else. Ghosts show fallen players.</div>
-      <div class="rules-box">
-        <div class="rules-title">📋 HOW TO PLAY</div>
-        <div class="r-row"><span class="ri">🏃</span><span class="rt">Move left/right with Arrow keys or A/D to dodge obstacles.</span></div>
-        <div class="r-row"><span class="ri">💀</span><span class="rt">Hit an obstacle = you die. Your ghost stays visible on screen.</span></div>
-        <div class="r-row"><span class="ri">👻</span><span class="rt">Other players' ghosts show exactly where they died.</span></div>
-        <div class="r-row"><span class="ri">🚀</span><span class="rt">Speed and obstacle count increase every 10 seconds.</span></div>
-        <div class="r-row"><span class="ri">🏆</span><span class="rt">Survive longest = top of the global leaderboard!</span></div>
+      <div class="ov-title" style="color:var(--green);text-shadow:0 0 20px rgba(0,255,136,.6)">SURVIVAL RACE</div>
+      <div class="ov-sub">Dodge neon obstacles forever. Speed ramps up. Survive as long as possible!</div>
+      <div class="rules">
+        <div class="rt">📋 HOW TO PLAY</div>
+        <div class="rule"><span class="ri">🏃</span><span class="rv">Arrow keys / A D / Touch buttons to move left & right.</span></div>
+        <div class="rule"><span class="ri">💀</span><span class="rv">Hit an obstacle = game over. Survive as long as you can.</span></div>
+        <div class="rule"><span class="ri">🚀</span><span class="rv">Every 10 seconds speed increases and more obstacles spawn.</span></div>
+        <div class="rule"><span class="ri">🏆</span><span class="rv">Your survival time is saved to the LIVE global leaderboard!</span></div>
       </div>
-      <div class="btns"><button class="btn btn-g" onclick="startGame()">Start Surviving →</button><a href="../index.html" class="btn btn-dim">← Arena</a></div>
+      <div id="fb-status" style="font-size:11px;color:var(--dim);margin-bottom:10px">Connecting...</div>
+      <div class="btns"><button class="btn btn-g" id="start-btn">Start!</button><a href="../index.html" class="btn btn-d">← Arena</a></div>
     </div>
 
-    <div class="overlay hidden" id="end-screen">
-      <div class="ov-icon" id="end-icon">💀</div>
-      <div class="ov-title" id="end-title" style="color:var(--green)">YOU SURVIVED!</div>
+    <div class="ov hidden" id="end-screen">
+      <div class="ov-icon">💀</div>
+      <div class="ov-title" id="end-title" style="color:var(--green)">SURVIVED!</div>
       <div class="rank-banner" id="rank-banner"></div>
-      <div class="nb-badge" id="nb-badge">⚡ NEW BEST TIME!</div>
-      <div class="stats-grid">
-        <div class="sg"><div class="sg-l">Survived</div><div class="sg-v" id="e-time" style="color:var(--green)">0s</div></div>
-        <div class="sg"><div class="sg-l">Best</div><div class="sg-v" id="e-best" style="color:var(--yellow)">0s</div></div>
-        <div class="sg"><div class="sg-l">Wave</div><div class="sg-v" id="e-wave" style="color:var(--purple)">1</div></div>
+      <div class="nb" id="nb">⚡ NEW BEST TIME!</div>
+      <div class="stats-row">
+        <div class="sbox"><div class="slbl">Time</div><div class="sval" id="e-time" style="color:var(--green)">0s</div></div>
+        <div class="sbox"><div class="slbl">Best</div><div class="sval" id="e-best" style="color:var(--yellow)">--</div></div>
+        <div class="sbox"><div class="slbl">Wave</div><div class="sval" id="e-wave" style="color:var(--purple)">1</div></div>
       </div>
-      <div class="lb-section">
-        <div class="lb-title-s">🏆 GLOBAL SURVIVAL LEADERBOARD</div>
-        <div class="lb-list" id="end-lb"></div>
-      </div>
-      <div class="btns">
-        <button class="btn btn-g" onclick="startGame()">Try Again</button>
-        <a href="../index.html" class="btn btn-dim">← Arena</a>
+      <div class="save-msg" id="save-msg">⏳ Saving to leaderboard...</div>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn btn-g" id="again-btn">Try Again</button>
+        <a href="../index.html" class="btn btn-d">← Arena</a>
       </div>
     </div>
   </div>
 
-  <div class="side-panel">
-    <div class="pc" style="border:1px solid rgba(255,107,0,0.12)">
-      <div class="pl">Speed</div>
-      <div id="speed-dots" style="display:flex;gap:3px;justify-content:center;margin-top:6px;flex-wrap:wrap"></div>
-    </div>
-    <div class="pc" style="border:1px solid rgba(255,0,60,0.1)">
-      <div class="pl">Obstacles</div>
-      <div class="pv" style="font-size:18px;color:var(--red,#ff003c)" id="obs-count">3</div>
-    </div>
-    <div class="pc" style="border:1px solid rgba(0,245,255,0.1);padding:10px 8px">
+  <div class="sp">
+    <div class="pc" style="border:1px solid rgba(255,0,60,.1);padding:8px">
       <div class="pl">Controls</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">
-        <div style="font-size:10px;color:#aabbdd;text-align:center">← → Arrow Keys</div>
-        <div style="font-size:10px;color:#aabbdd;text-align:center">A / D Keys</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+        <button onclick="setDir(-1)" style="width:44px;height:44px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25);color:var(--green);border-radius:7px;font-size:18px;cursor:pointer">◀</button>
+        <button onclick="setDir(1)"  style="width:44px;height:44px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25);color:var(--green);border-radius:7px;font-size:18px;cursor:pointer">▶</button>
       </div>
+      <div class="ctrl-hint" style="margin-top:6px">Arrow / A D</div>
+    </div>
+    <div class="pc" style="border:1px solid rgba(0,245,255,.08)">
+      <div class="pl">Obstacles</div>
+      <div class="pv" style="color:var(--pink);font-size:18px" id="obs-el">3</div>
     </div>
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp }     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, query, orderByChild,
+         limitToLast, push, runTransaction }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const FB={apiKey:"AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",authDomain:"gamehub234.firebaseapp.com",databaseURL:"https://gamehub234-default-rtdb.firebaseio.com",projectId:"gamehub234",storageBucket:"gamehub234.firebasestorage.app",messagingSenderId:"902315908438",appId:"1:902315908438:web:7ff2c34487b24c71998af7"};
+let db, fbReady=false;
+const fbSt=document.getElementById('fb-status');
+try{
+  const a=initializeApp(FB);db=getDatabase(a);fbReady=true;
+  fbSt.textContent='✅ Leaderboard connected!';fbSt.style.color='var(--green)';
+  setTimeout(()=>{fbSt.style.display='none';},2000);
+}catch(e){fbSt.textContent='⚠️ Offline';fbSt.style.color='var(--orange)';}
+
+const nick=localStorage.getItem('player_nick')||'Anonymous';
+document.getElementById('nick-show').textContent=nick;
+const MEDALS=['🥇','🥈','🥉'],RCLS=['r1','r2','r3'];
+
+function listenLB(){
+  if(!fbReady){document.getElementById('lb-list').innerHTML='<div class="lberr">Firebase not connected</div>';return;}
+  const q=query(ref(db,'scores/survival'),orderByChild('score'),limitToLast(12));
+  onValue(q,snap=>{
+    const rows=[];snap.forEach(c=>rows.push(c.val()));rows.sort((a,b)=>b.score-a.score);
+    const el=document.getElementById('lb-list');
+    if(!rows.length){el.innerHTML='<div class="lbmsg">No scores yet!</div>';return;}
+    el.innerHTML=rows.slice(0,10).map((e,i)=>`
+      <div class="lb-row" style="animation-delay:${i*.04}s">
+        <span class="lr ${RCLS[i]||'rn'}">${MEDALS[i]||i+1}</span>
+        <span class="ln ${e.nick===nick?'you-n':''}">${e.nick||'Anon'}${e.nick===nick?' ⭐':''}</span>
+        <span class="ls">${(e.score/10).toFixed(1)}s</span>
+      </div>`).join('');
+    const myR=rows.findIndex(e=>e.nick===nick);
+    document.getElementById('rank-el').textContent=myR>=0?'#'+(myR+1):'--';
+  },err=>{document.getElementById('lb-list').innerHTML=`<div class="lberr">${err.message}</div>`;});
+}
+
+async function saveScore(survived, wave){
+  const scoreVal=Math.round(survived*10);
+  const msg=document.getElementById('save-msg');
+  if(!fbReady){msg.textContent='⚠️ Saved locally';msg.style.color='var(--orange)';msg.style.animation='none';return;}
+  try{
+    await push(ref(db,'scores/survival'),{nick,score:scoreVal,survived:survived.toFixed(1),wave,date:new Date().toLocaleDateString(),ts:Date.now()});
+    await push(ref(db,'recent'),{nick,score:scoreVal,game:'survival',ts:Date.now()});
+    await runTransaction(ref(db,'stats/scores'),v=>(v||0)+1);
+    msg.textContent='✅ Score saved to global leaderboard!';msg.style.color='var(--green)';msg.style.animation='none';
+  }catch(e){msg.textContent='⚠️ Save failed — check Firebase rules';msg.style.color='var(--orange)';msg.style.animation='none';}
+}
+
+// ─── GAME ────────────────────────────────────────────────────────
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
 const W=canvas.width,H=canvas.height;
-const nick=localStorage.getItem('player_nick')||'Guest';
-document.getElementById('nick-show').textContent=nick;
+const GROUND=H-70;
+const PW=34,PH=40;
 
-let best=parseFloat(localStorage.getItem('sr_best')||'0');
-document.getElementById('best-el').textContent=best?best.toFixed(1)+'s':'--';
+let player,obs,particles,survived,wave,spd,obsCount,gameRunning,animFrame,clockInterval;
+let dir=0,localBest=parseFloat(localStorage.getItem('sr_best')||'0');
+const spawnQ=[];
 
-const PLAYER_W=32,PLAYER_H=32,PLAYER_SPEED=6;
-const OBS_W=44,OBS_H=18;
-const OBS_COLORS=['#ff006e','#ff003c','#ff6b00','#bf00ff'];
-const RIVAL_NAMES=['CyberAce','NeonKing','VoidWalker','LaserX'];
+document.getElementById('best-el').textContent=localBest?localBest.toFixed(1)+'s':'--';
+listenLB();
+ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
 
-let player,obstacles,ghosts,survived,wave,obsSpeed,obsCount,gameRunning,animFrame,timerInterval;
-const keys={};
+document.getElementById('start-btn').onclick=startGame;
+document.getElementById('again-btn').onclick=startGame;
 
-document.addEventListener('keydown',e=>{keys[e.key]=true});
-document.addEventListener('keyup',e=>{keys[e.key]=false});
+function setDir(d){dir=d;}
+window.setDir=setDir;
 
-// Rivals (simulated)
-let rivals=[];
-function makeRivals(){
-  rivals=RIVAL_NAMES.map(n=>({name:n,survived:0,dead:false,x:Math.random()*W,y:H-40,color:OBS_COLORS[Math.floor(Math.random()*OBS_COLORS.length)]}));
-}
-function updateRivals(t){
-  rivals.forEach(r=>{
-    if(!r.dead&&Math.random()<0.008*wave){r.dead=true;r.survived=t;}
-  });
-  const rows=[{name:nick+'(You)',survived:parseFloat(document.getElementById('timer-el').textContent)||0,dead:!gameRunning,isYou:true},...rivals.map(r=>({name:r.name,survived:r.survived,dead:r.dead}))].sort((a,b)=>b.survived-a.survived);
-  document.getElementById('rivals-list').innerHTML=rows.map(p=>`
-    <div class="rival-row ${p.isYou?'you-row':''}">
-      <div class="rival-dot" style="background:${p.isYou?'var(--green)':'var(--dim)'}"></div>
-      <span class="rival-name">${p.isYou?'YOU':p.name.slice(0,8)}</span>
-      <span class="rival-time ${p.dead?'dead':''}">${p.survived.toFixed(1)}s</span>
-    </div>`).join('');
-}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')dir=-1;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')dir=1;
+});
+document.addEventListener('keyup',e=>{
+  if(['ArrowLeft','a','A','ArrowRight','d','D'].includes(e.key))dir=0;
+});
 
 function startGame(){
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('end-screen').classList.add('hidden');
-  player={x:W/2-PLAYER_W/2,y:H-PLAYER_H-10,alive:true};
-  obstacles=[];ghosts=[];survived=0;wave=1;obsSpeed=3;obsCount=3;
+  player={x:W/2-PW/2,y:GROUND-PH,alive:true,trail:[]};
+  obs=[];particles=[];survived=0;wave=1;spd=3.5;obsCount=3;dir=0;
   gameRunning=true;
-  makeRivals();
-  updateSpeedDots(obsSpeed);
-  document.getElementById('obs-count').textContent=obsCount;
-
-  clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
+  clearInterval(clockInterval);
+  clockInterval=setInterval(()=>{
     if(!gameRunning)return;
     survived+=0.1;
-    document.getElementById('timer-el').textContent=survived.toFixed(1)+'s';
     wave=Math.floor(survived/10)+1;
-    obsSpeed=3+wave*0.5;
-    obsCount=3+Math.floor(wave/2);
+    spd=3.5+wave*.45;obsCount=Math.min(8,3+Math.floor(wave/2));
+    document.getElementById('time-el').textContent=survived.toFixed(1)+'s';
     document.getElementById('wave-el').textContent=wave;
-    document.getElementById('obs-count').textContent=obsCount;
-    updateSpeedDots(obsSpeed);
-    updateRivals(survived);
+    document.getElementById('obs-el').textContent=obsCount;
+    updateSpeedDots(spd);
   },100);
-
-  // Spawn obstacles
-  spawnObs();
+  spawnObstacles();
   if(animFrame)cancelAnimationFrame(animFrame);
   animFrame=requestAnimationFrame(loop);
 }
 
-let spawnTimeout;
-function spawnObs(){
+function spawnObstacles(){
   if(!gameRunning)return;
-  for(let i=0;i<Math.min(obsCount,8);i++){
-    obstacles.push({
-      x:Math.random()*(W-OBS_W),
-      y:-OBS_H-Math.random()*100,
-      color:OBS_COLORS[Math.floor(Math.random()*OBS_COLORS.length)],
-      speed:obsSpeed*(0.8+Math.random()*0.4),
-      w:OBS_W+(Math.random()*20|0),h:OBS_H
-    });
+  const OCOLS=['#ff006e','#ff003c','#ff6b00','#bf00ff','#ff0044'];
+  for(let i=0;i<obsCount;i++){
+    obs.push({x:Math.random()*(W-46),y:-30-Math.random()*60,w:40+Math.random()*20,h:18,color:OCOLS[Math.floor(Math.random()*OCOLS.length)],spd:spd*(0.8+Math.random()*.5)});
   }
-  spawnTimeout=setTimeout(spawnObs,Math.max(400,1200-wave*80));
+  setTimeout(spawnObstacles,Math.max(500,1400-wave*80));
 }
 
 function loop(){
-  ctx.fillStyle='#020208';
-  ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(0,255,136,0.02)';
-  for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40)ctx.fillRect(x-1,y-1,2,2);
+  ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
+  // Ground
+  ctx.fillStyle='rgba(0,255,136,.12)';ctx.fillRect(0,GROUND,W,3);
+  ctx.fillStyle='rgba(0,255,136,.05)';ctx.fillRect(0,GROUND+3,W,H-GROUND);
 
-  if(gameRunning){
-    // Move player
-    if(keys['ArrowLeft']||keys['a']||keys['A'])player.x=Math.max(0,player.x-PLAYER_SPEED);
-    if(keys['ArrowRight']||keys['d']||keys['D'])player.x=Math.min(W-PLAYER_W,player.x+PLAYER_SPEED);
-
-    // Move obstacles
-    obstacles=obstacles.filter(o=>o.y<H+20);
-    obstacles.forEach(o=>{
-      o.y+=o.speed;
-      // Collision
-      if(player.alive&&o.x<player.x+PLAYER_W&&o.x+o.w>player.x&&o.y<player.y+PLAYER_H&&o.y+o.h>player.y){
-        player.alive=false;
-        canvas.classList.add('shake-anim');
-        setTimeout(()=>canvas.classList.remove('shake-anim'),300);
-        clearTimeout(spawnTimeout);
-        clearInterval(timerInterval);
-        gameRunning=false;
-        setTimeout(endGame,600);
-      }
-    });
+  if(gameRunning&&player.alive){
+    player.x=Math.max(0,Math.min(W-PW,player.x+dir*6));
   }
 
-  // Draw ghosts (rivals)
-  rivals.filter(r=>r.dead).forEach(r=>{
-    ctx.save();ctx.globalAlpha=0.25;
-    ctx.fillStyle=r.color;ctx.shadowColor=r.color;ctx.shadowBlur=8;
-    ctx.fillRect(r.x,r.y,PLAYER_W,PLAYER_H);
-    ctx.shadowBlur=0;
-    ctx.font='9px Orbitron,monospace';ctx.fillStyle='rgba(255,255,255,0.4)';ctx.textAlign='center';
-    ctx.fillText(r.name.slice(0,6),r.x+PLAYER_W/2,r.y-4);
-    ctx.restore();
-  });
-
-  // Draw obstacles
-  obstacles.forEach(o=>{
-    ctx.save();ctx.shadowColor=o.color;ctx.shadowBlur=10;ctx.fillStyle=o.color;
+  // Obstacles
+  obs=obs.filter(o=>{
+    o.y+=o.spd;
+    if(o.y>H+20)return false;
+    if(player.alive&&player.x<o.x+o.w&&player.x+PW>o.x&&player.y<o.y+o.h&&player.y+PH>o.y){
+      die(); return false;
+    }
+    ctx.save();ctx.shadowColor=o.color;ctx.shadowBlur=12;ctx.fillStyle=o.color;
     ctx.fillRect(o.x,o.y,o.w,o.h);
-    ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,0.2)';
-    ctx.fillRect(o.x+2,o.y+2,o.w-4,5);
+    ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(o.x+2,o.y+2,o.w-4,5);
+    ctx.restore();
+    return true;
+  });
+
+  // Trail
+  if(player.alive){
+    player.trail.push({x:player.x+PW/2,y:player.y+PH/2});
+    if(player.trail.length>10)player.trail.shift();
+  }
+  player.trail.forEach((t,i)=>{
+    const a=(i/player.trail.length)*.3;
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#00ff88';ctx.shadowColor='#00ff88';ctx.shadowBlur=5;
+    ctx.beginPath();ctx.arc(t.x,t.y,3*(i/player.trail.length),0,Math.PI*2);ctx.fill();
     ctx.restore();
   });
 
-  // Draw player
-  if(player){
-    ctx.save();
-    if(!player.alive){ctx.globalAlpha=0.3;}
-    ctx.shadowColor=player.alive?'#00ff88':'#ff003c';ctx.shadowBlur=player.alive?20:10;
-    ctx.fillStyle=player.alive?'#00ff88':'#ff003c';
-    // Player shape (arrow)
-    ctx.beginPath();ctx.moveTo(player.x+PLAYER_W/2,player.y);
-    ctx.lineTo(player.x+PLAYER_W,player.y+PLAYER_H);
-    ctx.lineTo(player.x+PLAYER_W/2,player.y+PLAYER_H-8);
-    ctx.lineTo(player.x,player.y+PLAYER_H);
-    ctx.closePath();ctx.fill();
-    ctx.restore();
-  }
+  // Particles
+  particles=particles.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.life-=.04;
+    if(p.life<=0)return false;
+    ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=5;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fill();
+    ctx.restore();return true;
+  });
 
-  if(gameRunning||!player.alive)animFrame=requestAnimationFrame(loop);
+  // Player
+  ctx.save();
+  ctx.shadowColor=player.alive?'#00ff88':'rgba(255,0,60,.5)';ctx.shadowBlur=player.alive?18:8;
+  ctx.fillStyle=player.alive?'#00ff88':'rgba(255,0,60,.5)';
+  ctx.beginPath();ctx.moveTo(player.x+PW/2,player.y);
+  ctx.lineTo(player.x+PW,player.y+PH);ctx.lineTo(player.x+PW/2,player.y+PH-8);
+  ctx.lineTo(player.x,player.y+PH);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  if(gameRunning||particles.length)animFrame=requestAnimationFrame(loop);
 }
 
-function endGame(){
-  gameRunning=false;
+function die(){
+  player.alive=false;gameRunning=false;
+  clearInterval(clockInterval);
+  for(let i=0;i<16;i++){
+    const a=Math.random()*Math.PI*2,s=Math.random()*5+2;
+    particles.push({x:player.x+PW/2,y:player.y+PH/2,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,color:Math.random()>.5?'#ff003c':'#ff6b00',life:1,r:4});
+  }
   const s=survived;
-  const entries=JSON.parse(localStorage.getItem('mp_sr')||'[]');
-  entries.push({nick,score:Math.round(s*10),date:new Date().toLocaleDateString()});
-  entries.sort((a,b)=>b.score-a.score);
-  localStorage.setItem('mp_sr',JSON.stringify(entries.slice(0,50)));
-  const isNew=s>best;
-  if(isNew){best=s;localStorage.setItem('sr_best',s);}
-
-  // Rank among rivals
-  const allTimes=[{name:nick,t:s},...rivals.map(r=>({name:r.name,t:r.survived}))].sort((a,b)=>b.t-a.t);
-  const myRank=allTimes.findIndex(p=>p.name===nick)+1;
-  const rb=document.getElementById('rank-banner');
-  rb.textContent=myRank===1?'🏆 YOU SURVIVED THE LONGEST!':myRank===2?'🥈 2nd Place — So close!':'Rank '+myRank+' of '+(rivals.length+1)+' players';
-  rb.style.background=myRank===1?'rgba(255,230,0,0.1)':'rgba(0,255,136,0.06)';
-  rb.style.color=myRank===1?'var(--yellow)':'var(--green)';
-  rb.style.border=myRank===1?'1px solid rgba(255,230,0,0.3)':'1px solid rgba(0,255,136,0.2)';
-
-  document.getElementById('e-time').textContent=s.toFixed(1)+'s';
-  document.getElementById('e-best').textContent=Math.max(best,s).toFixed(1)+'s';
-  document.getElementById('e-wave').textContent=wave;
-  document.getElementById('nb-badge').classList.toggle('show',isNew);
-
-  const allLB=JSON.parse(localStorage.getItem('mp_sr')||'[]');
-  const medals=['🥇','🥈','🥉'];
-  document.getElementById('end-lb').innerHTML=allLB.slice(0,8).map((e,i)=>`
-    <div class="lb-item ${e.nick===nick?'you':''}">
-      <span class="lb-r">${medals[i]||i+1}</span>
-      <span class="lb-n">${e.nick}${e.nick===nick?'<span style="font-size:9px;color:var(--green);margin-left:6px">(you)</span>':''}</span>
-      <span class="lb-s">${(e.score/10).toFixed(1)}s</span>
-    </div>`).join('');
-
-  document.getElementById('end-screen').classList.remove('hidden');
+  const isNew=s>localBest;
+  if(isNew){localBest=s;localStorage.setItem('sr_best',s);}
+  setTimeout(()=>{
+    document.getElementById('e-time').textContent=s.toFixed(1)+'s';
+    document.getElementById('e-best').textContent=Math.max(localBest,s).toFixed(1)+'s';
+    document.getElementById('e-wave').textContent=wave;
+    document.getElementById('nb').classList.toggle('show',isNew);
+    const rb=document.getElementById('rank-banner');
+    const medal=s>=60?'🏅 ELITE!':s>=30?'🥇 LEGEND!':s>=15?'🥈 GREAT!':s>=8?'🥉 GOOD!':'💀 KEEP GOING!';
+    rb.textContent=medal;
+    rb.style.cssText=`background:rgba(${s>=30?'0,255,136':'0,245,255'},.08);color:var(--${s>=30?'green':'cyan'});border:1px solid rgba(${s>=30?'0,255,136':'0,245,255'},.2)`;
+    document.getElementById('end-screen').classList.remove('hidden');
+    saveScore(s,wave);
+  },500);
 }
 
 function updateSpeedDots(spd){
@@ -363,13 +363,11 @@ function updateSpeedDots(spd){
   el.innerHTML='';
   for(let i=0;i<10;i++){
     const d=document.createElement('div');
-    d.style.cssText=`width:8px;height:8px;border-radius:50%;background:${i<lvl?'var(--orange)':'rgba(255,255,255,0.06)'};box-shadow:${i<lvl?'0 0 5px rgba(255,107,0,0.6)':'none'}`;
+    d.style.cssText=`width:8px;height:8px;border-radius:50%;background:${i<lvl?'var(--orange)':'rgba(255,255,255,.06)'};box-shadow:${i<lvl?'0 0 5px rgba(255,107,0,.6)':'none'}`;
     el.appendChild(d);
   }
 }
-
-ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
-updateSpeedDots(3);
+updateSpeedDots(3.5);
 </script>
 </body>
 </html>
