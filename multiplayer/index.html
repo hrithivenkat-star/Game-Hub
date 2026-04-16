@@ -9,140 +9,143 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
 html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,110,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,110,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;top:-150px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(255,0,110,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,110,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,110,0.018) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:-150px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(255,0,110,0.055) 0%,transparent 70%);pointer-events:none;z-index:0}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
 .scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,0,110,0.04),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@keyframes glow-pulse{0%,100%{opacity:0.7}50%{opacity:1}}
-@keyframes fadeIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+@keyframes glow{0%,100%{opacity:.7}50%{opacity:1}}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes lb-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
 
-.container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px}
+.container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 22px}
 
-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid rgba(255,0,110,0.1)}
-.logo{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,0.5)}
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,0,110,.1)}
+.logo{font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,.5)}
 .logo span{color:var(--purple)}
-.nav-right{display:flex;gap:8px;align-items:center}
-.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:7px 15px;border-radius:6px;transition:all 0.2s}
-.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
-.nick-pill{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);color:var(--green);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:none;align-items:center;gap:6px}
-.nick-pill:hover{background:rgba(0,255,136,0.18)}
-.ndot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:glow-pulse 1.5s ease-in-out infinite}
+.nav-right{display:flex;gap:7px;align-items:center}
+.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:7px 14px;border-radius:6px;transition:all .2s;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
+.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,.3)}
+.nick-pill{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:var(--green);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:none;align-items:center;gap:6px;transition:all .2s}
+.nick-pill:hover{background:rgba(0,255,136,.18)}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 1.5s ease-in-out infinite}
 
-/* LIVE TICKER */
-.ticker-wrap{background:rgba(255,0,110,0.06);border-top:1px solid rgba(255,0,110,0.1);border-bottom:1px solid rgba(255,0,110,0.1);padding:10px 0;overflow:hidden;white-space:nowrap}
-.ticker-inner{display:inline-flex;gap:0;animation:ticker 30s linear infinite}
-.ticker-item{font-size:12px;color:var(--pink);padding:0 40px;font-weight:600;letter-spacing:1px}
-.ticker-item span{color:#fff}
+/* TICKER */
+.ticker-wrap{background:rgba(255,0,110,.05);border-top:1px solid rgba(255,0,110,.08);border-bottom:1px solid rgba(255,0,110,.08);padding:9px 0;overflow:hidden;white-space:nowrap}
+.ticker-inner{display:inline-flex;animation:ticker 28s linear infinite}
+.tick-item{font-size:12px;color:var(--pink);padding:0 36px;font-weight:600;letter-spacing:.5px}
+.tick-item span{color:#fff}
 
 /* HERO */
-.hero{text-align:center;padding:52px 0 44px}
-.hero-icon{width:76px;height:76px;border-radius:18px;margin:0 auto 22px;background:rgba(255,0,110,0.1);border:1px solid rgba(255,0,110,0.3);display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 35px rgba(255,0,110,0.2);animation:float 3s ease-in-out infinite}
-.hero-tag{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--pink);margin-bottom:14px;text-shadow:0 0 10px rgba(255,0,110,0.5);animation:glow-pulse 2s ease-in-out infinite}
-.hero h1{font-family:'Orbitron',monospace;font-size:clamp(28px,5.5vw,58px);font-weight:900;color:#fff;margin-bottom:12px}
-.hero h1 span{color:var(--pink);text-shadow:0 0 25px rgba(255,0,110,0.8),0 0 50px rgba(255,0,110,0.4)}
-.hero-sub{font-size:16px;color:var(--dim);max-width:520px;margin:0 auto 32px;line-height:1.7}
+.hero{text-align:center;padding:50px 0 40px}
+.hero-icon{width:70px;height:70px;border-radius:16px;margin:0 auto 20px;background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.3);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 30px rgba(255,0,110,.18);animation:float 3s ease-in-out infinite}
+.hero-tag{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--pink);margin-bottom:13px;animation:glow 2s ease-in-out infinite}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(26px,5.5vw,56px);font-weight:900;color:#fff;margin-bottom:12px}
+.hero h1 span{color:var(--pink);text-shadow:0 0 25px rgba(255,0,110,.8),0 0 50px rgba(255,0,110,.4)}
+.hero-sub{font-size:16px;color:var(--dim);max-width:500px;margin:0 auto 28px;line-height:1.7}
 
-/* PLAYER COUNT BAR */
-.player-bar{display:flex;justify-content:center;gap:20px;margin-bottom:48px;flex-wrap:wrap}
-.pcount{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 24px;text-align:center;min-width:120px}
-.pcount-n{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;display:block}
-.pcount-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
-.pcount.online .pcount-n{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.5)}
-.pcount.pink .pcount-n{color:var(--pink);text-shadow:0 0 10px rgba(255,0,110,0.5)}
-.pcount.yellow .pcount-n{color:var(--yellow);text-shadow:0 0 10px rgba(255,230,0,0.5)}
+/* STAT BAR */
+.stat-bar{display:flex;justify-content:center;gap:0;border:1px solid rgba(255,0,110,.12);border-radius:10px;margin:0 auto 52px;max-width:500px;overflow:hidden;background:rgba(255,0,110,.02)}
+.stat{flex:1;padding:16px;text-align:center;border-right:1px solid rgba(255,0,110,.08)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:var(--pink);display:block;text-shadow:0 0 12px rgba(255,0,110,.5)}
+.stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
 
-/* GAMES GRID */
-.games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:60px}
-@media(max-width:800px){.games-grid{grid-template-columns:1fr}}
+/* GAME CARDS */
+.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:60px}
+@media(max-width:700px){.games-grid{grid-template-columns:1fr}}
+.gc{position:relative;overflow:hidden;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.05);transition:all .3s;display:flex;flex-direction:column;animation:fadeInUp .4s ease both}
+.gc:hover{transform:translateY(-5px)}
+.gc-bar{height:3px}
+.g1 .gc-bar{background:linear-gradient(90deg,var(--cyan),var(--purple));box-shadow:0 0 10px var(--cyan)}
+.g2 .gc-bar{background:linear-gradient(90deg,var(--pink),var(--orange));box-shadow:0 0 10px var(--pink)}
+.g3 .gc-bar{background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 10px var(--green)}
+.g4 .gc-bar{background:linear-gradient(90deg,var(--yellow),var(--orange));box-shadow:0 0 10px var(--yellow)}
+.g1:hover{box-shadow:0 18px 50px rgba(0,245,255,.1),0 0 0 1px rgba(0,245,255,.15)}
+.g2:hover{box-shadow:0 18px 50px rgba(255,0,110,.1),0 0 0 1px rgba(255,0,110,.15)}
+.g3:hover{box-shadow:0 18px 50px rgba(0,255,136,.1),0 0 0 1px rgba(0,255,136,.15)}
+.g4:hover{box-shadow:0 18px 50px rgba(255,230,0,.1),0 0 0 1px rgba(255,230,0,.15)}
+.gc-body{padding:22px 20px 16px;flex:1}
+.gc-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;animation:float 3s ease-in-out infinite}
+.g1 .gc-icon{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25)}
+.g2 .gc-icon{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.25)}
+.g3 .gc-icon{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25)}
+.g4 .gc-icon{background:rgba(255,230,0,.1);border:1px solid rgba(255,230,0,.25)}
+.gc-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.g1 .gc-tag{color:var(--cyan)}.g2 .gc-tag{color:var(--pink)}.g3 .gc-tag{color:var(--green)}.g4 .gc-tag{color:var(--yellow)}
+.gc-title{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:#fff;margin-bottom:8px}
+.gc-desc{font-size:13px;color:var(--dim);line-height:1.55;margin-bottom:14px}
+.gc-feats{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.gc-feat{display:flex;align-items:center;gap:7px;font-size:12px;color:#aabbdd}
+.gc-feat-icon{font-size:13px}
 
-.game-card{position:relative;overflow:hidden;background:var(--card);border-radius:16px;border:1px solid rgba(255,255,255,0.05);text-decoration:none;color:inherit;transition:all 0.3s;display:flex;flex-direction:column;animation:fadeInUp 0.4s ease both;cursor:pointer}
-.game-card:hover{transform:translateY(-6px)}
-.gc-bar{height:4px}
-.g1 .gc-bar{background:linear-gradient(90deg,var(--cyan),var(--purple));box-shadow:0 0 12px var(--cyan)}
-.g2 .gc-bar{background:linear-gradient(90deg,var(--pink),var(--orange));box-shadow:0 0 12px var(--pink)}
-.g3 .gc-bar{background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 12px var(--green)}
-.g1:hover{box-shadow:0 20px 60px rgba(0,245,255,0.12),0 0 0 1px rgba(0,245,255,0.18)}
-.g2:hover{box-shadow:0 20px 60px rgba(255,0,110,0.12),0 0 0 1px rgba(255,0,110,0.18)}
-.g3:hover{box-shadow:0 20px 60px rgba(0,255,136,0.12),0 0 0 1px rgba(0,255,136,0.18)}
-
-.gc-body{padding:26px 22px 20px;flex:1}
-.gc-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;animation:float 3s ease-in-out infinite}
-.g1 .gc-icon{background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25)}
-.g2 .gc-icon{background:rgba(255,0,110,0.1);border:1px solid rgba(255,0,110,0.25)}
-.g3 .gc-icon{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25)}
-.gc-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:600}
-.g1 .gc-tag{color:var(--cyan)}.g2 .gc-tag{color:var(--pink)}.g3 .gc-tag{color:var(--green)}
-.gc-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:#fff;margin-bottom:10px}
-.gc-desc{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:18px}
-.gc-features{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
-.gc-feat{display:flex;align-items:center;gap:8px;font-size:12px;color:#aabbdd}
-.gc-feat-icon{font-size:13px;flex-shrink:0}
-
-/* MINI LEADERBOARD IN CARD */
-.card-lb{background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);padding:10px 12px;margin-bottom:14px}
-.card-lb-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
-.lb-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+/* MINI LEADERBOARD */
+.mini-lb{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.mlb-hdr{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.mlb-live{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green)}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:glow 1s ease-in-out infinite}
+.lb-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
 .lb-row:last-child{border-bottom:none}
-.lb-rank{font-family:'Orbitron',monospace;font-size:10px;color:var(--dim);width:18px;flex-shrink:0}
-.lb-rank.gold{color:var(--yellow);text-shadow:0 0 6px rgba(255,230,0,0.5)}
-.lb-rank.silver{color:#aabbdd}
-.lb-rank.bronze{color:var(--orange)}
-.lb-name{font-size:12px;color:#ccd6ff;flex:1}
+.lb-rank{font-family:'Orbitron',monospace;font-size:10px;width:18px;flex-shrink:0}
+.rank-1{color:var(--yellow)}.rank-2{color:#c0c8d8}.rank-3{color:var(--orange)}.rank-n{color:var(--dim)}
+.lb-name{font-size:12px;flex:1;color:#dde4f0}
 .lb-score{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
-.g1 .lb-score{color:var(--cyan)}.g2 .lb-score{color:var(--pink)}.g3 .lb-score{color:var(--green)}
+.g1 .lb-score{color:var(--cyan)}.g2 .lb-score{color:var(--pink)}.g3 .lb-score{color:var(--green)}.g4 .lb-score{color:var(--yellow)}
+.lb-empty{font-size:11px;color:var(--dim);text-align:center;padding:6px 0}
 
-.gc-footer{padding:14px 22px;border-top:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.01)}
-.play-now{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;border-radius:7px;cursor:pointer;transition:all 0.2s;border:none}
-.g1 .play-now{background:rgba(0,245,255,0.12);color:var(--cyan);border:1px solid rgba(0,245,255,0.3)}
-.g1 .play-now:hover{background:rgba(0,245,255,0.22);box-shadow:0 0 15px rgba(0,245,255,0.3)}
-.g2 .play-now{background:rgba(255,0,110,0.12);color:var(--pink);border:1px solid rgba(255,0,110,0.3)}
-.g2 .play-now:hover{background:rgba(255,0,110,0.22);box-shadow:0 0 15px rgba(255,0,110,0.3)}
-.g3 .play-now{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.3)}
-.g3 .play-now:hover{background:rgba(0,255,136,0.22);box-shadow:0 0 15px rgba(0,255,136,0.3)}
-.gc-players{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
-.gc-pdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:glow-pulse 1.5s ease-in-out infinite}
+.gc-footer{padding:12px 20px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.01)}
+.gc-online{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
+.odot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 1.5s ease-in-out infinite}
+.play-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 18px;border-radius:6px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-block}
+.g1 .play-btn{background:rgba(0,245,255,.12);color:var(--cyan);border:1px solid rgba(0,245,255,.3)}
+.g2 .play-btn{background:rgba(255,0,110,.12);color:var(--pink);border:1px solid rgba(255,0,110,.3)}
+.g3 .play-btn{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.g4 .play-btn{background:rgba(255,230,0,.12);color:var(--yellow);border:1px solid rgba(255,230,0,.3)}
+.gc:hover .play-btn{filter:brightness(1.2)}
 
-/* OVERALL LEADERBOARD */
-.overall-lb{background:rgba(255,230,0,0.04);border:1px solid rgba(255,230,0,0.12);border-radius:14px;padding:28px;margin-bottom:60px}
-.olb-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:6px;text-shadow:0 0 15px rgba(255,230,0,0.4)}
-.olb-sub{font-size:13px;color:var(--dim);margin-bottom:22px}
-.olb-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-.olb-tab{padding:7px 18px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,0.08);color:var(--dim);background:transparent;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
-.olb-tab.on{background:rgba(255,230,0,0.1);border-color:rgba(255,230,0,0.3);color:var(--yellow)}
+/* OVERALL LB */
+.overall-lb{background:rgba(255,230,0,.03);border:1px solid rgba(255,230,0,.12);border-radius:14px;padding:26px;margin-bottom:60px}
+.olb-title{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;color:var(--yellow);margin-bottom:5px}
+.olb-sub{font-size:13px;color:var(--dim);margin-bottom:18px}
+.olb-tabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.olb-tab{padding:6px 16px;border-radius:16px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.08);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.olb-tab:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.olb-tab.on{background:rgba(255,230,0,.1);border-color:rgba(255,230,0,.3);color:var(--yellow)}
 .olb-table{width:100%;border-collapse:collapse}
-.olb-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)}
-.olb-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+.olb-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+.olb-table td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.olb-table tr:hover td{background:rgba(255,255,255,.02)}
 .olb-table tr:last-child td{border-bottom:none}
-.olb-table tr:hover td{background:rgba(255,255,255,0.02)}
-.rank-1{color:var(--yellow);font-family:'Orbitron',monospace;font-weight:700;text-shadow:0 0 8px rgba(255,230,0,0.5)}
-.rank-2{color:#c0c8d8;font-family:'Orbitron',monospace;font-weight:700}
-.rank-3{color:var(--orange);font-family:'Orbitron',monospace;font-weight:700}
-.rank-n{color:var(--dim);font-family:'Orbitron',monospace}
+.rank-cell-1{color:var(--yellow);font-family:'Orbitron',monospace;font-weight:700}
+.rank-cell-2{color:#c0c8d8;font-family:'Orbitron',monospace;font-weight:700}
+.rank-cell-3{color:var(--orange);font-family:'Orbitron',monospace;font-weight:700}
+.rank-cell-n{color:var(--dim);font-family:'Orbitron',monospace;font-size:12px}
 .score-cell{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--cyan)}
-.you-row td{background:rgba(0,245,255,0.04)!important}
-.you-badge{font-size:9px;background:rgba(0,245,255,0.15);color:var(--cyan);border:1px solid rgba(0,245,255,0.3);border-radius:5px;padding:2px 7px;margin-left:7px}
+.you-row td{background:rgba(255,230,0,.04)!important}
+.you-chip{font-size:9px;background:rgba(255,230,0,.15);color:var(--yellow);border:1px solid rgba(255,230,0,.3);border-radius:5px;padding:2px 7px;margin-left:6px}
+.empty-lb{text-align:center;padding:28px;color:var(--dim);font-size:14px}
 
 /* NICKNAME MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(2,2,8,0.94);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.3s ease}
+.modal-bg{position:fixed;inset:0;background:rgba(2,2,8,.95);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
 .modal-bg.hidden{display:none}
-.modal{background:var(--card);border:1px solid rgba(255,0,110,0.25);border-radius:18px;padding:36px;width:100%;max-width:460px;text-align:center;box-shadow:0 0 60px rgba(255,0,110,0.12)}
-.modal-icon{font-size:52px;margin-bottom:14px;animation:float 2.5s ease-in-out infinite}
-.modal-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--pink);margin-bottom:8px;text-shadow:0 0 15px rgba(255,0,110,0.5)}
-.modal-sub{font-size:14px;color:var(--dim);margin-bottom:24px;line-height:1.65}
-.nick-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,0,110,0.25);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:18px;font-weight:700;padding:14px 18px;border-radius:8px;margin-bottom:8px;text-align:center;letter-spacing:2px;outline:none;transition:all 0.2s}
-.nick-input:focus{border-color:rgba(255,0,110,0.5);box-shadow:0 0 15px rgba(255,0,110,0.1)}
-.nick-input::placeholder{color:rgba(102,119,170,0.5);font-size:13px;letter-spacing:1px}
+.modal{background:var(--card);border:1px solid rgba(255,0,110,.25);border-radius:18px;padding:34px;width:100%;max-width:450px;text-align:center;box-shadow:0 0 60px rgba(255,0,110,.12)}
+.modal-icon{font-size:50px;margin-bottom:13px;animation:float 2.5s ease-in-out infinite}
+.modal-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--pink);margin-bottom:8px;text-shadow:0 0 15px rgba(255,0,110,.5)}
+.modal-sub{font-size:14px;color:var(--dim);margin-bottom:22px;line-height:1.65}
+.nick-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,0,110,.25);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:17px;font-weight:700;padding:14px 18px;border-radius:8px;margin-bottom:8px;text-align:center;letter-spacing:2px;outline:none;transition:border-color .2s}
+.nick-input:focus{border-color:rgba(255,0,110,.5);box-shadow:0 0 12px rgba(255,0,110,.1)}
+.nick-input::placeholder{color:rgba(102,119,170,.5);font-size:13px;letter-spacing:1px}
 .nick-hint{font-size:11px;color:var(--dim);margin-bottom:18px}
 .modal-btns{display:flex;gap:10px;justify-content:center}
-.mbtn{background:rgba(255,0,110,0.12);border:1px solid rgba(255,0,110,0.3);color:var(--pink);padding:13px 30px;border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s}
-.mbtn:hover{background:rgba(255,0,110,0.22);box-shadow:0 0 18px rgba(255,0,110,0.3);transform:translateY(-1px)}
-.mbtn-skip{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--dim);padding:13px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
-.mbtn-skip:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.mbtn{background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.3);color:var(--pink);padding:13px 28px;border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.mbtn:hover{background:rgba(255,0,110,.22);box-shadow:0 0 15px rgba(255,0,110,.3);transform:translateY(-1px)}
+.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:13px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.mbtn-skip:hover{color:#fff}
 
-footer{border-top:1px solid rgba(255,0,110,0.07);padding:28px 0;text-align:center;margin-top:20px}
+footer{border-top:1px solid rgba(255,0,110,.07);padding:26px 0;text-align:center;margin-top:10px}
 footer p{font-size:13px;color:var(--dim)}
 footer a{color:var(--cyan);text-decoration:none}
 </style>
@@ -155,9 +158,9 @@ footer a{color:var(--cyan);text-decoration:none}
   <div class="modal">
     <div class="modal-icon">🌐</div>
     <div class="modal-title">Enter the Arena</div>
-    <div class="modal-sub">You need a nickname to compete on live leaderboards and battle other players in the Multiplayer Arena!</div>
+    <div class="modal-sub">Your nickname appears on the <strong style="color:#fff">LIVE global leaderboard</strong> for all players to see!</div>
     <input class="nick-input" id="nick-input" maxlength="16" placeholder="Your nickname..." onkeydown="if(event.key==='Enter')saveNick()"/>
-    <div class="nick-hint">Max 16 characters. This shows on all leaderboards.</div>
+    <div class="nick-hint">Max 16 characters · Visible to all players worldwide</div>
     <div class="modal-btns">
       <button class="mbtn" onclick="saveNick()">Enter Arena →</button>
       <button class="mbtn-skip" onclick="skipNick()">Just browsing</button>
@@ -167,15 +170,13 @@ footer a{color:var(--cyan);text-decoration:none}
 
 <!-- LIVE TICKER -->
 <div class="ticker-wrap">
-  <div class="ticker-inner" id="ticker">
-    <span class="ticker-item">⚡ <span>ARENA ONLINE</span> — 3 games active</span>
-    <span class="ticker-item">🏆 <span id="t1">---</span> just set a new record in Speed Clash</span>
-    <span class="ticker-item">🎨 <span id="t2">---</span> won a Color War match</span>
-    <span class="ticker-item">💀 <span id="t3">---</span> survived <span id="t3s">--</span>s in Survival Race</span>
-    <span class="ticker-item">⚡ <span>ARENA ONLINE</span> — 3 games active</span>
-    <span class="ticker-item">🏆 <span id="t4">---</span> just set a new record in Speed Clash</span>
-    <span class="ticker-item">🎨 <span id="t5">---</span> won a Color War match</span>
-    <span class="ticker-item">💀 <span id="t6">---</span> survived in Survival Race</span>
+  <div class="ticker-inner" id="ticker-inner">
+    <span class="tick-item">⚡ <span>ARENA LIVE</span> — Real players competing now</span>
+    <span class="tick-item">🏆 Loading scores...</span>
+    <span class="tick-item">🎯 Play GridShot — new game!</span>
+    <span class="tick-item">⚡ <span>ARENA LIVE</span> — Real players competing now</span>
+    <span class="tick-item">🏆 Loading scores...</span>
+    <span class="tick-item">🎯 Play GridShot — new game!</span>
   </div>
 </div>
 
@@ -186,7 +187,7 @@ footer a{color:var(--cyan);text-decoration:none}
       <div class="nick-pill" id="nick-pill" onclick="changeNick()">
         <div class="ndot"></div><span id="nick-name">Player</span>
       </div>
-      <a href="../minigames/index.html" class="nbtn">🎮 Mini Games</a>
+      <a href="../minigames/index.html" class="nbtn">🎮 Games</a>
       <a href="../leaderboard/index.html" class="nbtn">🏆 Scores</a>
       <a href="../index.html" class="nbtn">← Hub</a>
     </div>
@@ -196,90 +197,114 @@ footer a{color:var(--cyan);text-decoration:none}
     <div class="hero-icon">🌐</div>
     <p class="hero-tag">⚡ Live Multiplayer Arena</p>
     <h1>MULTIPLAYER <span>ARENA</span></h1>
-    <p class="hero-sub">Enter with a nickname. Pick a game. Battle real players on live leaderboards. The competition never stops.</p>
+    <p class="hero-sub">Enter with a nickname. Compete in 4 games. Your scores appear on the <strong style="color:var(--pink)">live global leaderboard</strong> — visible to every player worldwide.</p>
   </section>
 
-  <div class="player-bar">
-    <div class="pcount online"><span class="pcount-n" id="online-n">🟢 Live</span><div class="pcount-l">Arena Status</div></div>
-    <div class="pcount pink"><span class="pcount-n" id="games-played">3</span><div class="pcount-l">Games Available</div></div>
-    <div class="pcount yellow"><span class="pcount-n" id="total-entries">0</span><div class="pcount-l">Total Score Entries</div></div>
+  <div class="stat-bar">
+    <div class="stat"><span class="stat-n" id="total-players">0</span><div class="stat-l">Total Players</div></div>
+    <div class="stat"><span class="stat-n" id="total-scores">0</span><div class="stat-l">Scores Logged</div></div>
+    <div class="stat"><span class="stat-n">4</span><div class="stat-l">Games</div></div>
   </div>
 
-  <!-- 3 GAME CARDS -->
+  <!-- GAME CARDS -->
   <div class="games-grid">
 
+    <!-- GRIDSHOT -->
+    <div class="gc g4" onclick="goGame('gridshot/index.html')">
+      <div class="gc-bar"></div>
+      <div class="gc-body">
+        <div class="gc-icon">🎯</div>
+        <div class="gc-tag">Aim Training</div>
+        <div class="gc-title">GridShot</div>
+        <div class="gc-desc">Glowing targets pop on a grid. Click them as fast as possible. 30 seconds. Pure reaction speed.</div>
+        <div class="gc-feats">
+          <div class="gc-feat"><span class="gc-feat-icon">🎯</span>Random target positions</div>
+          <div class="gc-feat"><span class="gc-feat-icon">⚡</span>Speed bonus for fast clicks</div>
+          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Live global leaderboard</div>
+          <div class="gc-feat"><span class="gc-feat-icon">📱</span>Mobile friendly tap controls</div>
+        </div>
+        <div class="mini-lb">
+          <div class="mlb-hdr">🏆 TOP SCORES <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
+          <div id="lb-gridshot">
+            <div class="lb-empty">Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="gc-footer">
+        <div class="gc-online"><div class="odot"></div><span id="online-gs">Live now</span></div>
+        <button class="play-btn">Play Now →</button>
+      </div>
+    </div>
+
     <!-- SPEED CLASH -->
-    <div class="game-card g1" onclick="goGame('speed-clash/index.html')">
+    <div class="gc g1" onclick="goGame('speed-clash/index.html')">
       <div class="gc-bar"></div>
       <div class="gc-body">
         <div class="gc-icon">⚡</div>
         <div class="gc-tag">Quiz Battle</div>
         <div class="gc-title">Speed Clash</div>
-        <div class="gc-desc">10 rapid-fire questions — math and trivia mixed. Answer faster than everyone else. First to 10 points wins the round.</div>
-        <div class="gc-features">
-          <div class="gc-feat"><span class="gc-feat-icon">🧠</span>Math + trivia questions</div>
-          <div class="gc-feat"><span class="gc-feat-icon">⚡</span>Faster answers = more points</div>
+        <div class="gc-desc">10 rapid-fire math and trivia questions. Answer faster for more points. Streak multipliers stack.</div>
+        <div class="gc-feats">
+          <div class="gc-feat"><span class="gc-feat-icon">🧠</span>Math + trivia mixed</div>
+          <div class="gc-feat"><span class="gc-feat-icon">🔥</span>Streak bonus multiplier</div>
           <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Live global leaderboard</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🔄</span>Infinite rounds, gets harder</div>
         </div>
-        <div class="card-lb">
-          <div class="card-lb-title">🏆 Top Scores</div>
-          <div id="sc-lb"></div>
+        <div class="mini-lb">
+          <div class="mlb-hdr">🏆 TOP SCORES <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
+          <div id="lb-speedclash"><div class="lb-empty">Loading...</div></div>
         </div>
       </div>
       <div class="gc-footer">
-        <div class="gc-players"><div class="gc-pdot"></div><span id="sc-players">Active now</span></div>
-        <button class="play-now">Play Now →</button>
+        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
+        <button class="play-btn">Play Now →</button>
       </div>
     </div>
 
     <!-- COLOR WAR -->
-    <div class="game-card g2" onclick="goGame('color-war/index.html')">
+    <div class="gc g2" onclick="goGame('color-war/index.html')">
       <div class="gc-bar"></div>
       <div class="gc-body">
         <div class="gc-icon">🎨</div>
         <div class="gc-tag">Tile Takeover</div>
         <div class="gc-title">Color War</div>
-        <div class="gc-desc">An 8×8 grid. Your color vs everyone else. Tap tiles to claim them. Someone can steal yours back. 60 seconds of chaos.</div>
-        <div class="gc-features">
+        <div class="gc-desc">64 tiles. 60 seconds. Claim tiles for your color. Anyone can steal yours back. Most tiles wins!</div>
+        <div class="gc-feats">
           <div class="gc-feat"><span class="gc-feat-icon">🎨</span>8×8 shared grid</div>
-          <div class="gc-feat"><span class="gc-feat-icon">⚔️</span>Steal tiles from opponents</div>
-          <div class="gc-feat"><span class="gc-feat-icon">⏱</span>60 second rounds</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Most tiles at end wins</div>
+          <div class="gc-feat"><span class="gc-feat-icon">⚔️</span>Steal from opponents</div>
+          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Win count leaderboard</div>
         </div>
-        <div class="card-lb">
-          <div class="card-lb-title">🏆 Most Wins</div>
-          <div id="cw-lb"></div>
+        <div class="mini-lb">
+          <div class="mlb-hdr">🏆 MOST WINS <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
+          <div id="lb-colorwar"><div class="lb-empty">Loading...</div></div>
         </div>
       </div>
       <div class="gc-footer">
-        <div class="gc-players"><div class="gc-pdot"></div><span id="cw-players">Active now</span></div>
-        <button class="play-now">Play Now →</button>
+        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
+        <button class="play-btn">Play Now →</button>
       </div>
     </div>
 
     <!-- SURVIVAL RACE -->
-    <div class="game-card g3" onclick="goGame('survival-race/index.html')">
+    <div class="gc g3" onclick="goGame('survival-race/index.html')">
       <div class="gc-bar"></div>
       <div class="gc-body">
         <div class="gc-icon">💀</div>
         <div class="gc-tag">Last One Standing</div>
         <div class="gc-title">Survival Race</div>
-        <div class="gc-desc">Dodge falling neon obstacles. Survive longer than every other player. Your ghost stays visible when you die — others see exactly how far you got.</div>
-        <div class="gc-features">
-          <div class="gc-feat"><span class="gc-feat-icon">💀</span>Dodge obstacles endlessly</div>
-          <div class="gc-feat"><span class="gc-feat-icon">👻</span>Ghosts show fallen players</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🚀</span>Speed ramps up every 10s</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Global survival leaderboard</div>
+        <div class="gc-desc">Dodge falling neon obstacles endlessly. Speed ramps up every 10s. Survive as long as possible!</div>
+        <div class="gc-feats">
+          <div class="gc-feat"><span class="gc-feat-icon">🚀</span>Speed increases every 10s</div>
+          <div class="gc-feat"><span class="gc-feat-icon">👻</span>Ghost trails of fallen players</div>
+          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Survival time leaderboard</div>
         </div>
-        <div class="card-lb">
-          <div class="card-lb-title">🏆 Longest Survival</div>
-          <div id="sr-lb"></div>
+        <div class="mini-lb">
+          <div class="mlb-hdr">🏆 LONGEST SURVIVAL <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
+          <div id="lb-survival"><div class="lb-empty">Loading...</div></div>
         </div>
       </div>
       <div class="gc-footer">
-        <div class="gc-players"><div class="gc-pdot"></div><span id="sr-players">Active now</span></div>
-        <button class="play-now">Play Now →</button>
+        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
+        <button class="play-btn">Play Now →</button>
       </div>
     </div>
 
@@ -287,21 +312,18 @@ footer a{color:var(--cyan);text-decoration:none}
 
   <!-- OVERALL LEADERBOARD -->
   <div class="overall-lb">
-    <div class="olb-title">🏆 Overall Arena Leaderboard</div>
-    <div class="olb-sub">Combined scores across all 3 multiplayer games. Updated in real time.</div>
+    <div class="olb-title">🏆 Global Arena Leaderboard</div>
+    <div class="olb-sub">Real scores from real players worldwide. Updated live via Firebase.</div>
     <div class="olb-tabs">
-      <button class="olb-tab on" onclick="showOlb(this,'all')">All Games</button>
-      <button class="olb-tab" onclick="showOlb(this,'sc')">Speed Clash</button>
-      <button class="olb-tab" onclick="showOlb(this,'cw')">Color War</button>
-      <button class="olb-tab" onclick="showOlb(this,'sr')">Survival Race</button>
+      <button class="olb-tab on" onclick="switchOlb(this,'all')">All Games</button>
+      <button class="olb-tab" onclick="switchOlb(this,'gridshot')">GridShot</button>
+      <button class="olb-tab" onclick="switchOlb(this,'speedclash')">Speed Clash</button>
+      <button class="olb-tab" onclick="switchOlb(this,'colorwar')">Color War</button>
+      <button class="olb-tab" onclick="switchOlb(this,'survival')">Survival</button>
     </div>
     <table class="olb-table">
-      <thead>
-        <tr>
-          <th>#</th><th>Player</th><th>Game</th><th>Score</th><th>Date</th>
-        </tr>
-      </thead>
-      <tbody id="olb-body"></tbody>
+      <thead><tr><th>#</th><th>Player</th><th>Game</th><th>Score</th><th>Date</th></tr></thead>
+      <tbody id="olb-body"><tr><td colspan="5" class="empty-lb">Loading global scores...</td></tr></tbody>
     </table>
   </div>
 
@@ -309,127 +331,174 @@ footer a{color:var(--cyan);text-decoration:none}
 
 <footer>
   <div class="container">
-    <p>← <a href="../index.html">Back to Hub</a> &nbsp;|&nbsp; <a href="../minigames/index.html">Mini Games</a> &nbsp;|&nbsp; <a href="../timed-challenge/index.html">Timed Mode</a> &nbsp;|&nbsp; <a href="../leaderboard/index.html">All Scores</a></p>
+    <p>← <a href="../index.html">Back to Hub</a> &nbsp;|&nbsp; <a href="../minigames/index.html">Mini Games</a> &nbsp;|&nbsp; <a href="../timed-challenge/index.html">Timed Mode</a></p>
   </div>
 </footer>
 
-<script>
-// Nickname
-let playerNick=localStorage.getItem('player_nick')||'';
-function checkNick(){
-  if(!playerNick){
-    document.getElementById('nick-modal').classList.remove('hidden');
-    setTimeout(()=>document.getElementById('nick-input').focus(),300);
-  } else showNickPill(playerNick);
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set, get }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",
+  authDomain: "gamehub234.firebaseapp.com",
+  databaseURL: "https://gamehub234-default-rtdb.firebaseio.com",
+  projectId: "gamehub234",
+  storageBucket: "gamehub234.firebasestorage.app",
+  messagingSenderId: "902315908438",
+  appId: "1:902315908438:web:7ff2c34487b24c71998af7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+window._db = db;
+window._dbRef = ref;
+window._dbQuery = query;
+window._orderByChild = orderByChild;
+window._limitToLast = limitToLast;
+window._push = push;
+window._set = set;
+window._get = get;
+window._onValue = onValue;
+
+const GAMES = ['gridshot','speedclash','colorwar','survival'];
+const GAME_LABELS = {gridshot:'GridShot',speedclash:'Speed Clash',colorwar:'Color War',survival:'Survival Race'};
+const MEDALS = ['🥇','🥈','🥉'];
+const RANK_CLS = ['rank-1','rank-2','rank-3'];
+const RANK_CELL = ['rank-cell-1','rank-cell-2','rank-cell-3'];
+
+const nick = localStorage.getItem('player_nick') || '';
+
+// Load mini leaderboards per game
+GAMES.forEach(game => {
+  const r = query(ref(db, `scores/${game}`), orderByChild('score'), limitToLast(5));
+  onValue(r, snap => {
+    const rows = [];
+    snap.forEach(c => rows.push(c.val()));
+    rows.sort((a,b) => b.score - a.score);
+    const el = document.getElementById(`lb-${game}`);
+    if (!el) return;
+    if (!rows.length) { el.innerHTML = '<div class="lb-empty">No scores yet — be first!</div>'; return; }
+    el.innerHTML = rows.slice(0,4).map((e,i) => `
+      <div class="lb-row" style="animation:lb-in .3s ease ${i*0.06}s both">
+        <span class="lb-rank ${RANK_CLS[i]||'rank-n'}">${MEDALS[i]||i+1}</span>
+        <span class="lb-name">${e.nick||'Anonymous'}${e.nick===nick?'<span style="font-size:9px;color:var(--green);margin-left:5px">(you)</span>':''}</span>
+        <span class="lb-score">${formatScore(game,e.score)}</span>
+      </div>`).join('');
+  });
+});
+
+// Overall leaderboard
+let olbFilter = 'all';
+function loadOlb(filter) {
+  olbFilter = filter;
+  const tbody = document.getElementById('olb-body');
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-lb">Loading...</td></tr>';
+  const games = filter === 'all' ? GAMES : [filter];
+  const promises = games.map(g =>
+    window._get(query(ref(db, `scores/${g}`), orderByChild('score'), limitToLast(20)))
+      .then(snap => { const r = []; snap.forEach(c => r.push({...c.val(), game:g})); return r; })
+  );
+  Promise.all(promises).then(results => {
+    const all = results.flat().sort((a,b) => b.score - a.score).slice(0,20);
+    if (!all.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-lb">No scores yet. Start playing!</td></tr>'; return; }
+    tbody.innerHTML = all.map((e,i) => `
+      <tr class="${e.nick===nick?'you-row':''}">
+        <td class="${RANK_CELL[i]||'rank-cell-n'}">${MEDALS[i]||i+1}</td>
+        <td>${e.nick||'Anonymous'}${e.nick===nick?'<span class="you-chip">YOU</span>':''}</td>
+        <td style="color:var(--dim)">${GAME_LABELS[e.game]}</td>
+        <td class="score-cell">${formatScore(e.game,e.score)}</td>
+        <td style="color:var(--dim);font-size:11px">${e.date||'Today'}</td>
+      </tr>`).join('');
+  });
 }
-function saveNick(){
-  const v=document.getElementById('nick-input').value.trim();
-  if(!v){document.getElementById('nick-input').style.borderColor='rgba(255,0,60,0.5)';return;}
-  playerNick=v;
-  localStorage.setItem('player_nick',v);
+window.loadOlb = loadOlb;
+loadOlb('all');
+
+// Global stats
+onValue(ref(db,'stats'), snap => {
+  const v = snap.val() || {};
+  document.getElementById('total-players').textContent = v.players || 0;
+  document.getElementById('total-scores').textContent  = v.scores  || 0;
+});
+
+// Ticker — show recent scores
+onValue(query(ref(db,'recent'), orderByChild('ts'), limitToLast(8)), snap => {
+  const items = [];
+  snap.forEach(c => items.push(c.val()));
+  items.sort((a,b) => b.ts - a.ts);
+  if (items.length) {
+    const msgs = items.map(e =>
+      `<span class="tick-item">🏆 <span>${e.nick}</span> scored ${formatScore(e.game,e.score)} in ${GAME_LABELS[e.game]||e.game}</span>`
+    ).join('');
+    document.getElementById('ticker-inner').innerHTML = msgs + msgs;
+  }
+});
+
+function formatScore(game, s) {
+  if (game === 'survival') return (s/10).toFixed(1) + 's';
+  return s.toLocaleString();
+}
+window.formatScore = formatScore;
+
+function switchOlb(btn, filter) {
+  document.querySelectorAll('.olb-tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  loadOlb(filter);
+}
+window.switchOlb = switchOlb;
+</script>
+
+<script>
+// Nickname system
+let playerNick = localStorage.getItem('player_nick') || '';
+
+function checkNick() {
+  if (!playerNick) {
+    document.getElementById('nick-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('nick-input').focus(), 300);
+  } else {
+    showNickPill(playerNick);
+  }
+}
+function saveNick() {
+  const v = document.getElementById('nick-input').value.trim();
+  if (!v) { document.getElementById('nick-input').style.borderColor = 'rgba(255,0,60,.5)'; return; }
+  playerNick = v;
+  localStorage.setItem('player_nick', v);
   document.getElementById('nick-modal').classList.add('hidden');
   showNickPill(v);
 }
-function skipNick(){
-  playerNick=localStorage.getItem('player_nick')||'Guest'+Math.floor(Math.random()*1000);
+function skipNick() {
+  playerNick = 'Guest' + Math.floor(Math.random() * 9999);
   document.getElementById('nick-modal').classList.add('hidden');
-  if(!localStorage.getItem('player_nick'))showNickPill(playerNick);
 }
-function changeNick(){
-  document.getElementById('nick-input').value=playerNick;
+function changeNick() {
+  document.getElementById('nick-input').value = playerNick;
   document.getElementById('nick-modal').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('nick-input').focus(),100);
+  setTimeout(() => document.getElementById('nick-input').focus(), 100);
 }
-function showNickPill(n){
-  document.getElementById('nick-name').textContent=n;
-  document.getElementById('nick-pill').style.display='flex';
+function showNickPill(n) {
+  document.getElementById('nick-name').textContent = n;
+  document.getElementById('nick-pill').style.display = 'flex';
 }
-checkNick();
-
-// Navigate to game
-function goGame(path){
-  if(!playerNick||playerNick===''){
+function goGame(path) {
+  if (!playerNick) {
     document.getElementById('nick-modal').classList.remove('hidden');
     document.getElementById('nick-input').focus();
     return;
   }
-  window.location.href=path;
+  window.location.href = path;
 }
+window.saveNick = saveNick;
+window.skipNick = skipNick;
+window.changeNick = changeNick;
+window.goGame = goGame;
 
-// Leaderboard data (localStorage-backed)
-function getLBData(key){
-  try{return JSON.parse(localStorage.getItem(key)||'[]');}catch{return [];}
-}
-function getAllEntries(){
-  const sc=getLBData('mp_sc').map(e=>({...e,game:'Speed Clash'}));
-  const cw=getLBData('mp_cw').map(e=>({...e,game:'Color War'}));
-  const sr=getLBData('mp_sr').map(e=>({...e,game:'Survival Race'}));
-  return [...sc,...cw,...sr].sort((a,b)=>b.score-a.score);
-}
-
-function renderMiniLB(containerId,data,color){
-  const el=document.getElementById(containerId);
-  if(!data.length){el.innerHTML='<div style="font-size:12px;color:var(--dim);padding:4px 0">No scores yet — be first!</div>';return;}
-  const ranks=['gold','silver','bronze'];
-  el.innerHTML=data.slice(0,3).map((e,i)=>`
-    <div class="lb-row">
-      <span class="lb-rank ${ranks[i]||''}">${i+1}</span>
-      <span class="lb-name">${e.nick}${e.nick===playerNick?'<span style="font-size:9px;color:var(--cyan);margin-left:5px">(you)</span>':''}</span>
-      <span class="lb-score">${e.score}</span>
-    </div>`).join('');
-}
-
-function renderOLB(filter){
-  const all=getAllEntries();
-  const filtered=filter==='all'?all:all.filter(e=>{
-    if(filter==='sc')return e.game==='Speed Clash';
-    if(filter==='cw')return e.game==='Color War';
-    if(filter==='sr')return e.game==='Survival Race';
-    return true;
-  });
-  const tbody=document.getElementById('olb-body');
-  if(!filtered.length){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--dim);padding:24px">No scores yet. Start playing to appear here!</td></tr>';
-    return;
-  }
-  tbody.innerHTML=filtered.slice(0,15).map((e,i)=>{
-    const rankCls=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-    const isYou=e.nick===playerNick;
-    const medals=['🥇','🥈','🥉'];
-    return `<tr class="${isYou?'you-row':''}">
-      <td class="${rankCls}">${medals[i]||i+1}</td>
-      <td>${e.nick}${isYou?'<span class="you-badge">YOU</span>':''}</td>
-      <td style="color:var(--dim)">${e.game}</td>
-      <td class="score-cell">${e.score}</td>
-      <td style="color:var(--dim);font-size:11px">${e.date||'Today'}</td>
-    </tr>`;
-  }).join('');
-}
-
-function showOlb(btn,filter){
-  document.querySelectorAll('.olb-tab').forEach(t=>t.classList.remove('on'));
-  btn.classList.add('on');
-  renderOLB(filter);
-}
-
-// Fake ticker names
-const fakeNames=['CyberAce','NeonKing','PixelPro','LaserX','QuickByte','StarDash','VoidWalker','GlitchHunter'];
-function populateTicker(){
-  const rn=()=>fakeNames[Math.floor(Math.random()*fakeNames.length)];
-  ['t1','t2','t3','t4','t5','t6'].forEach(id=>document.getElementById(id).textContent=rn());
-  document.getElementById('t3s').textContent=Math.floor(30+Math.random()*90);
-}
-populateTicker();
-setInterval(populateTicker,8000);
-
-// Load leaderboards
-renderMiniLB('sc-lb',getLBData('mp_sc'),'cyan');
-renderMiniLB('cw-lb',getLBData('mp_cw'),'pink');
-renderMiniLB('sr-lb',getLBData('mp_sr'),'green');
-renderOLB('all');
-
-const total=getLBData('mp_sc').length+getLBData('mp_cw').length+getLBData('mp_sr').length;
-document.getElementById('total-entries').textContent=total;
+checkNick();
 </script>
 </body>
 </html>
