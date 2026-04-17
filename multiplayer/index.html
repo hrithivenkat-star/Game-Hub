@@ -5,149 +5,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multiplayer Arena — Game Hub</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--cyan:#00f5ff;--purple:#bf00ff;--pink:#ff006e;--green:#00ff88;--yellow:#ffe600;--orange:#ff6b00;--bg:#050510;--card:#0a0a1a;--dim:#6677aa}
+:root{
+  --c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;
+  --c4:#ffe600;--c5:#ff6b00;--c6:#ff003c;--c7:#0088ff;
+  --bg:#03030f;--card:#080818;--card2:#0c0c22;--dim:#5566aa;
+}
 html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,0,110,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,110,0.018) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;top:-150px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(255,0,110,0.055) 0%,transparent 70%);pointer-events:none;z-index:0}
+/* ANIMATED BG */
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 80% 50% at 20% -20%,rgba(0,245,255,.07),transparent),
+  radial-gradient(ellipse 60% 40% at 80% 110%,rgba(191,0,255,.07),transparent),
+  radial-gradient(ellipse 40% 60% at 50% 50%,rgba(255,0,110,.04),transparent);
+  pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:
+  linear-gradient(rgba(0,245,255,.018) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,245,255,.018) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0}
+
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,0,110,0.04),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:0}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@keyframes glow{0%,100%{opacity:.7}50%{opacity:1}}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.8);opacity:0}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
-@keyframes lb-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes rowslide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-.container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 22px}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,.04),transparent);animation:scanline 10s linear infinite;pointer-events:none;z-index:1}
 
-/* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,0,110,.1)}
-.logo{font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:var(--cyan);text-decoration:none;text-shadow:0 0 15px rgba(0,245,255,.5)}
-.logo span{color:var(--purple)}
-.nav-right{display:flex;gap:7px;align-items:center}
-.nbtn{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:7px 14px;border-radius:6px;transition:all .2s;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
-.nbtn:hover{color:var(--cyan);border-color:rgba(0,245,255,.3)}
-.nick-pill{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:var(--green);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:none;align-items:center;gap:6px;transition:all .2s}
+.container{position:relative;z-index:2;max-width:1260px;margin:0 auto;padding:0 20px}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(0,245,255,.07);position:sticky;top:0;z-index:50;background:rgba(3,3,15,.92);backdrop-filter:blur(12px)}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--c0);text-decoration:none;text-shadow:0 0 20px rgba(0,245,255,.5);letter-spacing:2px}
+.logo em{color:var(--c1);font-style:normal}
+.nav-links{display:flex;gap:5px;align-items:center}
+.nl{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:7px 13px;border-radius:6px;border:1px solid transparent;transition:all .2s;cursor:pointer;background:none;font-family:'Rajdhani',sans-serif}
+.nl:hover{color:var(--c0);border-color:rgba(0,245,255,.2);background:rgba(0,245,255,.04)}
+.nick-pill{background:linear-gradient(135deg,rgba(0,255,136,.12),rgba(0,245,255,.06));border:1px solid rgba(0,255,136,.3);color:var(--c3);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:none;align-items:center;gap:6px;font-family:'Orbitron',monospace}
 .nick-pill:hover{background:rgba(0,255,136,.18)}
-.ndot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 1.5s ease-in-out infinite}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--c3);box-shadow:0 0 8px var(--c3);animation:glow 1.5s ease-in-out infinite}
 
-/* TICKER */
-.ticker-wrap{background:rgba(255,0,110,.05);border-top:1px solid rgba(255,0,110,.08);border-bottom:1px solid rgba(255,0,110,.08);padding:9px 0;overflow:hidden;white-space:nowrap}
-.ticker-inner{display:inline-flex;animation:ticker 28s linear infinite}
-.tick-item{font-size:12px;color:var(--pink);padding:0 36px;font-weight:600;letter-spacing:.5px}
-.tick-item span{color:#fff}
+/* ── TICKER ── */
+.ticker-wrap{background:rgba(255,0,110,.05);border-top:1px solid rgba(255,0,110,.08);border-bottom:1px solid rgba(255,0,110,.08);padding:8px 0;overflow:hidden;white-space:nowrap;position:relative;z-index:2}
+.ticker-inner{display:inline-flex;animation:ticker 32s linear infinite}
+.ti{font-size:12px;color:var(--c2);padding:0 40px;font-weight:600;letter-spacing:.5px}
+.ti strong{color:#fff}
 
-/* HERO */
-.hero{text-align:center;padding:50px 0 40px}
-.hero-icon{width:70px;height:70px;border-radius:16px;margin:0 auto 20px;background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.3);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 30px rgba(255,0,110,.18);animation:float 3s ease-in-out infinite}
-.hero-tag{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--pink);margin-bottom:13px;animation:glow 2s ease-in-out infinite}
-.hero h1{font-family:'Orbitron',monospace;font-size:clamp(26px,5.5vw,56px);font-weight:900;color:#fff;margin-bottom:12px}
-.hero h1 span{color:var(--pink);text-shadow:0 0 25px rgba(255,0,110,.8),0 0 50px rgba(255,0,110,.4)}
-.hero-sub{font-size:16px;color:var(--dim);max-width:500px;margin:0 auto 28px;line-height:1.7}
+/* ── HERO ── */
+.hero{text-align:center;padding:60px 0 46px;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.25);border-radius:20px;padding:6px 18px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--c2);margin-bottom:22px;animation:glow 2s ease-in-out infinite}
+.live-ping{width:8px;height:8px;border-radius:50%;background:var(--c2);box-shadow:0 0 8px var(--c2);position:relative}
+.live-ping::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(255,0,110,.5);animation:pulse-ring 1.5s ease-out infinite}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(30px,6vw,70px);font-weight:900;color:#fff;line-height:1.05;margin-bottom:10px}
+.hero h1 .w1{color:var(--c0);text-shadow:0 0 30px rgba(0,245,255,.7),0 0 60px rgba(0,245,255,.4)}
+.hero h1 .w2{color:var(--c1);text-shadow:0 0 30px rgba(191,0,255,.7),0 0 60px rgba(191,0,255,.4)}
+.hero-sub{font-size:17px;color:var(--dim);max-width:520px;margin:0 auto 34px;line-height:1.7}
+.hero-sub strong{color:#e0e8ff}
 
-/* STAT BAR */
-.stat-bar{display:flex;justify-content:center;gap:0;border:1px solid rgba(255,0,110,.12);border-radius:10px;margin:0 auto 52px;max-width:500px;overflow:hidden;background:rgba(255,0,110,.02)}
-.stat{flex:1;padding:16px;text-align:center;border-right:1px solid rgba(255,0,110,.08)}
+.stat-row{display:flex;justify-content:center;gap:0;border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:540px;margin:0 auto 56px;background:rgba(255,255,255,.02)}
+.stat{flex:1;padding:18px;text-align:center;border-right:1px solid rgba(255,255,255,.05)}
 .stat:last-child{border-right:none}
-.stat-n{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:var(--pink);display:block;text-shadow:0 0 12px rgba(255,0,110,.5)}
+.stat-n{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;display:block;text-shadow:0 0 12px currentColor}
 .stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.sn1{color:var(--c2)}.sn2{color:var(--c0)}.sn3{color:var(--c3)}.sn4{color:var(--c4)}
 
-/* GAME CARDS */
-.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:60px}
-@media(max-width:700px){.games-grid{grid-template-columns:1fr}}
-.gc{position:relative;overflow:hidden;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.05);transition:all .3s;display:flex;flex-direction:column;animation:fadeInUp .4s ease both}
-.gc:hover{transform:translateY(-5px)}
-.gc-bar{height:3px}
-.g1 .gc-bar{background:linear-gradient(90deg,var(--cyan),var(--purple));box-shadow:0 0 10px var(--cyan)}
-.g2 .gc-bar{background:linear-gradient(90deg,var(--pink),var(--orange));box-shadow:0 0 10px var(--pink)}
-.g3 .gc-bar{background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 10px var(--green)}
-.g4 .gc-bar{background:linear-gradient(90deg,var(--yellow),var(--orange));box-shadow:0 0 10px var(--yellow)}
-.g1:hover{box-shadow:0 18px 50px rgba(0,245,255,.1),0 0 0 1px rgba(0,245,255,.15)}
-.g2:hover{box-shadow:0 18px 50px rgba(255,0,110,.1),0 0 0 1px rgba(255,0,110,.15)}
-.g3:hover{box-shadow:0 18px 50px rgba(0,255,136,.1),0 0 0 1px rgba(0,255,136,.15)}
-.g4:hover{box-shadow:0 18px 50px rgba(255,230,0,.1),0 0 0 1px rgba(255,230,0,.15)}
-.gc-body{padding:22px 20px 16px;flex:1}
-.gc-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;animation:float 3s ease-in-out infinite}
-.g1 .gc-icon{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25)}
-.g2 .gc-icon{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.25)}
-.g3 .gc-icon{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25)}
-.g4 .gc-icon{background:rgba(255,230,0,.1);border:1px solid rgba(255,230,0,.25)}
-.gc-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
-.g1 .gc-tag{color:var(--cyan)}.g2 .gc-tag{color:var(--pink)}.g3 .gc-tag{color:var(--green)}.g4 .gc-tag{color:var(--yellow)}
-.gc-title{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:#fff;margin-bottom:8px}
-.gc-desc{font-size:13px;color:var(--dim);line-height:1.55;margin-bottom:14px}
-.gc-feats{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.gc-feat{display:flex;align-items:center;gap:7px;font-size:12px;color:#aabbdd}
-.gc-feat-icon{font-size:13px}
+/* ── SECTION HEADER ── */
+.sec-hdr{text-align:center;margin-bottom:36px}
+.sec-tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,32px);font-weight:900;color:#fff}
 
-/* MINI LEADERBOARD */
-.mini-lb{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;margin-bottom:12px}
-.mlb-hdr{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.mlb-live{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green)}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:glow 1s ease-in-out infinite}
-.lb-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+/* ── GAMES GRID ── */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-bottom:70px}
+
+.gc{position:relative;overflow:hidden;background:var(--card);border-radius:16px;border:1px solid rgba(255,255,255,.05);transition:all .3s;display:flex;flex-direction:column;animation:fadeUp .4s ease both;cursor:pointer}
+.gc:hover{transform:translateY(-6px)}
+.gc-stripe{height:4px;border-radius:16px 16px 0 0;position:relative;overflow:hidden}
+.gc-stripe::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);background-size:200% 100%;animation:shimmer 2s linear infinite}
+
+/* per-game colors */
+.cw .gc-stripe{background:linear-gradient(90deg,#ff006e,#ff6b00);box-shadow:0 0 14px rgba(255,0,110,.5)}
+.gs .gc-stripe{background:linear-gradient(90deg,#ffe600,#ff6b00);box-shadow:0 0 14px rgba(255,230,0,.5)}
+.sc .gc-stripe{background:linear-gradient(90deg,#00f5ff,#bf00ff);box-shadow:0 0 14px rgba(0,245,255,.5)}
+.sr .gc-stripe{background:linear-gradient(90deg,#00ff88,#00f5ff);box-shadow:0 0 14px rgba(0,255,136,.5)}
+.td .gc-stripe{background:linear-gradient(90deg,#bf00ff,#ff006e);box-shadow:0 0 14px rgba(191,0,255,.5)}
+.mb .gc-stripe{background:linear-gradient(90deg,#0088ff,#00f5ff);box-shadow:0 0 14px rgba(0,136,255,.5)}
+.rz .gc-stripe{background:linear-gradient(90deg,#ff003c,#ff006e);box-shadow:0 0 14px rgba(255,0,60,.5)}
+
+.cw:hover{box-shadow:0 20px 60px rgba(255,0,110,.12),0 0 0 1px rgba(255,0,110,.18)}
+.gs:hover{box-shadow:0 20px 60px rgba(255,230,0,.12),0 0 0 1px rgba(255,230,0,.18)}
+.sc:hover{box-shadow:0 20px 60px rgba(0,245,255,.12),0 0 0 1px rgba(0,245,255,.18)}
+.sr:hover{box-shadow:0 20px 60px rgba(0,255,136,.12),0 0 0 1px rgba(0,255,136,.18)}
+.td:hover{box-shadow:0 20px 60px rgba(191,0,255,.12),0 0 0 1px rgba(191,0,255,.18)}
+.mb:hover{box-shadow:0 20px 60px rgba(0,136,255,.12),0 0 0 1px rgba(0,136,255,.18)}
+.rz:hover{box-shadow:0 20px 60px rgba(255,0,60,.12),0 0 0 1px rgba(255,0,60,.18)}
+
+.gc-body{padding:20px 18px 14px;flex:1;display:flex;flex-direction:column}
+.gc-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.gc-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;animation:float 3s ease-in-out infinite}
+.cw .gc-icon{background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.28)}
+.gs .gc-icon{background:rgba(255,230,0,.1);border:1px solid rgba(255,230,0,.25)}
+.sc .gc-icon{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25)}
+.sr .gc-icon{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25)}
+.td .gc-icon{background:rgba(191,0,255,.1);border:1px solid rgba(191,0,255,.25)}
+.mb .gc-icon{background:rgba(0,136,255,.1);border:1px solid rgba(0,136,255,.25)}
+.rz .gc-icon{background:rgba(255,0,60,.1);border:1px solid rgba(255,0,60,.25)}
+
+.gc-info{flex:1;min-width:0}
+.gc-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.cw .gc-tag{color:var(--c2)}.gs .gc-tag{color:var(--c4)}.sc .gc-tag{color:var(--c0)}
+.sr .gc-tag{color:var(--c3)}.td .gc-tag{color:var(--c1)}.mb .gc-tag{color:var(--c7)}.rz .gc-tag{color:var(--c6)}
+.gc-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc-desc{font-size:13px;color:var(--dim);line-height:1.55;margin-bottom:12px;flex:1}
+
+/* MINI LB */
+.mini-lb{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:9px 11px;margin-bottom:12px}
+.mlb-hdr{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.live-chip{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--c3)}
+.lc-dot{width:5px;height:5px;border-radius:50%;background:var(--c3);animation:glow 1s ease-in-out infinite}
+.lb-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);animation:rowslide .3s ease both}
 .lb-row:last-child{border-bottom:none}
-.lb-rank{font-family:'Orbitron',monospace;font-size:10px;width:18px;flex-shrink:0}
-.rank-1{color:var(--yellow)}.rank-2{color:#c0c8d8}.rank-3{color:var(--orange)}.rank-n{color:var(--dim)}
-.lb-name{font-size:12px;flex:1;color:#dde4f0}
-.lb-score{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
-.g1 .lb-score{color:var(--cyan)}.g2 .lb-score{color:var(--pink)}.g3 .lb-score{color:var(--green)}.g4 .lb-score{color:var(--yellow)}
-.lb-empty{font-size:11px;color:var(--dim);text-align:center;padding:6px 0}
+.lr{font-family:'Orbitron',monospace;font-size:10px;width:18px;flex-shrink:0}
+.rk1{color:var(--c4)}.rk2{color:#c0c8d8}.rk3{color:var(--c5)}.rkn{color:var(--dim)}
+.ln{font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dde4f0}
+.you-n{color:var(--c3)!important;font-weight:700}
+.ls{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
+.cw .ls{color:var(--c2)}.gs .ls{color:var(--c4)}.sc .ls{color:var(--c0)}
+.sr .ls{color:var(--c3)}.td .ls{color:var(--c1)}.mb .ls{color:var(--c7)}.rz .ls{color:var(--c6)}
+.lb-empty{font-size:11px;color:var(--dim);text-align:center;padding:5px 0}
 
-.gc-footer{padding:12px 20px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.01)}
+/* CARD FOOTER */
+.gc-footer{padding:12px 18px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.01)}
 .gc-online{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
-.odot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 1.5s ease-in-out infinite}
-.play-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 18px;border-radius:6px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-block}
-.g1 .play-btn{background:rgba(0,245,255,.12);color:var(--cyan);border:1px solid rgba(0,245,255,.3)}
-.g2 .play-btn{background:rgba(255,0,110,.12);color:var(--pink);border:1px solid rgba(255,0,110,.3)}
-.g3 .play-btn{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3)}
-.g4 .play-btn{background:rgba(255,230,0,.12);color:var(--yellow);border:1px solid rgba(255,230,0,.3)}
-.gc:hover .play-btn{filter:brightness(1.2)}
+.go-dot{width:6px;height:6px;border-radius:50%;background:var(--c3);animation:glow 1.5s ease-in-out infinite}
+.play-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 17px;border-radius:6px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-block}
+.cw .play-btn{background:rgba(255,0,110,.12);color:var(--c2);border:1px solid rgba(255,0,110,.3)}
+.gs .play-btn{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.3)}
+.sc .play-btn{background:rgba(0,245,255,.12);color:var(--c0);border:1px solid rgba(0,245,255,.3)}
+.sr .play-btn{background:rgba(0,255,136,.12);color:var(--c3);border:1px solid rgba(0,255,136,.3)}
+.td .play-btn{background:rgba(191,0,255,.12);color:var(--c1);border:1px solid rgba(191,0,255,.3)}
+.mb .play-btn{background:rgba(0,136,255,.12);color:var(--c7);border:1px solid rgba(0,136,255,.3)}
+.rz .play-btn{background:rgba(255,0,60,.12);color:var(--c6);border:1px solid rgba(255,0,60,.3)}
+.gc:hover .play-btn{filter:brightness(1.25);transform:scale(1.04)}
 
-/* OVERALL LB */
-.overall-lb{background:rgba(255,230,0,.03);border:1px solid rgba(255,230,0,.12);border-radius:14px;padding:26px;margin-bottom:60px}
-.olb-title{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;color:var(--yellow);margin-bottom:5px}
-.olb-sub{font-size:13px;color:var(--dim);margin-bottom:18px}
-.olb-tabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
-.olb-tab{padding:6px 16px;border-radius:16px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.08);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
-.olb-tab:hover{color:#fff;border-color:rgba(255,255,255,.2)}
-.olb-tab.on{background:rgba(255,230,0,.1);border-color:rgba(255,230,0,.3);color:var(--yellow)}
-.olb-table{width:100%;border-collapse:collapse}
-.olb-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
-.olb-table td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
-.olb-table tr:hover td{background:rgba(255,255,255,.02)}
-.olb-table tr:last-child td{border-bottom:none}
-.rank-cell-1{color:var(--yellow);font-family:'Orbitron',monospace;font-weight:700}
-.rank-cell-2{color:#c0c8d8;font-family:'Orbitron',monospace;font-weight:700}
-.rank-cell-3{color:var(--orange);font-family:'Orbitron',monospace;font-weight:700}
-.rank-cell-n{color:var(--dim);font-family:'Orbitron',monospace;font-size:12px}
-.score-cell{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--cyan)}
+/* ── GLOBAL LB ── */
+.global-lb{background:linear-gradient(135deg,rgba(255,230,0,.04),rgba(255,107,0,.02));border:1px solid rgba(255,230,0,.12);border-radius:16px;padding:28px;margin-bottom:70px}
+.glb-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+.glb-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--c4);margin-bottom:4px}
+.glb-sub{font-size:13px;color:var(--dim)}
+.glb-tabs{display:flex;gap:7px;flex-wrap:wrap}
+.gtab{padding:7px 16px;border-radius:18px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.08);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.gtab:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.gtab.on{background:rgba(255,230,0,.1);border-color:rgba(255,230,0,.3);color:var(--c4)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;transition:background .15s}
+tr:hover td{background:rgba(255,255,255,.02)}
+tr:last-child td{border-bottom:none}
+.tc1{color:var(--c4);font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
+.tc2{color:#c0c8d8;font-family:'Orbitron',monospace;font-weight:700}
+.tc3{color:var(--c5);font-family:'Orbitron',monospace;font-weight:700}
+.tcn{color:var(--dim);font-family:'Orbitron',monospace;font-size:11px}
+.score-td{font-family:'Orbitron',monospace;font-weight:700;color:var(--c0);font-size:13px}
 .you-row td{background:rgba(255,230,0,.04)!important}
-.you-chip{font-size:9px;background:rgba(255,230,0,.15);color:var(--yellow);border:1px solid rgba(255,230,0,.3);border-radius:5px;padding:2px 7px;margin-left:6px}
-.empty-lb{text-align:center;padding:28px;color:var(--dim);font-size:14px}
+.you-chip{font-size:9px;background:rgba(255,230,0,.15);color:var(--c4);border:1px solid rgba(255,230,0,.3);border-radius:5px;padding:2px 7px;margin-left:6px;font-family:'Rajdhani',sans-serif}
+.empty-td{text-align:center;padding:28px;color:var(--dim)}
 
-/* NICKNAME MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(2,2,8,.95);backdrop-filter:blur(8px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(2,2,12,.96);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-bg.hidden{display:none}
-.modal{background:var(--card);border:1px solid rgba(255,0,110,.25);border-radius:18px;padding:34px;width:100%;max-width:450px;text-align:center;box-shadow:0 0 60px rgba(255,0,110,.12)}
-.modal-icon{font-size:50px;margin-bottom:13px;animation:float 2.5s ease-in-out infinite}
-.modal-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--pink);margin-bottom:8px;text-shadow:0 0 15px rgba(255,0,110,.5)}
-.modal-sub{font-size:14px;color:var(--dim);margin-bottom:22px;line-height:1.65}
-.nick-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,0,110,.25);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:17px;font-weight:700;padding:14px 18px;border-radius:8px;margin-bottom:8px;text-align:center;letter-spacing:2px;outline:none;transition:border-color .2s}
-.nick-input:focus{border-color:rgba(255,0,110,.5);box-shadow:0 0 12px rgba(255,0,110,.1)}
-.nick-input::placeholder{color:rgba(102,119,170,.5);font-size:13px;letter-spacing:1px}
-.nick-hint{font-size:11px;color:var(--dim);margin-bottom:18px}
+.modal{background:var(--card2);border:1px solid rgba(255,0,110,.25);border-radius:20px;padding:36px;width:100%;max-width:460px;text-align:center;box-shadow:0 0 80px rgba(255,0,110,.1),inset 0 0 40px rgba(255,0,110,.02)}
+.modal-icon{font-size:54px;margin-bottom:14px;display:block;animation:float 2.5s ease-in-out infinite}
+.modal-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:var(--c2);margin-bottom:8px;text-shadow:0 0 20px rgba(255,0,110,.5)}
+.modal-sub{font-size:14px;color:var(--dim);margin-bottom:24px;line-height:1.65}
+.nick-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,0,110,.25);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:18px;font-weight:700;padding:14px 20px;border-radius:10px;margin-bottom:8px;text-align:center;letter-spacing:2px;outline:none;transition:all .2s}
+.nick-in:focus{border-color:rgba(255,0,110,.55);box-shadow:0 0 20px rgba(255,0,110,.12)}
+.nick-in::placeholder{color:rgba(102,119,170,.4);font-size:13px;letter-spacing:1px}
+.nick-hint{font-size:11px;color:var(--dim);margin-bottom:20px}
 .modal-btns{display:flex;gap:10px;justify-content:center}
-.mbtn{background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.3);color:var(--pink);padding:13px 28px;border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
-.mbtn:hover{background:rgba(255,0,110,.22);box-shadow:0 0 15px rgba(255,0,110,.3);transform:translateY(-1px)}
-.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:13px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.mbtn{background:rgba(255,0,110,.14);border:1px solid rgba(255,0,110,.35);color:var(--c2);padding:13px 30px;border-radius:9px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.mbtn:hover{background:rgba(255,0,110,.24);box-shadow:0 0 20px rgba(255,0,110,.3);transform:translateY(-1px)}
+.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:13px 20px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
 .mbtn-skip:hover{color:#fff}
 
-footer{border-top:1px solid rgba(255,0,110,.07);padding:26px 0;text-align:center;margin-top:10px}
+footer{border-top:1px solid rgba(255,255,255,.05);padding:28px 0;text-align:center;margin-top:10px}
 footer p{font-size:13px;color:var(--dim)}
-footer a{color:var(--cyan);text-decoration:none}
+footer a{color:var(--c0);text-decoration:none}
+
+@media(max-width:700px){
+  .games-grid{grid-template-columns:1fr}
+  nav .nl:not(.nick-pill){display:none}
+}
 </style>
 </head>
 <body>
@@ -156,174 +207,179 @@ footer a{color:var(--cyan);text-decoration:none}
 <!-- NICKNAME MODAL -->
 <div class="modal-bg" id="nick-modal">
   <div class="modal">
-    <div class="modal-icon">🌐</div>
+    <span class="modal-icon">🌐</span>
     <div class="modal-title">Enter the Arena</div>
-    <div class="modal-sub">Your nickname appears on the <strong style="color:#fff">LIVE global leaderboard</strong> for all players to see!</div>
-    <input class="nick-input" id="nick-input" maxlength="16" placeholder="Your nickname..." onkeydown="if(event.key==='Enter')saveNick()"/>
-    <div class="nick-hint">Max 16 characters · Visible to all players worldwide</div>
+    <div class="modal-sub">Your nickname appears on the <strong style="color:#fff">live global leaderboard</strong> — visible to every player worldwide!</div>
+    <input class="nick-in" id="nick-in" maxlength="16" placeholder="Your nickname..." autocomplete="off"/>
+    <div class="nick-hint">Max 16 chars · Shown on all leaderboards · No account needed</div>
     <div class="modal-btns">
-      <button class="mbtn" onclick="saveNick()">Enter Arena →</button>
-      <button class="mbtn-skip" onclick="skipNick()">Just browsing</button>
+      <button class="mbtn" id="nick-save-btn">Enter Arena →</button>
+      <button class="mbtn-skip" id="nick-skip-btn">Just browsing</button>
     </div>
   </div>
 </div>
 
-<!-- LIVE TICKER -->
+<!-- TICKER -->
 <div class="ticker-wrap">
-  <div class="ticker-inner" id="ticker-inner">
-    <span class="tick-item">⚡ <span>ARENA LIVE</span> — Real players competing now</span>
-    <span class="tick-item">🏆 Loading scores...</span>
-    <span class="tick-item">🎯 Play GridShot — new game!</span>
-    <span class="tick-item">⚡ <span>ARENA LIVE</span> — Real players competing now</span>
-    <span class="tick-item">🏆 Loading scores...</span>
-    <span class="tick-item">🎯 Play GridShot — new game!</span>
+  <div class="ticker-inner" id="ticker">
+    <span class="ti">⚡ <strong>ARENA LIVE</strong> — 7 games, real players competing now</span>
+    <span class="ti">🏆 Loading live scores...</span>
+    <span class="ti">🎨 Color War upgraded — steal tiles, build combos!</span>
+    <span class="ti">🎯 NEW: GridShot · Type Duel · Memory Blitz · Reflex Zone</span>
+    <span class="ti">⚡ <strong>ARENA LIVE</strong> — 7 games, real players competing now</span>
+    <span class="ti">🏆 Loading live scores...</span>
+    <span class="ti">🎨 Color War upgraded — steal tiles, build combos!</span>
+    <span class="ti">🎯 NEW: GridShot · Type Duel · Memory Blitz · Reflex Zone</span>
   </div>
 </div>
 
 <div class="container">
   <nav>
-    <a href="../index.html" class="logo">GAME<span>HUB</span></a>
-    <div class="nav-right">
-      <div class="nick-pill" id="nick-pill" onclick="changeNick()">
-        <div class="ndot"></div><span id="nick-name">Player</span>
-      </div>
-      <a href="../minigames/index.html" class="nbtn">🎮 Games</a>
-      <a href="../leaderboard/index.html" class="nbtn">🏆 Scores</a>
-      <a href="../index.html" class="nbtn">← Hub</a>
+    <a href="../index.html" class="logo">GAME<em>HUB</em></a>
+    <div class="nav-links">
+      <div class="nick-pill" id="nick-pill"><div class="ndot"></div><span id="nick-name">Player</span></div>
+      <a href="../minigames/index.html" class="nl">🎮 Mini Games</a>
+      <a href="../timed-challenge/index.html" class="nl">⏱ Timed</a>
+      <a href="leaderboard.html" class="nl">🏆 Scores</a>
+      <a href="../index.html" class="nl">← Hub</a>
     </div>
   </nav>
 
+  <!-- HERO -->
   <section class="hero">
-    <div class="hero-icon">🌐</div>
-    <p class="hero-tag">⚡ Live Multiplayer Arena</p>
-    <h1>MULTIPLAYER <span>ARENA</span></h1>
-    <p class="hero-sub">Enter with a nickname. Compete in 4 games. Your scores appear on the <strong style="color:var(--pink)">live global leaderboard</strong> — visible to every player worldwide.</p>
+    <div class="hero-badge"><div class="live-ping"></div>LIVE MULTIPLAYER ARENA</div>
+    <h1><span class="w1">MULTI</span><span class="w2">PLAYER</span></h1>
+    <p class="hero-sub">Enter with a nickname. Play 7 competitive games. Your score posts to the <strong>live global leaderboard</strong> — seen by every player worldwide.</p>
   </section>
 
-  <div class="stat-bar">
-    <div class="stat"><span class="stat-n" id="total-players">0</span><div class="stat-l">Total Players</div></div>
-    <div class="stat"><span class="stat-n" id="total-scores">0</span><div class="stat-l">Scores Logged</div></div>
-    <div class="stat"><span class="stat-n">4</span><div class="stat-l">Games</div></div>
+  <div class="stat-row">
+    <div class="stat"><span class="stat-n sn1" id="total-players">0</span><div class="stat-l">Players</div></div>
+    <div class="stat"><span class="stat-n sn2" id="total-scores">0</span><div class="stat-l">Scores</div></div>
+    <div class="stat"><span class="stat-n sn3">7</span><div class="stat-l">Games</div></div>
+    <div class="stat"><span class="stat-n sn4">Live</span><div class="stat-l">Status</div></div>
   </div>
 
-  <!-- GAME CARDS -->
-  <div class="games-grid">
+  <!-- GAMES GRID -->
+  <div class="sec-hdr">
+    <div class="sec-tag" style="color:var(--c2)">Choose Your Battle</div>
+    <div class="sec-title">Arena Games</div>
+  </div>
+  <div class="games-grid" id="games-grid">
 
-    <!-- GRIDSHOT -->
-    <div class="gc g4" onclick="goGame('gridshot/index.html')">
-      <div class="gc-bar"></div>
+    <div class="gc cw" onclick="goGame('color-war/index.html')">
+      <div class="gc-stripe"></div>
       <div class="gc-body">
-        <div class="gc-icon">🎯</div>
-        <div class="gc-tag">Aim Training</div>
-        <div class="gc-title">GridShot</div>
-        <div class="gc-desc">Glowing targets pop on a grid. Click them as fast as possible. 30 seconds. Pure reaction speed.</div>
-        <div class="gc-feats">
-          <div class="gc-feat"><span class="gc-feat-icon">🎯</span>Random target positions</div>
-          <div class="gc-feat"><span class="gc-feat-icon">⚡</span>Speed bonus for fast clicks</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Live global leaderboard</div>
-          <div class="gc-feat"><span class="gc-feat-icon">📱</span>Mobile friendly tap controls</div>
+        <div class="gc-top">
+          <div class="gc-icon">🎨</div>
+          <div class="gc-info"><div class="gc-tag">Tile Takeover</div><div class="gc-title">Color War</div></div>
         </div>
-        <div class="mini-lb">
-          <div class="mlb-hdr">🏆 TOP SCORES <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
-          <div id="lb-gridshot">
-            <div class="lb-empty">Loading...</div>
-          </div>
-        </div>
+        <div class="gc-desc">64 tiles. 4 AI rivals. 60 seconds. Claim tiles, build combos, steal enemy territory. Most tiles at the end wins.</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 TOP SCORES <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-colorwar"><div class="lb-empty">Loading...</div></div></div>
       </div>
-      <div class="gc-footer">
-        <div class="gc-online"><div class="odot"></div><span id="online-gs">Live now</span></div>
-        <button class="play-btn">Play Now →</button>
-      </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
     </div>
 
-    <!-- SPEED CLASH -->
-    <div class="gc g1" onclick="goGame('speed-clash/index.html')">
-      <div class="gc-bar"></div>
+    <div class="gc gs" onclick="goGame('gridshot/index.html')">
+      <div class="gc-stripe"></div>
       <div class="gc-body">
-        <div class="gc-icon">⚡</div>
-        <div class="gc-tag">Quiz Battle</div>
-        <div class="gc-title">Speed Clash</div>
-        <div class="gc-desc">10 rapid-fire math and trivia questions. Answer faster for more points. Streak multipliers stack.</div>
-        <div class="gc-feats">
-          <div class="gc-feat"><span class="gc-feat-icon">🧠</span>Math + trivia mixed</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🔥</span>Streak bonus multiplier</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Live global leaderboard</div>
+        <div class="gc-top">
+          <div class="gc-icon">🎯</div>
+          <div class="gc-info"><div class="gc-tag">Aim Training</div><div class="gc-title">GridShot</div></div>
         </div>
-        <div class="mini-lb">
-          <div class="mlb-hdr">🏆 TOP SCORES <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
-          <div id="lb-speedclash"><div class="lb-empty">Loading...</div></div>
-        </div>
+        <div class="gc-desc">Glowing targets pop on a 5×5 grid. Click them instantly. 30 seconds. Build combos for massive score multipliers.</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 TOP SCORES <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-gridshot"><div class="lb-empty">Loading...</div></div></div>
       </div>
-      <div class="gc-footer">
-        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
-        <button class="play-btn">Play Now →</button>
-      </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
     </div>
 
-    <!-- COLOR WAR -->
-    <div class="gc g2" onclick="goGame('color-war/index.html')">
-      <div class="gc-bar"></div>
+    <div class="gc sc" onclick="goGame('speed-clash/index.html')">
+      <div class="gc-stripe"></div>
       <div class="gc-body">
-        <div class="gc-icon">🎨</div>
-        <div class="gc-tag">Tile Takeover</div>
-        <div class="gc-title">Color War</div>
-        <div class="gc-desc">64 tiles. 60 seconds. Claim tiles for your color. Anyone can steal yours back. Most tiles wins!</div>
-        <div class="gc-feats">
-          <div class="gc-feat"><span class="gc-feat-icon">🎨</span>8×8 shared grid</div>
-          <div class="gc-feat"><span class="gc-feat-icon">⚔️</span>Steal from opponents</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Win count leaderboard</div>
+        <div class="gc-top">
+          <div class="gc-icon">⚡</div>
+          <div class="gc-info"><div class="gc-tag">Quiz Battle</div><div class="gc-title">Speed Clash</div></div>
         </div>
-        <div class="mini-lb">
-          <div class="mlb-hdr">🏆 MOST WINS <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
-          <div id="lb-colorwar"><div class="lb-empty">Loading...</div></div>
-        </div>
+        <div class="gc-desc">10 rapid-fire math & trivia questions. Faster correct answers = more points. Streak multiplier stacks!</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 TOP SCORES <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-speedclash"><div class="lb-empty">Loading...</div></div></div>
       </div>
-      <div class="gc-footer">
-        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
-        <button class="play-btn">Play Now →</button>
-      </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
     </div>
 
-    <!-- SURVIVAL RACE -->
-    <div class="gc g3" onclick="goGame('survival-race/index.html')">
-      <div class="gc-bar"></div>
+    <div class="gc sr" onclick="goGame('survival-race/index.html')">
+      <div class="gc-stripe"></div>
       <div class="gc-body">
-        <div class="gc-icon">💀</div>
-        <div class="gc-tag">Last One Standing</div>
-        <div class="gc-title">Survival Race</div>
+        <div class="gc-top">
+          <div class="gc-icon">💀</div>
+          <div class="gc-info"><div class="gc-tag">Last Standing</div><div class="gc-title">Survival Race</div></div>
+        </div>
         <div class="gc-desc">Dodge falling neon obstacles endlessly. Speed ramps up every 10s. Survive as long as possible!</div>
-        <div class="gc-feats">
-          <div class="gc-feat"><span class="gc-feat-icon">🚀</span>Speed increases every 10s</div>
-          <div class="gc-feat"><span class="gc-feat-icon">👻</span>Ghost trails of fallen players</div>
-          <div class="gc-feat"><span class="gc-feat-icon">🏆</span>Survival time leaderboard</div>
-        </div>
-        <div class="mini-lb">
-          <div class="mlb-hdr">🏆 LONGEST SURVIVAL <div class="mlb-live"><div class="live-dot"></div>LIVE</div></div>
-          <div id="lb-survival"><div class="lb-empty">Loading...</div></div>
-        </div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 LONGEST SURVIVAL <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-survival"><div class="lb-empty">Loading...</div></div></div>
       </div>
-      <div class="gc-footer">
-        <div class="gc-online"><div class="odot"></div><span>Live now</span></div>
-        <button class="play-btn">Play Now →</button>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
+    </div>
+
+    <div class="gc td" onclick="goGame('type-duel/index.html')">
+      <div class="gc-stripe"></div>
+      <div class="gc-body">
+        <div class="gc-top">
+          <div class="gc-icon">⌨️</div>
+          <div class="gc-info"><div class="gc-tag">Typing Speed</div><div class="gc-title">Type Duel</div></div>
+        </div>
+        <div class="gc-desc">Neon words fall from above. Type them before they hit the bottom. Speed + accuracy = score. 3 lives.</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 TOP SCORES <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-typeduel"><div class="lb-empty">Loading...</div></div></div>
       </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
+    </div>
+
+    <div class="gc mb" onclick="goGame('memory-blitz/index.html')">
+      <div class="gc-stripe"></div>
+      <div class="gc-body">
+        <div class="gc-top">
+          <div class="gc-icon">🧠</div>
+          <div class="gc-info"><div class="gc-tag">Memory Speed</div><div class="gc-title">Memory Blitz</div></div>
+        </div>
+        <div class="gc-desc">Watch the pattern light up, then repeat it exactly. Every round adds one more tile. How far can you reach?</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 BEST STREAK <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-memoryblitz"><div class="lb-empty">Loading...</div></div></div>
+      </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
+    </div>
+
+    <div class="gc rz" onclick="goGame('reflex-zone/index.html')">
+      <div class="gc-stripe"></div>
+      <div class="gc-body">
+        <div class="gc-top">
+          <div class="gc-icon">🔴</div>
+          <div class="gc-info"><div class="gc-tag">Reflex Test</div><div class="gc-title">Reflex Zone</div></div>
+        </div>
+        <div class="gc-desc">Navigate your dot through bouncing red zones. Touch one = dead. More zones spawn every 5 seconds. Pure survival.</div>
+        <div class="mini-lb"><div class="mlb-hdr">🏆 LONGEST SURVIVAL <div class="live-chip"><div class="lc-dot"></div>LIVE</div></div><div id="lb-reflexzone"><div class="lb-empty">Loading...</div></div></div>
+      </div>
+      <div class="gc-footer"><div class="gc-online"><div class="go-dot"></div>Live now</div><button class="play-btn">Play →</button></div>
     </div>
 
   </div>
 
-  <!-- OVERALL LEADERBOARD -->
-  <div class="overall-lb">
-    <div class="olb-title">🏆 Global Arena Leaderboard</div>
-    <div class="olb-sub">Real scores from real players worldwide. Updated live via Firebase.</div>
-    <div class="olb-tabs">
-      <button class="olb-tab on" onclick="switchOlb(this,'all')">All Games</button>
-      <button class="olb-tab" onclick="switchOlb(this,'gridshot')">GridShot</button>
-      <button class="olb-tab" onclick="switchOlb(this,'speedclash')">Speed Clash</button>
-      <button class="olb-tab" onclick="switchOlb(this,'colorwar')">Color War</button>
-      <button class="olb-tab" onclick="switchOlb(this,'survival')">Survival</button>
+  <!-- GLOBAL LEADERBOARD -->
+  <div class="global-lb">
+    <div class="glb-header">
+      <div>
+        <div class="glb-title">🏆 Global Arena Leaderboard</div>
+        <div class="glb-sub">Real scores from real players — updated live via Firebase</div>
+      </div>
+      <div class="glb-tabs">
+        <button class="gtab on" onclick="switchTab(this,'all')">All Games</button>
+        <button class="gtab" onclick="switchTab(this,'colorwar')">Color War</button>
+        <button class="gtab" onclick="switchTab(this,'gridshot')">GridShot</button>
+        <button class="gtab" onclick="switchTab(this,'speedclash')">Speed Clash</button>
+        <button class="gtab" onclick="switchTab(this,'survival')">Survival</button>
+        <button class="gtab" onclick="switchTab(this,'typeduel')">Type Duel</button>
+        <button class="gtab" onclick="switchTab(this,'memoryblitz')">Memory</button>
+        <button class="gtab" onclick="switchTab(this,'reflexzone')">Reflex</button>
+      </div>
     </div>
-    <table class="olb-table">
+    <table>
       <thead><tr><th>#</th><th>Player</th><th>Game</th><th>Score</th><th>Date</th></tr></thead>
-      <tbody id="olb-body"><tr><td colspan="5" class="empty-lb">Loading global scores...</td></tr></tbody>
+      <tbody id="global-lb-body"><tr><td colspan="5" class="empty-td">Loading global scores...</td></tr></tbody>
     </table>
   </div>
 
@@ -331,172 +387,156 @@ footer a{color:var(--cyan);text-decoration:none}
 
 <footer>
   <div class="container">
-    <p>← <a href="../index.html">Back to Hub</a> &nbsp;|&nbsp; <a href="../minigames/index.html">Mini Games</a> &nbsp;|&nbsp; <a href="../timed-challenge/index.html">Timed Mode</a></p>
+    <p>← <a href="../index.html">Back to Hub</a> &nbsp;|&nbsp; <a href="../minigames/index.html">Mini Games</a> &nbsp;|&nbsp; <a href="../timed-challenge/index.html">Timed Mode</a> &nbsp;|&nbsp; <a href="leaderboard.html">Full Leaderboard</a></p>
   </div>
 </footer>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set, get }
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, get, push, runTransaction }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",
-  authDomain: "gamehub234.firebaseapp.com",
-  databaseURL: "https://gamehub234-default-rtdb.firebaseio.com",
-  projectId: "gamehub234",
-  storageBucket: "gamehub234.firebasestorage.app",
-  messagingSenderId: "902315908438",
-  appId: "1:902315908438:web:7ff2c34487b24c71998af7"
+const FB = {
+  apiKey:"AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",
+  authDomain:"gamehub234.firebaseapp.com",
+  databaseURL:"https://gamehub234-default-rtdb.firebaseio.com",
+  projectId:"gamehub234",
+  storageBucket:"gamehub234.firebasestorage.app",
+  messagingSenderId:"902315908438",
+  appId:"1:902315908438:web:7ff2c34487b24c71998af7"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
-
-window._db = db;
-window._dbRef = ref;
-window._dbQuery = query;
-window._orderByChild = orderByChild;
-window._limitToLast = limitToLast;
-window._push = push;
-window._set = set;
-window._get = get;
-window._onValue = onValue;
-
-const GAMES = ['gridshot','speedclash','colorwar','survival'];
-const GAME_LABELS = {gridshot:'GridShot',speedclash:'Speed Clash',colorwar:'Color War',survival:'Survival Race'};
-const MEDALS = ['🥇','🥈','🥉'];
-const RANK_CLS = ['rank-1','rank-2','rank-3'];
-const RANK_CELL = ['rank-cell-1','rank-cell-2','rank-cell-3'];
+let db, fbReady = false;
+try {
+  const app = initializeApp(FB);
+  db = getDatabase(app);
+  fbReady = true;
+} catch(e) { console.error('Firebase init failed:', e); }
 
 const nick = localStorage.getItem('player_nick') || '';
+const MEDALS = ['🥇','🥈','🥉'];
+const RCLS = ['rk1','rk2','rk3'];
+const GAME_LABELS = {
+  colorwar:'Color War', gridshot:'GridShot', speedclash:'Speed Clash',
+  survival:'Survival Race', typeduel:'Type Duel', memoryblitz:'Memory Blitz', reflexzone:'Reflex Zone'
+};
+const GAMES = Object.keys(GAME_LABELS);
 
-// Load mini leaderboards per game
-GAMES.forEach(game => {
-  const r = query(ref(db, `scores/${game}`), orderByChild('score'), limitToLast(5));
-  onValue(r, snap => {
-    const rows = [];
-    snap.forEach(c => rows.push(c.val()));
-    rows.sort((a,b) => b.score - a.score);
-    const el = document.getElementById(`lb-${game}`);
-    if (!el) return;
-    if (!rows.length) { el.innerHTML = '<div class="lb-empty">No scores yet — be first!</div>'; return; }
-    el.innerHTML = rows.slice(0,4).map((e,i) => `
-      <div class="lb-row" style="animation:lb-in .3s ease ${i*0.06}s both">
-        <span class="lb-rank ${RANK_CLS[i]||'rank-n'}">${MEDALS[i]||i+1}</span>
-        <span class="lb-name">${e.nick||'Anonymous'}${e.nick===nick?'<span style="font-size:9px;color:var(--green);margin-left:5px">(you)</span>':''}</span>
-        <span class="lb-score">${formatScore(game,e.score)}</span>
-      </div>`).join('');
-  });
-});
-
-// Overall leaderboard
-let olbFilter = 'all';
-function loadOlb(filter) {
-  olbFilter = filter;
-  const tbody = document.getElementById('olb-body');
-  tbody.innerHTML = '<tr><td colspan="5" class="empty-lb">Loading...</td></tr>';
-  const games = filter === 'all' ? GAMES : [filter];
-  const promises = games.map(g =>
-    window._get(query(ref(db, `scores/${g}`), orderByChild('score'), limitToLast(20)))
-      .then(snap => { const r = []; snap.forEach(c => r.push({...c.val(), game:g})); return r; })
-  );
-  Promise.all(promises).then(results => {
-    const all = results.flat().sort((a,b) => b.score - a.score).slice(0,20);
-    if (!all.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-lb">No scores yet. Start playing!</td></tr>'; return; }
-    tbody.innerHTML = all.map((e,i) => `
-      <tr class="${e.nick===nick?'you-row':''}">
-        <td class="${RANK_CELL[i]||'rank-cell-n'}">${MEDALS[i]||i+1}</td>
-        <td>${e.nick||'Anonymous'}${e.nick===nick?'<span class="you-chip">YOU</span>':''}</td>
-        <td style="color:var(--dim)">${GAME_LABELS[e.game]}</td>
-        <td class="score-cell">${formatScore(e.game,e.score)}</td>
-        <td style="color:var(--dim);font-size:11px">${e.date||'Today'}</td>
-      </tr>`).join('');
-  });
-}
-window.loadOlb = loadOlb;
-loadOlb('all');
-
-// Global stats
-onValue(ref(db,'stats'), snap => {
-  const v = snap.val() || {};
-  document.getElementById('total-players').textContent = v.players || 0;
-  document.getElementById('total-scores').textContent  = v.scores  || 0;
-});
-
-// Ticker — show recent scores
-onValue(query(ref(db,'recent'), orderByChild('ts'), limitToLast(8)), snap => {
-  const items = [];
-  snap.forEach(c => items.push(c.val()));
-  items.sort((a,b) => b.ts - a.ts);
-  if (items.length) {
-    const msgs = items.map(e =>
-      `<span class="tick-item">🏆 <span>${e.nick}</span> scored ${formatScore(e.game,e.score)} in ${GAME_LABELS[e.game]||e.game}</span>`
-    ).join('');
-    document.getElementById('ticker-inner').innerHTML = msgs + msgs;
-  }
-});
-
-function formatScore(game, s) {
-  if (game === 'survival') return (s/10).toFixed(1) + 's';
+function fmtScore(game, s) {
+  if (game === 'survival' || game === 'reflexzone') return (s/10).toFixed(1)+'s';
   return s.toLocaleString();
 }
-window.formatScore = formatScore;
 
-function switchOlb(btn, filter) {
-  document.querySelectorAll('.olb-tab').forEach(t => t.classList.remove('on'));
-  btn.classList.add('on');
-  loadOlb(filter);
+// Mini LBs per game
+if (fbReady) {
+  GAMES.forEach(game => {
+    const q = query(ref(db, `scores/${game}`), orderByChild('score'), limitToLast(5));
+    onValue(q, snap => {
+      const rows = []; snap.forEach(c => rows.push(c.val()));
+      rows.sort((a,b) => b.score - a.score);
+      const el = document.getElementById(`lb-${game}`);
+      if (!el) return;
+      if (!rows.length) { el.innerHTML = '<div class="lb-empty">No scores yet — be first! 🏆</div>'; return; }
+      el.innerHTML = rows.slice(0,4).map((e,i) => `
+        <div class="lb-row" style="animation-delay:${i*.05}s">
+          <span class="lr ${RCLS[i]||'rkn'}">${MEDALS[i]||i+1}</span>
+          <span class="ln ${e.nick===nick?'you-n':''}">${e.nick||'Anon'}${e.nick===nick?' ⭐':''}</span>
+          <span class="ls">${fmtScore(game,e.score)}</span>
+        </div>`).join('');
+    });
+  });
+
+  // Global stats
+  onValue(ref(db,'stats'), snap => {
+    const v = snap.val() || {};
+    document.getElementById('total-players').textContent = v.players || 0;
+    document.getElementById('total-scores').textContent  = v.scores  || 0;
+  });
+
+  // Ticker — recent scores
+  onValue(query(ref(db,'recent'), orderByChild('ts'), limitToLast(10)), snap => {
+    const items = []; snap.forEach(c => items.push(c.val()));
+    items.sort((a,b) => b.ts - a.ts);
+    if (items.length >= 3) {
+      const msgs = items.map(e =>
+        `<span class="ti">🏆 <strong>${e.nick}</strong> scored ${fmtScore(e.game,e.score)} in ${GAME_LABELS[e.game]||e.game}</span>`
+      ).join('');
+      document.getElementById('ticker').innerHTML = msgs + msgs;
+    }
+  });
 }
-window.switchOlb = switchOlb;
-</script>
 
-<script>
-// Nickname system
+// Global LB
+let currentTab = 'all';
+async function loadGlobalLB(filter) {
+  currentTab = filter;
+  const tbody = document.getElementById('global-lb-body');
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-td">Loading...</td></tr>';
+  if (!fbReady) { tbody.innerHTML = '<tr><td colspan="5" class="empty-td">⚠️ Firebase not connected — check rules</td></tr>'; return; }
+  const games = filter === 'all' ? GAMES : [filter];
+  try {
+    const results = await Promise.all(games.map(g =>
+      get(query(ref(db, `scores/${g}`), orderByChild('score'), limitToLast(25)))
+        .then(snap => { const r = []; snap.forEach(c => r.push({...c.val(), game:g})); return r; })
+    ));
+    const all = results.flat().sort((a,b) => b.score - a.score).slice(0,25);
+    if (!all.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-td">No scores yet. Be the first to play! 🎮</td></tr>'; return; }
+    tbody.innerHTML = all.map((e,i) => `
+      <tr class="${e.nick===nick?'you-row':''}">
+        <td class="${['tc1','tc2','tc3'][i]||'tcn'}">${MEDALS[i]||i+1}</td>
+        <td>${e.nick||'Anonymous'}${e.nick===nick?'<span class="you-chip">YOU</span>':''}</td>
+        <td style="color:var(--dim)">${GAME_LABELS[e.game]}</td>
+        <td class="score-td">${fmtScore(e.game,e.score)}</td>
+        <td style="color:var(--dim);font-size:11px">${e.date||'Today'}</td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-td">⚠️ Load failed: ${e.message}</td></tr>`;
+  }
+}
+
+window.switchTab = function(btn, filter) {
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  loadGlobalLB(filter);
+};
+loadGlobalLB('all');
+
+// Nickname
 let playerNick = localStorage.getItem('player_nick') || '';
-
 function checkNick() {
   if (!playerNick) {
     document.getElementById('nick-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('nick-input').focus(), 300);
-  } else {
-    showNickPill(playerNick);
-  }
+    setTimeout(() => document.getElementById('nick-in').focus(), 300);
+  } else showPill(playerNick);
 }
-function saveNick() {
-  const v = document.getElementById('nick-input').value.trim();
-  if (!v) { document.getElementById('nick-input').style.borderColor = 'rgba(255,0,60,.5)'; return; }
-  playerNick = v;
-  localStorage.setItem('player_nick', v);
-  document.getElementById('nick-modal').classList.add('hidden');
-  showNickPill(v);
-}
-function skipNick() {
-  playerNick = 'Guest' + Math.floor(Math.random() * 9999);
-  document.getElementById('nick-modal').classList.add('hidden');
-}
-function changeNick() {
-  document.getElementById('nick-input').value = playerNick;
-  document.getElementById('nick-modal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('nick-input').focus(), 100);
-}
-function showNickPill(n) {
+function showPill(n) {
   document.getElementById('nick-name').textContent = n;
   document.getElementById('nick-pill').style.display = 'flex';
 }
-function goGame(path) {
-  if (!playerNick) {
-    document.getElementById('nick-modal').classList.remove('hidden');
-    document.getElementById('nick-input').focus();
-    return;
-  }
+document.getElementById('nick-save-btn').onclick = () => {
+  const v = document.getElementById('nick-in').value.trim();
+  if (!v) { document.getElementById('nick-in').style.borderColor='rgba(255,0,60,.6)'; return; }
+  playerNick = v; localStorage.setItem('player_nick', v);
+  document.getElementById('nick-modal').classList.add('hidden');
+  showPill(v);
+  if (fbReady) runTransaction(ref(db, `players/${v.replace(/[.#$\/\[\]]/g,'_')}`), x => (x||0)+1).catch(()=>{});
+  if (fbReady) runTransaction(ref(db,'stats/players'), x => (x||0)+1).catch(()=>{});
+};
+document.getElementById('nick-skip-btn').onclick = () => {
+  playerNick = 'Guest'+Math.floor(Math.random()*9999);
+  document.getElementById('nick-modal').classList.add('hidden');
+};
+document.getElementById('nick-in').onkeydown = e => { if(e.key==='Enter') document.getElementById('nick-save-btn').click(); };
+document.getElementById('nick-pill').onclick = () => {
+  document.getElementById('nick-in').value = playerNick;
+  document.getElementById('nick-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('nick-in').focus(), 100);
+};
+
+window.goGame = function(path) {
+  if (!playerNick) { document.getElementById('nick-modal').classList.remove('hidden'); document.getElementById('nick-in').focus(); return; }
   window.location.href = path;
-}
-window.saveNick = saveNick;
-window.skipNick = skipNick;
-window.changeNick = changeNick;
-window.goGame = goGame;
+};
 
 checkNick();
 </script>
