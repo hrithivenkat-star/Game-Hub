@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2 Player Mode — Game Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--c6:#ff003c;--c7:#0088ff;--bg:#03030f;--card:#080818;--card2:#0d0d20;--dim:#5566aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 30% -10%,rgba(0,255,136,.06),transparent),radial-gradient(ellipse 50% 40% at 70% 110%,rgba(255,230,0,.05),transparent);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,.014)1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.014)1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,255,136,.04),transparent);animation:scanline 9s linear infinite;pointer-events:none;z-index:1}
+
+.container{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:0 22px}
+nav{position:sticky;top:0;z-index:50;background:rgba(3,3,15,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,255,136,.08);padding:13px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:2px}
+.logo em{color:var(--c1);font-style:normal}
+.nav-links{display:flex;gap:5px;align-items:center}
+.nl{color:var(--dim);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:7px 12px;border-radius:6px;border:1px solid transparent;transition:all .2s}
+.nl:hover{color:var(--c0);border-color:rgba(0,245,255,.2);background:rgba(0,245,255,.04)}
+
+/* HERO */
+.hero{text-align:center;padding:60px 0 48px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.22);border-radius:20px;padding:6px 18px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--c3);margin-bottom:20px}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(28px,6vw,66px);font-weight:900;color:#fff;margin-bottom:12px;line-height:1.05}
+.hero h1 .a{color:var(--c3);text-shadow:0 0 25px rgba(0,255,136,.8),0 0 50px rgba(0,255,136,.4)}
+.hero h1 .b{color:var(--c4);text-shadow:0 0 25px rgba(255,230,0,.8),0 0 50px rgba(255,230,0,.4)}
+.hero-sub{font-size:16px;color:var(--dim);max-width:550px;margin:0 auto 36px;line-height:1.7}
+
+/* MODE SELECTOR */
+.mode-selector{display:flex;justify-content:center;gap:14px;margin-bottom:52px;flex-wrap:wrap}
+.mode-sel-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 28px;border-radius:14px;cursor:pointer;transition:all .25s;border:2px solid rgba(255,255,255,.07);background:var(--card);min-width:160px}
+.mode-sel-btn:hover{transform:translateY(-3px)}
+.msb-icon{font-size:36px}
+.msb-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#fff}
+.msb-sub{font-size:11px;color:var(--dim);text-align:center}
+.msb-2p{border-color:rgba(0,255,136,.25)}
+.msb-2p:hover,.msb-2p.active{border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.06);box-shadow:0 12px 40px rgba(0,255,136,.1)}
+.msb-2p.active .msb-title{color:var(--c3)}
+.msb-ai{border-color:rgba(191,0,255,.25)}
+.msb-ai:hover,.msb-ai.active{border-color:rgba(191,0,255,.5);background:rgba(191,0,255,.06);box-shadow:0 12px 40px rgba(191,0,255,.1)}
+.msb-ai.active .msb-title{color:var(--c1)}
+
+/* AI DIFFICULTY */
+.diff-row{display:flex;justify-content:center;gap:10px;margin-bottom:40px;flex-wrap:wrap}
+.diff-btn{padding:8px 22px;border-radius:18px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.09);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.diff-btn:hover{color:#fff;border-color:rgba(255,255,255,.22)}
+.diff-easy.active{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.35);color:var(--c3)}
+.diff-med.active{background:rgba(255,230,0,.1);border-color:rgba(255,230,0,.35);color:var(--c4)}
+.diff-hard.active{background:rgba(255,0,110,.1);border-color:rgba(255,0,110,.35);color:var(--c2)}
+
+/* SECTION */
+.sec-hdr{text-align:center;margin-bottom:32px}
+.sec-tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-weight:600;color:var(--c3)}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,30px);font-weight:900;color:#fff}
+
+/* GAMES GRID */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-bottom:60px}
+.gc{position:relative;overflow:hidden;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.05);transition:all .3s;display:flex;flex-direction:column;animation:fadeUp .4s ease both;cursor:pointer}
+.gc:hover{transform:translateY(-5px)}
+.gc-stripe{height:3px;position:relative;overflow:hidden}
+.gc-stripe::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);background-size:200% 100%;animation:shimmer 2s linear infinite}
+
+/* game-specific colors */
+.g-chess .gc-stripe{background:linear-gradient(90deg,#c0c8d8,#ffe600);box-shadow:0 0 10px rgba(255,230,0,.4)}
+.g-pong  .gc-stripe{background:linear-gradient(90deg,var(--c0),var(--c1));box-shadow:0 0 10px var(--c0)}
+.g-race  .gc-stripe{background:linear-gradient(90deg,var(--c2),var(--c5));box-shadow:0 0 10px var(--c2)}
+.g-mem   .gc-stripe{background:linear-gradient(90deg,var(--c7),var(--c0));box-shadow:0 0 10px var(--c7)}
+.g-ttt   .gc-stripe{background:linear-gradient(90deg,var(--c1),var(--c2));box-shadow:0 0 10px var(--c1)}
+.g-bomb  .gc-stripe{background:linear-gradient(90deg,var(--c6),var(--c5));box-shadow:0 0 10px var(--c6)}
+.g-snake .gc-stripe{background:linear-gradient(90deg,var(--c3),var(--c4));box-shadow:0 0 10px var(--c3)}
+.g-puzz  .gc-stripe{background:linear-gradient(90deg,var(--c4),var(--c5));box-shadow:0 0 10px var(--c4)}
+
+.g-chess:hover{box-shadow:0 16px 50px rgba(255,230,0,.1),0 0 0 1px rgba(255,230,0,.16)}
+.g-pong:hover{box-shadow:0 16px 50px rgba(0,245,255,.1),0 0 0 1px rgba(0,245,255,.16)}
+.g-race:hover{box-shadow:0 16px 50px rgba(255,0,110,.1),0 0 0 1px rgba(255,0,110,.16)}
+.g-mem:hover{box-shadow:0 16px 50px rgba(0,136,255,.1),0 0 0 1px rgba(0,136,255,.16)}
+.g-ttt:hover{box-shadow:0 16px 50px rgba(191,0,255,.1),0 0 0 1px rgba(191,0,255,.16)}
+.g-bomb:hover{box-shadow:0 16px 50px rgba(255,0,60,.1),0 0 0 1px rgba(255,0,60,.16)}
+.g-snake:hover{box-shadow:0 16px 50px rgba(0,255,136,.1),0 0 0 1px rgba(0,255,136,.16)}
+.g-puzz:hover{box-shadow:0 16px 50px rgba(255,230,0,.1),0 0 0 1px rgba(255,230,0,.16)}
+
+.gc-body{padding:18px 16px 14px;flex:1;display:flex;gap:14px;align-items:flex-start}
+.gc-icon{width:48px;height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;animation:float 3s ease-in-out infinite}
+.g-chess .gc-icon{background:rgba(255,230,0,.1);border:1px solid rgba(255,230,0,.22)}
+.g-pong  .gc-icon{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.22)}
+.g-race  .gc-icon{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.22)}
+.g-mem   .gc-icon{background:rgba(0,136,255,.1);border:1px solid rgba(0,136,255,.22)}
+.g-ttt   .gc-icon{background:rgba(191,0,255,.1);border:1px solid rgba(191,0,255,.22)}
+.g-bomb  .gc-icon{background:rgba(255,0,60,.1);border:1px solid rgba(255,0,60,.22)}
+.g-snake .gc-icon{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.22)}
+.g-puzz  .gc-icon{background:rgba(255,230,0,.1);border:1px solid rgba(255,230,0,.22)}
+
+.gc-info{flex:1;min-width:0}
+.gc-tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.g-chess .gc-tag{color:var(--c4)}.g-pong .gc-tag{color:var(--c0)}.g-race .gc-tag{color:var(--c2)}
+.g-mem .gc-tag{color:var(--c7)}.g-ttt .gc-tag{color:var(--c1)}.g-bomb .gc-tag{color:var(--c6)}
+.g-snake .gc-tag{color:var(--c3)}.g-puzz .gc-tag{color:var(--c4)}
+.gc h3{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;margin-bottom:5px}
+.gc p{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:10px}
+
+/* MODES SUPPORTED */
+.modes-tags{display:flex;gap:5px;flex-wrap:wrap}
+.mtag{font-size:9px;padding:3px 8px;border-radius:6px;font-weight:600;letter-spacing:.5px}
+.mtag-2p{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.2)}
+.mtag-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.2)}
+
+/* DIFFICULTY BADGE */
+.diff-badge{position:absolute;top:12px;right:10px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:7px}
+.db-e{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.2)}
+.db-m{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.2)}
+.db-h{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.2)}
+
+.gc-footer{padding:10px 16px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.01)}
+.ctrl-hint{font-size:10px;color:var(--dim)}
+.play-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:5px;cursor:pointer;transition:all .2s;border:none;text-decoration:none}
+.g-chess .play-btn{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.22)}
+.g-pong  .play-btn{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.22)}
+.g-race  .play-btn{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.22)}
+.g-mem   .play-btn{background:rgba(0,136,255,.1);color:var(--c7);border:1px solid rgba(0,136,255,.22)}
+.g-ttt   .play-btn{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.22)}
+.g-bomb  .play-btn{background:rgba(255,0,60,.1);color:var(--c6);border:1px solid rgba(255,0,60,.22)}
+.g-snake .play-btn{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.22)}
+.g-puzz  .play-btn{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.22)}
+.gc:hover .play-btn{filter:brightness(1.25);transform:scale(1.05)}
+
+/* HOW IT WORKS */
+.how-section{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.1);border-radius:14px;padding:28px;margin-bottom:60px}
+.how-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--c3);margin-bottom:20px}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.how-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:16px}
+.how-n{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:rgba(0,255,136,.3);margin-bottom:8px}
+.how-card h4{font-size:14px;font-weight:600;color:#ccd6ff;margin-bottom:5px}
+.how-card p{font-size:12px;color:var(--dim);line-height:1.5}
+
+footer{border-top:1px solid rgba(255,255,255,.05);padding:26px 0;text-align:center;margin-top:10px}
+footer p{font-size:13px;color:var(--dim)}
+footer a{color:var(--c0);text-decoration:none}
+@media(max-width:700px){nav .nl:not(:last-child){display:none}}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="container">
+  <nav>
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">GAME<em>HUB</em></a>
+      <div class="nav-links">
+        <a href="../minigames/index.html" class="nl">🎮 Mini</a>
+        <a href="../multiplayer/index.html" class="nl">🌐 Arena</a>
+        <a href="../multiplayer/leaderboard.html" class="nl">🏆 Scores</a>
+        <a href="../index.html" class="nl">← Hub</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">✨ New Mode</div>
+    <h1><span class="a">2 PLAYER</span><br><span class="b">BATTLES</span></h1>
+    <p class="hero-sub">Play with a friend on the same device — or challenge the AI with 3 difficulty levels. 8 games, couch gaming style, neon arcade aesthetic.</p>
+  </section>
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-selector">
+    <div class="mode-sel-btn msb-2p active" id="btn-2p" onclick="setMode('2p')">
+      <span class="msb-icon">👥</span>
+      <div class="msb-title">2 Players</div>
+      <div class="msb-sub">Same device<br>take turns</div>
+    </div>
+    <div class="mode-sel-btn msb-ai" id="btn-ai" onclick="setMode('ai')">
+      <span class="msb-icon">🤖</span>
+      <div class="msb-title">vs AI</div>
+      <div class="msb-sub">Play alone<br>beat the machine</div>
+    </div>
+  </div>
+
+  <!-- AI DIFFICULTY (shown when AI mode) -->
+  <div class="diff-row" id="diff-row" style="display:none">
+    <button class="diff-btn diff-easy active" onclick="setDiff(this,'easy')">🌱 Easy</button>
+    <button class="diff-btn diff-med" onclick="setDiff(this,'medium')">⚡ Medium</button>
+    <button class="diff-btn diff-hard" onclick="setDiff(this,'hard')">💀 Hard</button>
+  </div>
+
+  <div class="sec-hdr">
+    <div class="sec-tag">8 Games Available</div>
+    <div class="sec-title">Choose Your Battle</div>
+  </div>
+
+  <div class="games-grid">
+
+    <div class="gc g-chess" onclick="goGame('chess')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-h">Strategy</span>
+      <div class="gc-body">
+        <div class="gc-icon">♟️</div>
+        <div class="gc-info">
+          <div class="gc-tag">Board Game</div>
+          <h3>Chess</h3>
+          <p>Full neon chess. Full rules, AI with 3 difficulty levels, check/checkmate detection.</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">Click piece → click target</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-pong" onclick="goGame('pong2p')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-e">Arcade</span>
+      <div class="gc-body">
+        <div class="gc-icon">🏓</div>
+        <div class="gc-info">
+          <div class="gc-tag">Split Screen</div>
+          <h3>Pong Battle</h3>
+          <p>Classic Pong with neon glow. P1: W/S keys · P2: ↑/↓ arrows. First to 7 wins!</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">P1: W/S · P2: ↑/↓</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-race" onclick="goGame('race')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-m">Racing</span>
+      <div class="gc-body">
+        <div class="gc-icon">🏎️</div>
+        <div class="gc-info">
+          <div class="gc-tag">Split Screen Race</div>
+          <h3>Neon Racing</h3>
+          <p>Split screen top-down racing. Avoid walls. P1: WASD · P2: Arrow Keys.</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">P1: WASD · P2: Arrows</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-mem" onclick="goGame('memory2p')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-e">Memory</span>
+      <div class="gc-body">
+        <div class="gc-icon">🃏</div>
+        <div class="gc-info">
+          <div class="gc-tag">Turn Based</div>
+          <h3>Memory Match</h3>
+          <p>Flip cards to find matching pairs. Players take turns. Most matches wins.</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">Click to flip cards</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-ttt" onclick="goGame('tictactoe')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-e">Classic</span>
+      <div class="gc-body">
+        <div class="gc-icon">❌</div>
+        <div class="gc-info">
+          <div class="gc-tag">Board Game</div>
+          <h3>Tic Tac Toe</h3>
+          <p>Neon X vs O. Minimax AI with 3 difficulty modes. Winning line glows!</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">Click any cell</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-bomb" onclick="goGame('bombdodge')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-h">Action</span>
+      <div class="gc-body">
+        <div class="gc-icon">💣</div>
+        <div class="gc-info">
+          <div class="gc-tag">Survive Together</div>
+          <h3>Bomb Dodge</h3>
+          <p>Both players dodge the same bombs. Last one alive wins. Sabotage each other!</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">P1: WASD · P2: Arrows</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-snake" onclick="goGame('snake2p')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-m">Classic</span>
+      <div class="gc-body">
+        <div class="gc-icon">🐍</div>
+        <div class="gc-info">
+          <div class="gc-tag">Snake Battle</div>
+          <h3>Snake 2P</h3>
+          <p>Two snakes, one grid. Eat food, grow longer. Crash into each other to win!</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">P1: WASD · P2: Arrows</span><span class="play-btn">Play →</span></div>
+    </div>
+
+    <div class="gc g-puzz" onclick="goGame('quiz2p')">
+      <div class="gc-stripe"></div>
+      <span class="diff-badge db-m">Quiz</span>
+      <div class="gc-body">
+        <div class="gc-icon">🧠</div>
+        <div class="gc-info">
+          <div class="gc-tag">Quiz Duel</div>
+          <h3>Quiz Battle</h3>
+          <p>Same question for both players. First to buzz in and answer correctly wins the point!</p>
+          <div class="modes-tags"><span class="mtag mtag-2p">👥 2P</span><span class="mtag mtag-ai">🤖 vs AI</span></div>
+        </div>
+      </div>
+      <div class="gc-footer"><span class="ctrl-hint">P1: Z key · P2: / key</span><span class="play-btn">Play →</span></div>
+    </div>
+
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="how-title">🎮 How 2 Player Mode Works</div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-n">01</div>
+        <h4>Pick a Mode</h4>
+        <p>Choose <strong>2 Players</strong> for same-device battles, or <strong>vs AI</strong> to play solo against the machine.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-n">02</div>
+        <h4>Set AI Difficulty</h4>
+        <p>Easy AI makes mistakes. Medium AI is decent. Hard AI plays near-perfectly. All 3 available in every game.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-n">03</div>
+        <h4>Share the Keyboard</h4>
+        <p>Most games use split keyboard controls. P1 uses WASD, P2 uses Arrow keys — or just take turns clicking.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-n">04</div>
+        <h4>Mobile Friendly</h4>
+        <p>On mobile, games use on-screen touch controls. Split-screen games show two sets of buttons.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>
+  <div class="container">
+    <p>← <a href="../index.html">Back to Hub</a> &nbsp;|&nbsp; <a href="../minigames/index.html">Mini Games</a> &nbsp;|&nbsp; <a href="../multiplayer/index.html">Multiplayer Arena</a></p>
+  </div>
+</footer>
+
+<script>
+let currentMode='2p', currentDiff='easy';
+
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('btn-2p').classList.toggle('active',mode==='2p');
+  document.getElementById('btn-ai').classList.toggle('active',mode==='ai');
+  document.getElementById('diff-row').style.display=mode==='ai'?'flex':'none';
+}
+
+function setDiff(btn,diff){
+  currentDiff=diff;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function goGame(game){
+  const params=new URLSearchParams({mode:currentMode,diff:currentDiff});
+  // Map game to file
+  const paths={
+    chess:'chess/index.html',pong2p:'pong2p/index.html',race:'race/index.html',
+    memory2p:'memory2p/index.html',tictactoe:'../minigames/tictactoe/index.html',
+    bombdodge:'bombdodge/index.html',snake2p:'snake2p/index.html',quiz2p:'quiz2p/index.html',
+  };
+  const base=paths[game]||game+'/index.html';
+  // For tictactoe use existing game with mode param
+  window.location.href=base+'?'+params.toString();
+}
+window.setMode=setMode;
+window.setDiff=setDiff;
+window.goGame=goGame;
+</script>
+</body>
+</html>
