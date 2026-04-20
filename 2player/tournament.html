@@ -1,1 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Tournament — 2 Player</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#03030f;--card:#080818;--dim:#5566aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(255,230,0,.07),transparent),radial-gradient(ellipse 60% 50% at 20% 110%,rgba(191,0,255,.05),transparent);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,230,0,.014)1px,transparent 1px),linear-gradient(90deg,rgba(255,230,0,.014)1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200%}100%{background-position:200%}}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes trophy-bounce{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.08) translateY(-8px)}}
+@keyframes ring-pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@keyframes slide-in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,230,0,.038),transparent);animation:scanline 10s linear infinite;pointer-events:none;z-index:1}
+.container{position:relative;z-index:2;max-width:860px;margin:0 auto;padding:0 18px}
 
+nav{position:sticky;top:0;z-index:50;background:rgba(3,3,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,230,0,.08);padding:12px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:2px}
+.logo em{color:var(--c1);font-style:normal}
+.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:6px 11px;border-radius:6px;transition:all .2s;background:none}
+.nbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.3)}
+
+/* ── PHASES ── */
+.phase{animation:fadeIn .35s ease}
+.phase.hidden{display:none}
+
+/* SETUP PHASE */
+.setup{text-align:center;padding:56px 0 40px}
+.setup-icon{font-size:60px;display:block;margin:0 auto 16px;animation:float 3s ease-in-out infinite}
+.setup h1{font-family:'Orbitron',monospace;font-size:clamp(26px,5vw,52px);font-weight:900;color:var(--c4);margin-bottom:8px;text-shadow:0 0 24px rgba(255,230,0,.6)}
+.setup-sub{font-size:15px;color:var(--dim);margin-bottom:36px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.65}
+.player-inputs{display:flex;gap:16px;max-width:560px;margin:0 auto 28px;flex-wrap:wrap}
+.pi-box{flex:1;min-width:200px;background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px}
+.pi-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:10px}
+.pi-1 .pi-label{color:var(--c0)}.pi-2 .pi-label{color:var(--c2)}
+.pi-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:14px;font-weight:700;padding:11px 14px;border-radius:8px;outline:none;transition:all .2s;text-align:center;letter-spacing:1px}
+.pi-1 .pi-in:focus{border-color:rgba(0,245,255,.4);box-shadow:0 0 14px rgba(0,245,255,.1)}
+.pi-2 .pi-in:focus{border-color:rgba(255,0,110,.4);box-shadow:0 0 14px rgba(255,0,110,.1)}
+.pi-in::placeholder{color:rgba(85,102,170,.4);font-size:12px;letter-spacing:1px}
+.mode-chips{display:flex;justify-content:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.mc-chip{padding:9px 22px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.09);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.mc-chip.on.mc-1v1{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.35);color:var(--c3)}
+.mc-chip.on.mc-ai{background:rgba(191,0,255,.1);border-color:rgba(191,0,255,.35);color:var(--c1)}
+.diff-chips{display:none;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.diff-chips.show{display:flex}
+.dc{padding:7px 18px;border-radius:16px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.09);color:var(--dim);background:transparent;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.dc.on.de{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.35);color:var(--c3)}
+.dc.on.dm{background:rgba(255,230,0,.1);border-color:rgba(255,230,0,.35);color:var(--c4)}
+.dc.on.dh{background:rgba(255,0,110,.1);border-color:rgba(255,0,110,.35);color:var(--c2)}
+.start-btn{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 44px;border-radius:10px;cursor:pointer;transition:all .25s;border:1px solid rgba(255,230,0,.4);background:rgba(255,230,0,.12);color:var(--c4);box-shadow:0 0 24px rgba(255,230,0,.1)}
+.start-btn:hover{background:rgba(255,230,0,.22);box-shadow:0 0 40px rgba(255,230,0,.3);transform:translateY(-2px)}
+
+/* BRACKET PHASE */
+.bracket{padding:40px 0}
+.bracket-header{text-align:center;margin-bottom:36px}
+.bracket-header h2{font-family:'Orbitron',monospace;font-size:clamp(18px,4vw,32px);font-weight:700;color:var(--c4);margin-bottom:6px}
+.score-board{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;margin-bottom:32px}
+.sb-players{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+.sb-player{text-align:center;flex:1;min-width:120px}
+.sb-name{font-size:12px;color:var(--dim);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase}
+.sb-score{font-family:'Orbitron',monospace;font-size:52px;font-weight:900;line-height:1}
+.sb-p1 .sb-score{color:var(--c0);text-shadow:0 0 16px rgba(0,245,255,.5)}
+.sb-p2 .sb-score{color:var(--c2);text-shadow:0 0 16px rgba(255,0,110,.5)}
+.sb-ai .sb-score{color:var(--c1);text-shadow:0 0 16px rgba(191,0,255,.5)}
+.sb-vs{font-family:'Orbitron',monospace;font-size:18px;color:var(--dim);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);padding:8px 16px;border-radius:24px;flex-shrink:0}
+.sb-label{font-size:10px;color:var(--dim);margin-top:3px;letter-spacing:1px;text-transform:uppercase}
+.progress-bar{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.pb-fill{height:100%;background:linear-gradient(90deg,var(--c4),var(--c5));border-radius:3px;transition:width .5s ease;box-shadow:0 0 8px rgba(255,230,0,.4)}
+.progress-label{font-size:11px;color:var(--dim);text-align:center}
+
+/* GAME LIST */
+.game-list{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
+.gl-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);transition:all .3s;animation:slide-in .3s ease both}
+.gl-item.current{background:rgba(255,230,0,.06);border-color:rgba(255,230,0,.25);box-shadow:0 0 20px rgba(255,230,0,.08)}
+.gl-item.done-p1{background:rgba(0,245,255,.04);border-color:rgba(0,245,255,.12)}
+.gl-item.done-p2,.gl-item.done-ai{background:rgba(255,0,110,.04);border-color:rgba(255,0,110,.12)}
+.gl-item.done-tie{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
+.gl-item.upcoming{opacity:.45}
+.gl-num{font-family:'Orbitron',monospace;font-size:11px;color:var(--dim);width:24px;flex-shrink:0}
+.gl-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.gl-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#fff;flex:1}
+.gl-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;white-space:nowrap}
+.st-current{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.25);animation:glow 1.5s ease-in-out infinite}
+.st-p1{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.22)}
+.st-p2,.st-ai{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.22)}
+.st-tie{background:rgba(255,255,255,.06);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.st-up{color:var(--dim);font-size:11px}
+
+.play-now-btn{display:block;width:100%;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px;border-radius:10px;cursor:pointer;transition:all .25s;border:1px solid rgba(255,230,0,.35);background:rgba(255,230,0,.1);color:var(--c4);text-align:center;text-decoration:none;margin-bottom:12px}
+.play-now-btn:hover{background:rgba(255,230,0,.2);box-shadow:0 0 30px rgba(255,230,0,.25);transform:translateY(-2px)}
+.play-now-sub{text-align:center;font-size:12px;color:var(--dim);margin-bottom:32px}
+
+/* TROPHY PHASE */
+.trophy-phase{text-align:center;padding:52px 0 40px;animation:fadeIn .4s ease}
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:10;overflow:hidden}
+.conf-piece{position:absolute;top:-20px;width:8px;height:12px;border-radius:2px;animation:confetti-fall linear forwards}
+.trophy-icon{font-size:80px;display:block;margin:0 auto 20px;animation:trophy-bounce 1.5s ease-in-out infinite;position:relative}
+.trophy-ring{position:absolute;inset:-10px;border-radius:50%;border:2px solid rgba(255,230,0,.4);animation:ring-pulse 1.5s ease-out infinite}
+.trophy-title{font-family:'Orbitron',monospace;font-size:clamp(22px,5vw,46px);font-weight:900;color:var(--c4);margin-bottom:8px;text-shadow:0 0 30px rgba(255,230,0,.7)}
+.trophy-winner{font-family:'Orbitron',monospace;font-size:clamp(16px,3.5vw,28px);font-weight:700;margin-bottom:24px}
+.final-table{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;max-width:500px;margin:0 auto 28px}
+.ft-title{font-family:'Orbitron',monospace;font-size:12px;color:var(--c4);letter-spacing:2px;margin-bottom:16px}
+.ft-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ft-row:last-child{border-bottom:none}
+.ft-medal{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.ft-name{font-size:14px;flex:1;text-align:left}
+.ft-score{font-family:'Orbitron',monospace;font-size:18px;font-weight:700}
+.ft-won{font-size:11px;color:var(--dim);margin-left:6px}
+.tourn-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tbtn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:8px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;border:none}
+.tbtn-main{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.3)}
+.tbtn-main:hover{background:rgba(255,230,0,.22);box-shadow:0 0 18px rgba(255,230,0,.3);transform:translateY(-2px)}
+.tbtn-sec{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.tbtn-sec:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<!-- CONFETTI -->
+<div class="confetti-wrap" id="confetti-wrap"></div>
+
+<div class="container">
+  <nav>
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">GAME<em>HUB</em></a>
+      <a href="index.html" class="nbtn">← 2 Player</a>
+    </div>
+  </nav>
+
+  <!-- ── SETUP PHASE ── -->
+  <div class="phase" id="phase-setup">
+    <div class="setup">
+      <span class="setup-icon">🏆</span>
+      <h1>TOURNAMENT</h1>
+      <p class="setup-sub">7 random games. 1 point per win. The highest scorer after all 7 games is crowned the champion!</p>
+      <div class="player-inputs">
+        <div class="pi-box pi-1">
+          <div class="pi-label">🟦 Player 1</div>
+          <input class="pi-in" id="p1-name" placeholder="Player 1" maxlength="12" autocomplete="off"/>
+        </div>
+        <div class="pi-box pi-2" id="p2-box">
+          <div class="pi-label" id="p2-label-text">🔴 Player 2</div>
+          <input class="pi-in" id="p2-name" placeholder="Player 2" maxlength="12" autocomplete="off"/>
+        </div>
+      </div>
+      <div class="mode-chips">
+        <button class="mc-chip mc-1v1 on" onclick="pickMode('1v1',this)">👥 1 vs 1</button>
+        <button class="mc-chip mc-ai" onclick="pickMode('ai',this)">🤖 vs AI</button>
+      </div>
+      <div class="diff-chips" id="diff-chips">
+        <button class="dc de on" onclick="pickDiff('easy',this)">🌱 Easy AI</button>
+        <button class="dc dm" onclick="pickDiff('medium',this)">⚡ Medium AI</button>
+        <button class="dc dh" onclick="pickDiff('hard',this)">💀 Hard AI</button>
+      </div>
+      <button class="start-btn" onclick="startTournament()">Start Tournament ⚡</button>
+    </div>
+  </div>
+
+  <!-- ── BRACKET PHASE ── -->
+  <div class="phase hidden" id="phase-bracket">
+    <div class="bracket">
+      <div class="bracket-header">
+        <h2>🏆 TOURNAMENT</h2>
+        <p id="bracket-sub" style="font-size:13px;color:var(--dim)">7 games · 1 point per win</p>
+      </div>
+
+      <div class="score-board">
+        <div class="sb-players">
+          <div class="sb-player sb-p1">
+            <div class="sb-name" id="sb-p1-name">Player 1</div>
+            <div class="sb-score" id="sb-p1-score">0</div>
+            <div class="sb-label">points</div>
+          </div>
+          <div class="sb-vs">VS</div>
+          <div class="sb-player sb-p2" id="sb-p2-wrap">
+            <div class="sb-name" id="sb-p2-name">Player 2</div>
+            <div class="sb-score" id="sb-p2-score">0</div>
+            <div class="sb-label">points</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-bar"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+      <p class="progress-label" id="progress-label">Game 0 of 7 complete</p>
+
+      <div class="game-list" id="game-list"></div>
+
+      <a href="#" class="play-now-btn" id="play-now-btn">▶ Play Game 1</a>
+      <p class="play-now-sub" id="play-now-sub">Tap to launch the next game. When done, come back here to record the result.</p>
+    </div>
+  </div>
+
+  <!-- ── TROPHY PHASE ── -->
+  <div class="phase hidden" id="phase-trophy">
+    <div class="trophy-phase">
+      <div style="position:relative;display:inline-block;margin-bottom:20px">
+        <span class="trophy-icon" id="trophy-icon">🏆</span>
+        <div class="trophy-ring"></div>
+      </div>
+      <div class="trophy-title">CHAMPION!</div>
+      <div class="trophy-winner" id="trophy-winner"></div>
+      <div class="final-table">
+        <div class="ft-title">📊 FINAL STANDINGS</div>
+        <div id="final-table-body"></div>
+      </div>
+      <div class="tourn-btns">
+        <button class="tbtn tbtn-main" onclick="restartTournament()">⚡ Play Again</button>
+        <a href="index.html" class="tbtn tbtn-sec">← Back to Games</a>
+        <a href="../index.html" class="tbtn tbtn-sec">🏠 Hub</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_GAMES=[
+  {id:'gravity-run',name:'Gravity Run',icon:'🚀',path:'gravity-run/index.html'},
+  {id:'tennis',name:'Neon Tennis',icon:'🎾',path:'tennis/index.html'},
+  {id:'sea-battle',name:'Sea Battle',icon:'🚢',path:'sea-battle/index.html'},
+  {id:'tictactoe',name:'Tic Tac Toe',icon:'❌',path:'tictactoe/index.html'},
+  {id:'memory',name:'Memory Match',icon:'🃏',path:'memory/index.html'},
+  {id:'chess',name:'Chess',icon:'♟️',path:'chess/index.html'},
+  {id:'king-yard',name:'King of Yard',icon:'👑',path:'king-yard/index.html'},
+  {id:'carrom',name:'Carrom',icon:'🎱',path:'carrom/index.html'},
+  {id:'cornhole',name:'Cornhole',icon:'🎯',path:'cornhole/index.html'},
+  {id:'broken-tiles',name:'Broken Tiles',icon:'💥',path:'broken-tiles/index.html'},
+  {id:'snake-ladders',name:'Snake & Ladders',icon:'🐍',path:'snake-ladders/index.html'},
+];
+
+let tournMode='1v1',diff='easy';
+let p1Name='Player 1',p2Name='Player 2';
+let schedule=[],currentGame=0;
+let p1Score=0,p2Score=0;
+
+// Read URL params
+const usp=new URLSearchParams(location.search);
+if(usp.get('mode')==='ai'){tournMode='ai';pickMode('ai',document.querySelector('.mc-ai'));}
+if(usp.get('diff'))pickDiff(usp.get('diff'),null);
+
+function pickMode(m,btn){
+  tournMode=m;
+  document.querySelectorAll('.mc-chip').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const isAI=m==='ai';
+  document.getElementById('diff-chips').classList.toggle('show',isAI);
+  document.getElementById('p2-label-text').textContent=isAI?'🤖 AI Opponent':'🔴 Player 2';
+  document.getElementById('p2-name').value=isAI?'AI':'';
+  document.getElementById('p2-name').disabled=isAI;
+  document.getElementById('p2-name').placeholder=isAI?'AI Bot':'Player 2';
+}
+function pickDiff(d,btn){
+  diff=d;
+  document.querySelectorAll('.dc').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+}
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function startTournament(){
+  p1Name=document.getElementById('p1-name').value.trim()||'Player 1';
+  p2Name=tournMode==='ai'?'AI Bot':(document.getElementById('p2-name').value.trim()||'Player 2');
+  sessionStorage.setItem('t_p1',p1Name);
+  sessionStorage.setItem('t_p2',p2Name);
+  sessionStorage.setItem('t_mode',tournMode);
+  sessionStorage.setItem('t_diff',diff);
+  schedule=shuffle(ALL_GAMES).slice(0,7);
+  sessionStorage.setItem('t_schedule',JSON.stringify(schedule));
+  currentGame=0;p1Score=0;p2Score=0;
+  sessionStorage.setItem('t_current','0');
+  sessionStorage.setItem('t_p1score','0');
+  sessionStorage.setItem('t_p2score','0');
+  sessionStorage.setItem('t_results',JSON.stringify([]));
+  showBracket();
+}
+
+function showBracket(){
+  document.getElementById('phase-setup').classList.add('hidden');
+  document.getElementById('phase-bracket').classList.remove('hidden');
+  document.getElementById('phase-trophy').classList.add('hidden');
+  renderBracket();
+}
+
+function renderBracket(){
+  // Load from session
+  p1Name=sessionStorage.getItem('t_p1')||'Player 1';
+  p2Name=sessionStorage.getItem('t_p2')||'Player 2';
+  tournMode=sessionStorage.getItem('t_mode')||'1v1';
+  diff=sessionStorage.getItem('t_diff')||'easy';
+  schedule=JSON.parse(sessionStorage.getItem('t_schedule')||'[]');
+  currentGame=parseInt(sessionStorage.getItem('t_current')||'0');
+  p1Score=parseFloat(sessionStorage.getItem('t_p1score')||'0');
+  p2Score=parseFloat(sessionStorage.getItem('t_p2score')||'0');
+  const results=JSON.parse(sessionStorage.getItem('t_results')||'[]');
+
+  document.getElementById('sb-p1-name').textContent=p1Name;
+  document.getElementById('sb-p2-name').textContent=p2Name;
+  document.getElementById('sb-p1-score').textContent=p1Score;
+  document.getElementById('sb-p2-score').textContent=p2Score;
+  document.getElementById('sb-p2-wrap').className='sb-player '+(tournMode==='ai'?'sb-ai':'sb-p2');
+  document.getElementById('pb-fill').style.width=(currentGame/7*100)+'%';
+  document.getElementById('progress-label').textContent='Game '+currentGame+' of 7 complete';
+
+  // Game list
+  const gl=document.getElementById('game-list');
+  gl.innerHTML='';
+  schedule.forEach((g,i)=>{
+    const done=i<currentGame;
+    const isCurrent=i===currentGame;
+    const res=results[i];
+    let cls=isCurrent?'current':done?('done-'+(res||'tie')):'upcoming';
+    let statusHtml='<span class="st-up">Upcoming</span>';
+    if(isCurrent)statusHtml='<span class="gl-status st-current">▶ NEXT</span>';
+    else if(done){
+      const r=results[i];
+      if(r==='p1')statusHtml=`<span class="gl-status st-p1">🏆 ${p1Name}</span>`;
+      else if(r==='p2'||r==='ai')statusHtml=`<span class="gl-status st-p2">🏆 ${p2Name}</span>`;
+      else statusHtml='<span class="gl-status st-tie">🤝 Tie</span>';
+    }
+    const div=document.createElement('div');
+    div.className='gl-item '+cls;
+    div.style.animationDelay=(i*.06)+'s';
+    div.innerHTML=`<span class="gl-num">${i+1}</span><span class="gl-icon">${g.icon}</span><span class="gl-name">${g.name}</span>${statusHtml}`;
+    gl.appendChild(div);
+  });
+
+  if(currentGame<7){
+    const next=schedule[currentGame];
+    document.getElementById('play-now-btn').textContent=`▶ Play Game ${currentGame+1}: ${next.name}`;
+    document.getElementById('play-now-btn').href=next.path+'?mode='+tournMode+'&diff='+diff+'&tournament=1&gameIdx='+currentGame;
+    document.getElementById('play-now-sub').textContent='After the game ends, tap "Report Result" or come back here.';
+  } else {
+    showTrophy();
+  }
+}
+
+function reportResult(result){
+  // Called from game pages OR manual override buttons
+  const results=JSON.parse(sessionStorage.getItem('t_results')||'[]');
+  results[currentGame]=result;
+  sessionStorage.setItem('t_results',JSON.stringify(results));
+  if(result==='p1')p1Score+=1;
+  else if(result==='p2'||result==='ai')p2Score+=1;
+  else{p1Score+=.5;p2Score+=.5;}// tie
+  currentGame++;
+  sessionStorage.setItem('t_current',currentGame);
+  sessionStorage.setItem('t_p1score',p1Score);
+  sessionStorage.setItem('t_p2score',p2Score);
+  if(currentGame>=7)showTrophy();else renderBracket();
+}
+window.reportResult=reportResult;
+
+function showTrophy(){
+  document.getElementById('phase-bracket').classList.add('hidden');
+  document.getElementById('phase-trophy').classList.remove('hidden');
+  p1Score=parseFloat(sessionStorage.getItem('t_p1score')||'0');
+  p2Score=parseFloat(sessionStorage.getItem('t_p2score')||'0');
+  p1Name=sessionStorage.getItem('t_p1')||'Player 1';
+  p2Name=sessionStorage.getItem('t_p2')||'Player 2';
+  const results=JSON.parse(sessionStorage.getItem('t_results')||'[]');
+  const p1wins=results.filter(r=>r==='p1').length;
+  const p2wins=results.filter(r=>r==='p2'||r==='ai').length;
+  const ties=results.filter(r=>r==='tie').length;
+  const p1champion=p1Score>p2Score;
+  const tied=p1Score===p2Score;
+  const tw=document.getElementById('trophy-winner');
+  const ti=document.getElementById('trophy-icon');
+  if(tied){tw.innerHTML='🤝 <span style="color:var(--dim)">It\'s a tie! Both champions!</span>';ti.textContent='🤝';}
+  else{
+    const winner=p1champion?p1Name:p2Name;
+    const wc=p1champion?'var(--c0)':'var(--c2)';
+    tw.innerHTML=`<span style="color:${wc}">${winner}</span> wins the tournament!`;
+    ti.textContent='🏆';
+  }
+  // Final table
+  const rows=p1Score>=p2Score?
+    [{n:p1Name,s:p1Score,w:p1wins,c:'var(--c0)'},{n:p2Name,s:p2Score,w:p2wins,c:'var(--c2)'}]:
+    [{n:p2Name,s:p2Score,w:p2wins,c:'var(--c2)'},{n:p1Name,s:p1Score,w:p1wins,c:'var(--c0)'}];
+  const medals=['🥇','🥈'];
+  document.getElementById('final-table-body').innerHTML=rows.map((r,i)=>`
+    <div class="ft-row">
+      <span class="ft-medal">${medals[i]}</span>
+      <span class="ft-name" style="color:${r.c};font-weight:600">${r.n}</span>
+      <span class="ft-score" style="color:${r.c}">${r.s}</span>
+      <span class="ft-won">pts · ${r.w}W ${ties>0?ties+'T':''}</span>
+    </div>`).join('')+
+    (ties>0?`<div class="ft-row"><span class="ft-medal">🤝</span><span class="ft-name" style="color:var(--dim)">Ties</span><span class="ft-score" style="color:var(--dim)">${ties}</span></div>`:''
+  );
+  spawnConfetti();
+}
+
+function spawnConfetti(){
+  const wrap=document.getElementById('confetti-wrap');wrap.innerHTML='';
+  const colors=['#ffe600','#00f5ff','#ff006e','#00ff88','#bf00ff','#ff6b00'];
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='conf-piece';
+    el.style.cssText=`left:${Math.random()*100}%;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;height:${10+Math.random()*10}px`;
+    wrap.appendChild(el);
+  }
+  setTimeout(()=>wrap.innerHTML='',7000);
+}
+
+function restartTournament(){
+  document.getElementById('phase-trophy').classList.add('hidden');
+  document.getElementById('phase-setup').classList.remove('hidden');
+}
+
+// Resume tournament if in progress
+const inProgress=sessionStorage.getItem('t_schedule');
+const gIdx=parseInt(sessionStorage.getItem('t_current')||'0');
+const urlT=new URLSearchParams(location.search).get('result');
+if(urlT){
+  // Game returned result via URL param
+  reportResult(urlT);
+} else if(inProgress&&gIdx>0&&gIdx<7){
+  // Resume bracket
+  document.getElementById('phase-setup').classList.add('hidden');
+  showBracket();
+}
+// Result reporting overlay (shown when game sends us back)
+</script>
+</body>
+</html>
