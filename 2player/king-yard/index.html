@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>King of the Yard — 2 Player</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--bg:#03030f;--card:#080818;--dim:#5566aa}
+html,body{height:100%;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow:hidden;display:flex;flex-direction:column;touch-action:none}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes crown-glow{0%,100%{filter:drop-shadow(0 0 8px rgba(255,230,0,.8))}50%{filter:drop-shadow(0 0 20px rgba(255,230,0,1))}}
+@keyframes urgent{0%,100%{opacity:1}50%{opacity:.3}}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid rgba(255,230,0,.08);background:rgba(3,3,15,.98);flex-shrink:0;z-index:10}
+.logo{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none}
+.logo em{color:var(--c1);font-style:normal}
+.nav-r{display:flex;gap:6px}
+.nbtn{color:var(--dim);text-decoration:none;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:5px 10px;border-radius:5px;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
+
+/* HUD */
+.hud{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;gap:12px}
+.hud-player{display:flex;align-items:center;gap:8px;flex:1}
+.hud-right{justify-content:flex-end}
+.p-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
+.pn1{color:var(--c0)}.pn2{color:var(--c2)}
+.hold-bar-wrap{flex:1;height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;max-width:120px}
+.hold-bar{height:100%;border-radius:4px;transition:width .1s linear}
+.hb1{background:linear-gradient(90deg,var(--c0),var(--c3))}.hb2{background:linear-gradient(90deg,var(--c2),var(--c1))}
+.hold-time{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;min-width:28px}
+.ht1{color:var(--c0)}.ht2{color:var(--c2)}
+.hud-center{text-align:center;flex-shrink:0}
+.timer-big{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:var(--c4);text-shadow:0 0 12px rgba(255,230,0,.5);line-height:1}
+.timer-big.urgent{animation:urgent .5s ease-in-out infinite;color:#ff003c}
+.timer-label{font-size:9px;color:var(--dim);letter-spacing:1px}
+.crown-holder{font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;margin-top:2px}
+.ch-p1{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.2)}
+.ch-p2{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.2)}
+.ch-none{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid rgba(255,255,255,.08)}
+
+/* CANVAS */
+.game-area{flex:1;position:relative;overflow:hidden}
+canvas{width:100%;height:100%;display:block}
+
+/* MOBILE CONTROLS */
+.mobile-ctrls{display:none;flex-shrink:0;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.05);padding:8px}
+@media(max-width:700px){.mobile-ctrls{display:block}}
+.mc-row{display:flex;gap:8px;justify-content:space-between}
+.mc-half{display:flex;flex-direction:column;gap:5px;flex:1}
+.mc-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);text-align:center;margin-bottom:2px}
+.dpad-r{display:flex;gap:5px;justify-content:center}
+.dpb{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;border:none;user-select:none;transition:transform .1s}
+.dpb:active{transform:scale(.9)}
+.dp1{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.2);color:var(--c0)}
+.dp2{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.2);color:var(--c2)}
+.dp-mid{width:44px;height:44px}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;background:rgba(2,2,10,.95);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:20px;animation:fadeIn .3s ease}
+.ov.hidden{display:none}
+.ov-icon{font-size:56px;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',monospace;font-size:clamp(18px,4vw,28px);font-weight:900;margin-bottom:7px;text-align:center;letter-spacing:2px}
+.ov-sub{font-size:13px;color:var(--dim);text-align:center;line-height:1.6;max-width:420px;margin-bottom:16px}
+.ctrl-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:14px 18px;margin-bottom:14px;width:100%;max-width:420px}
+.ctrl-title{font-family:'Orbitron',monospace;font-size:9px;color:var(--c4);letter-spacing:2px;margin-bottom:9px}
+.ctrl-row{display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+.ctrl-item{display:flex;align-items:center;gap:8px;flex:1;min-width:130px}
+.ck{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:5px;padding:3px 8px;font-family:'Orbitron',monospace;font-size:10px;color:#fff;white-space:nowrap}
+.cd{font-size:11px;color:var(--dim)}
+.btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:7px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-block}
+.btn-y{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.3)}
+.btn-y:hover{background:rgba(255,230,0,.22);box-shadow:0 0 14px rgba(255,230,0,.3);transform:translateY(-2px)}
+.btn-d{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.win-stats{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:14px 20px;margin-bottom:14px;text-align:center;width:100%;max-width:360px}
+.ws-row{display:flex;justify-content:center;gap:28px}
+.ws{text-align:center}
+.ws-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.ws-v{font-family:'Orbitron',monospace;font-size:24px;font-weight:700}
+.tourn-btn{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.28);font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:7px;cursor:pointer;transition:all .2s}
+.tourn-btn:hover{background:rgba(255,230,0,.2)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="../../index.html" class="logo">GAME<em>HUB</em></a>
+  <div class="nav-r">
+    <a href="../index.html" class="nbtn">← 2P</a>
+    <a href="../../index.html" class="nbtn">🏠</a>
+  </div>
+</nav>
+
+<div class="hud">
+  <div class="hud-player">
+    <div class="p-name pn1" id="h-p1">P1</div>
+    <div class="hold-bar-wrap"><div class="hold-bar hb1" id="bar1" style="width:0%"></div></div>
+    <div class="hold-time ht1" id="ht1">0s</div>
+  </div>
+  <div class="hud-center">
+    <div class="timer-big" id="match-timer">35</div>
+    <div class="timer-label">SECONDS LEFT</div>
+    <div class="crown-holder ch-none" id="crown-holder">👑 No King</div>
+  </div>
+  <div class="hud-player hud-right">
+    <div class="hold-time ht2" id="ht2">0s</div>
+    <div class="hold-bar-wrap"><div class="hold-bar hb2" id="bar2" style="width:0%"></div></div>
+    <div class="p-name pn2" id="h-p2">P2</div>
+  </div>
+</div>
+
+<div class="game-area">
+  <canvas id="c"></canvas>
+</div>
+
+<!-- Mobile D-pads -->
+<div class="mobile-ctrls">
+  <div class="mc-row">
+    <div class="mc-half">
+      <div class="mc-label p-name pn1">P1 Controls</div>
+      <div class="dpad-r"><button class="dpb dp1" id="d1u">▲</button></div>
+      <div class="dpad-r">
+        <button class="dpb dp1" id="d1l">◀</button>
+        <div class="dp-mid"></div>
+        <button class="dpb dp1" id="d1r">▶</button>
+      </div>
+      <div class="dpad-r"><button class="dpb dp1" id="d1d">▼</button></div>
+    </div>
+    <div class="mc-half" id="p2-dpad">
+      <div class="mc-label p-name pn2" id="p2-dpad-label">P2 Controls</div>
+      <div class="dpad-r"><button class="dpb dp2" id="d2u">▲</button></div>
+      <div class="dpad-r">
+        <button class="dpb dp2" id="d2l">◀</button>
+        <div class="dp-mid"></div>
+        <button class="dpb dp2" id="d2r">▶</button>
+      </div>
+      <div class="dpad-r"><button class="dpb dp2" id="d2d">▼</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="ov" id="start-ov">
+  <div class="ov-icon">👑</div>
+  <div class="ov-title" style="color:var(--c4);text-shadow:0 0 18px rgba(255,230,0,.6)">KING OF THE YARD</div>
+  <div class="ov-sub">Grab the crown and hold it! The player who holds it the longest when time runs out wins the round.</div>
+  <div class="ctrl-box">
+    <div class="ctrl-title">⌨️ CONTROLS</div>
+    <div class="ctrl-row">
+      <div class="ctrl-item"><span class="ck" style="color:var(--c0)">WASD</span><span class="cd">Player 1 move</span></div>
+      <div class="ctrl-item"><span class="ck" style="color:var(--c2)">ARROWS</span><span class="cd">Player 2 move</span></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-item"><span class="ck">Walk over 👑</span><span class="cd">Pick up crown</span></div>
+      <div class="ctrl-item"><span class="ck">Touch player</span><span class="cd">Steal crown!</span></div>
+    </div>
+  </div>
+  <div class="btns">
+    <button class="btn btn-y" onclick="startGame()">Start Round 👑</button>
+    <a href="../index.html" class="btn btn-d">← Back</a>
+  </div>
+</div>
+
+<!-- WIN -->
+<div class="ov hidden" id="win-ov">
+  <div class="ov-icon" id="win-icon">🏆</div>
+  <div class="ov-title" id="win-title" style="color:var(--c4)">PLAYER 1 IS KING!</div>
+  <div class="win-stats">
+    <div class="ws-row">
+      <div class="ws"><div class="ws-l" id="ws-p1-label">P1</div><div class="ws-v" style="color:var(--c0)" id="ws-p1">0s</div></div>
+      <div class="ws"><div class="ws-l" id="ws-p2-label">P2</div><div class="ws-v" style="color:var(--c2)" id="ws-p2">0s</div></div>
+    </div>
+  </div>
+  <div class="btns">
+    <button class="btn btn-y" onclick="startGame()">Play Again</button>
+    <button class="tourn-btn hidden" id="tourn-btn" onclick="reportTourn()">Report Result →</button>
+    <a href="../index.html" class="btn btn-d">← Back</a>
+  </div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const mode=params.get('mode')||'2p';
+const aiDiff=params.get('diff')||'medium';
+const inTournament=params.get('tournament')==='1';
+const p1N=sessionStorage.getItem('t_p1')||'Player 1';
+const p2N=sessionStorage.getItem('t_p2')||(mode==='ai'?'AI Bot':'Player 2');
+['h-p1','ws-p1-label'].forEach(id=>document.getElementById(id).textContent=p1N);
+['h-p2','ws-p2-label'].forEach(id=>document.getElementById(id).textContent=p2N);
+if(mode==='ai'){document.getElementById('p2-dpad').style.opacity='.3';document.getElementById('p2-dpad').style.pointerEvents='none';}
+
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H;
+function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
+resize();window.addEventListener('resize',resize);
+
+const PSIZE=22,PSPEED=3.5,CROWN_SIZE=18,MATCH_DUR=35;
+const p1Color='#00f5ff',p2Color='#ff006e',crownColor='#ffe600';
+
+let p1,p2,crown,matchTime,holdTimer,gameRunning,animFrame,timerInterval;
+let p1Hold=0,p2Hold=0;
+let lastResult='tie';
+const keys={};
+
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.code]=false;});
+
+// Mobile D-pad
+function dp(id,code){
+  const el=document.getElementById(id);
+  el.addEventListener('pointerdown',()=>{keys[code]=true;});
+  el.addEventListener('pointerup',()=>{keys[code]=false;});
+  el.addEventListener('pointerleave',()=>{keys[code]=false;});
+}
+dp('d1u','KeyW');dp('d1d','KeyS');dp('d1l','KeyA');dp('d1r','KeyD');
+dp('d2u','ArrowUp');dp('d2d','ArrowDown');dp('d2l','ArrowLeft');dp('d2r','ArrowRight');
+
+function mkPlayer(x,y,color){return{x,y,w:PSIZE,h:PSIZE,color,hasCrown:false,vx:0,vy:0};}
+
+function startGame(){
+  document.getElementById('start-ov').classList.add('hidden');
+  document.getElementById('win-ov').classList.add('hidden');
+  resize();
+  p1=mkPlayer(60,H/2,p1Color);
+  p2=mkPlayer(W-80,H/2,p2Color);
+  // Crown in center
+  crown={x:W/2-CROWN_SIZE/2,y:H/2-CROWN_SIZE/2,free:true};
+  matchTime=MATCH_DUR;p1Hold=0;p2Hold=0;gameRunning=true;
+  document.getElementById('match-timer').classList.remove('urgent');
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    matchTime--;
+    document.getElementById('match-timer').textContent=matchTime;
+    if(matchTime<=5)document.getElementById('match-timer').classList.add('urgent');
+    if(p1.hasCrown)p1Hold+=1;
+    if(p2.hasCrown)p2Hold+=1;
+    // Update hold bars
+    document.getElementById('bar1').style.width=(p1Hold/MATCH_DUR*100)+'%';
+    document.getElementById('bar2').style.width=(p2Hold/MATCH_DUR*100)+'%';
+    document.getElementById('ht1').textContent=p1Hold+'s';
+    document.getElementById('ht2').textContent=p2Hold+'s';
+    if(matchTime<=0){clearInterval(timerInterval);endGame();}
+  },1000);
+  if(animFrame)cancelAnimationFrame(animFrame);
+  animFrame=requestAnimationFrame(loop);
+}
+
+function update(){
+  // P1 movement
+  if(keys['KeyW']||keys['ArrowUp']&&false)p1.vy=-PSPEED;
+  else if(keys['KeyS'])p1.vy=PSPEED;else p1.vy=0;
+  if(keys['KeyA'])p1.vx=-PSPEED;
+  else if(keys['KeyD'])p1.vx=PSPEED;else p1.vx=0;
+  if(keys['KeyW'])p1.vy=-PSPEED;// override
+  // P2 movement (or AI)
+  if(mode==='ai'){
+    aiP2();
+  } else {
+    if(keys['ArrowUp'])p2.vy=-PSPEED;
+    else if(keys['ArrowDown'])p2.vy=PSPEED;else p2.vy=0;
+    if(keys['ArrowLeft'])p2.vx=-PSPEED;
+    else if(keys['ArrowRight'])p2.vx=PSPEED;else p2.vx=0;
+  }
+  // Apply
+  [p1,p2].forEach(p=>{
+    p.x=Math.max(0,Math.min(W-p.w,p.x+p.vx));
+    p.y=Math.max(0,Math.min(H-p.h,p.y+p.vy));
+  });
+  // Crown pickup
+  if(crown.free){
+    if(overlaps(p1,{x:crown.x,y:crown.y,w:CROWN_SIZE,h:CROWN_SIZE})){crown.free=false;p1.hasCrown=true;updateCrownHolder(1);}
+    else if(overlaps(p2,{x:crown.x,y:crown.y,w:CROWN_SIZE,h:CROWN_SIZE})){crown.free=false;p2.hasCrown=true;updateCrownHolder(2);}
+  }
+  // Crown stealing
+  if(overlaps(p1,p2)){
+    if(p2.hasCrown){p2.hasCrown=false;p1.hasCrown=true;updateCrownHolder(1);}
+    else if(p1.hasCrown){p1.hasCrown=false;p2.hasCrown=true;updateCrownHolder(2);}
+  }
+  // Crown follows holder
+  if(p1.hasCrown){crown.x=p1.x+p1.w/2-CROWN_SIZE/2;crown.y=p1.y-CROWN_SIZE-2;}
+  if(p2.hasCrown){crown.x=p2.x+p2.w/2-CROWN_SIZE/2;crown.y=p2.y-CROWN_SIZE-2;}
+}
+
+let aiDir={vx:0,vy:0},aiTimer=0;
+function aiP2(){
+  aiTimer++;
+  const speed={easy:.4,medium:.72,hard:.96}[aiDiff]||.72;
+  if(Math.random()>speed)return;
+  let tx,ty;
+  if(p1.hasCrown){tx=p1.x;ty=p1.y;}// go steal
+  else if(crown.free){tx=crown.x;ty=crown.y;}// go get crown
+  else{tx=W-80;ty=H/2;}// idle
+  const dx=tx-p2.x,dy=ty-p2.y;
+  const mag=Math.hypot(dx,dy)||1;
+  p2.vx=(dx/mag)*PSPEED;p2.vy=(dy/mag)*PSPEED;
+}
+
+function overlaps(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+function updateCrownHolder(player){
+  const el=document.getElementById('crown-holder');
+  if(player===1){el.className='crown-holder ch-p1';el.textContent='👑 '+p1N+' is King!';}
+  else{el.className='crown-holder ch-p2';el.textContent='👑 '+p2N+' is King!';}
+}
+
+function draw(){
+  ctx.fillStyle='#020208';ctx.fillRect(0,0,W,H);
+  // Subtle grid
+  ctx.strokeStyle='rgba(255,255,255,.025)';ctx.lineWidth=1;
+  for(let x=44;x<W;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=44;y<H;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Boundary indicator
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=2;ctx.strokeRect(2,2,W-4,H-4);
+  // Crown (free or attached)
+  ctx.save();ctx.shadowColor=crownColor;ctx.shadowBlur=16;
+  ctx.font=CROWN_SIZE+'px serif';ctx.fillText('👑',crown.x,crown.y+CROWN_SIZE);
+  ctx.restore();
+  // Players
+  function drawPlayer(p,name,color){
+    ctx.save();ctx.shadowColor=color;ctx.shadowBlur=16;
+    ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();
+    // Name tag
+    ctx.shadowBlur=0;ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(p.x-2,p.y-16,name.length*6+8,14);
+    ctx.fillStyle=color;ctx.font='bold 9px "Orbitron",monospace';ctx.fillText(name.slice(0,5),p.x+3,p.y-5);
+    ctx.restore();
+  }
+  drawPlayer(p1,p1N,p1Color);drawPlayer(p2,p2N,p2Color);
+}
+
+function loop(){
+  if(!gameRunning)return;
+  update();draw();
+  animFrame=requestAnimationFrame(loop);
+}
+
+function endGame(){
+  gameRunning=false;cancelAnimationFrame(animFrame);
+  const p1wins=p1Hold>p2Hold,tied=p1Hold===p2Hold;
+  let icon,title,wcolor;
+  if(tied){icon='🤝';title='TIE! Both held '+p1Hold+'s';wcolor='var(--dim)';lastResult='tie';}
+  else if(p1wins){icon='👑';title=p1N+' IS KING!';wcolor='var(--c0)';lastResult='p1';}
+  else{icon='👑';title=p2N+' IS KING!';wcolor='var(--c2)';lastResult=mode==='ai'?'ai':'p2';}
+  document.getElementById('win-icon').textContent=icon;
+  document.getElementById('win-title').textContent=title;document.getElementById('win-title').style.color=wcolor;
+  document.getElementById('ws-p1').textContent=p1Hold+'s';document.getElementById('ws-p2').textContent=p2Hold+'s';
+  if(inTournament){document.getElementById('tourn-btn').classList.remove('hidden');sessionStorage.setItem('t_last_result',lastResult);}
+  document.getElementById('win-ov').classList.remove('hidden');
+}
+
+function reportTourn(){window.location.href='../tournament.html?result='+(sessionStorage.getItem('t_last_result')||'tie');}
+window.startGame=startGame;window.reportTourn=reportTourn;
+</script>
+</body>
+</html>
