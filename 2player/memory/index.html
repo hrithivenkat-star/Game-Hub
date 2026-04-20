@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Memory Match — 2 Player</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c7:#0088ff;--bg:#03030f;--card:#080818;--dim:#5566aa}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;display:flex;flex-direction:column;touch-action:manipulation}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,136,255,.018)1px,transparent 1px),linear-gradient(90deg,rgba(0,136,255,.018)1px,transparent 1px);background-size:44px 44px;pointer-events:none}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes flip-in{0%{transform:rotateY(90deg);opacity:0}100%{transform:rotateY(0deg);opacity:1}}
+@keyframes match-flash{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(0,136,255,.1);background:rgba(3,3,15,.98);flex-shrink:0;z-index:10}
+.logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--c0);text-decoration:none}
+.logo em{color:var(--c1);font-style:normal}
+.nav-r{display:flex;gap:6px}
+.nbtn{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);padding:6px 11px;border-radius:6px;background:none;cursor:pointer;font-family:'Rajdhani',sans-serif}
+
+.main{flex:1;display:flex;flex-direction:column;align-items:center;padding:18px;gap:14px}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:14px;width:100%;max-width:560px;flex-wrap:wrap}
+.hp{flex:1;background:var(--card);border-radius:11px;padding:12px 16px;min-width:120px;transition:all .3s}
+.hp.active-turn{border:1px solid var(--active-color);box-shadow:0 0 18px var(--active-glow)}
+.hp.inactive-turn{border:1px solid rgba(255,255,255,.05);opacity:.7}
+.hp-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.hp-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;margin-bottom:3px}
+.hp-score{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;line-height:1}
+.hp1 .hp-name{color:var(--c0)}.hp1 .hp-score{color:var(--c0)}
+.hp2 .hp-name{color:var(--c2)}.hp2 .hp-score{color:var(--c2)}
+.hud-mid{text-align:center;flex-shrink:0}
+.turn-txt{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;padding:6px 16px;border-radius:16px;transition:all .3s}
+.tt-p1{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.25)}
+.tt-p2{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.25)}
+.tt-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.25);animation:pulse 1s ease-in-out infinite}
+.pairs-left{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* GRID */
+.grid{display:grid;gap:9px;width:100%;max-width:560px}
+.card-wrap{perspective:600px;cursor:pointer}
+.card-wrap.matched{pointer-events:none}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .4s ease}
+.card-wrap.flipped .card-inner,.card-wrap.matched .card-inner{transform:rotateY(180deg)}
+.card-face,.card-back{position:absolute;inset:0;border-radius:10px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;aspect-ratio:1}
+.card-back{background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.2);font-size:clamp(16px,5vw,28px);color:rgba(0,136,255,.4)}
+.card-back:hover{background:rgba(0,136,255,.14);border-color:rgba(0,136,255,.38)}
+.card-face{transform:rotateY(180deg);font-size:clamp(20px,6vw,36px);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.card-wrap.matched .card-face{border-color:var(--match-color);background:var(--match-bg);box-shadow:0 0 16px var(--match-glow);animation:match-flash .4s ease}
+
+/* RESULT */
+.result-box{background:var(--card);border:1px solid rgba(0,136,255,.2);border-radius:16px;padding:22px;text-align:center;width:100%;max-width:380px;animation:fadeIn .3s ease}
+.r-icon{font-size:44px;display:block;margin-bottom:10px;animation:float 2.5s ease-in-out infinite}
+.r-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:2px}
+.r-sub{font-size:13px;color:var(--dim);margin-bottom:14px}
+.r-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rbtn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 18px;border-radius:7px;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:inline-block}
+.rbtn-b{background:rgba(0,136,255,.12);color:var(--c7);border:1px solid rgba(0,136,255,.3)}
+.rbtn-b:hover{background:rgba(0,136,255,.22);transform:translateY(-2px)}
+.rbtn-d{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.rbtn-d:hover{background:rgba(255,255,255,.09);color:#fff}
+.rbtn-t{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.28)}
+.rbtn-t:hover{background:rgba(255,230,0,.2);transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="../../index.html" class="logo">GAME<em>HUB</em></a>
+  <div class="nav-r">
+    <a href="../index.html" class="nbtn">← 2P</a>
+    <a href="../../index.html" class="nbtn">🏠</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="hud">
+    <div class="hp hp1 active-turn" id="hp1" style="--active-color:rgba(0,245,255,.3);--active-glow:rgba(0,245,255,.06)">
+      <div class="hp-label">Player 1</div>
+      <div class="hp-name" id="p1-name-el">Player 1</div>
+      <div class="hp-score" id="p1-score-el">0</div>
+    </div>
+    <div class="hud-mid">
+      <div class="turn-txt tt-p1" id="turn-txt">P1's Turn</div>
+      <div class="pairs-left" id="pairs-left">8 pairs left</div>
+    </div>
+    <div class="hp hp2 inactive-turn" id="hp2" style="--active-color:rgba(255,0,110,.3);--active-glow:rgba(255,0,110,.06)">
+      <div class="hp-label">Player 2</div>
+      <div class="hp-name" id="p2-name-el">Player 2</div>
+      <div class="hp-score" id="p2-score-el">0</div>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="result-box hidden" id="result-box">
+    <span class="r-icon" id="r-icon">🏆</span>
+    <div class="r-title" id="r-title">Player 1 Wins!</div>
+    <div class="r-sub" id="r-sub">Most pairs matched</div>
+    <div class="r-btns">
+      <button class="rbtn rbtn-b" onclick="initGame()">Play Again</button>
+      <button class="rbtn rbtn-t hidden" id="tourn-btn" onclick="reportTourn()">Report Result →</button>
+      <a href="../index.html" class="rbtn rbtn-d">← Back</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const mode=params.get('mode')||'2p';
+const aiDiff=params.get('diff')||'medium';
+const inTournament=params.get('tournament')==='1';
+const p1N=sessionStorage.getItem('t_p1')||'Player 1';
+const p2N=sessionStorage.getItem('t_p2')||(mode==='ai'?'AI Bot':'Player 2');
+document.getElementById('p1-name-el').textContent=p1N;
+document.getElementById('p2-name-el').textContent=p2N;
+
+const EMOJIS=['🌟','🔥','💎','🌈','🦋','🎯','🎸','🚀','🌙','🦄','🎭','🍕','🎮','🏆','⚡','🌺'];
+let cards=[],flipped=[],matched=0,turn=1,canFlip=true,p1Score=0,p2Score=0;
+let aiMemory={};// remembers positions
+
+const MATCH_COLORS=[
+  {color:'rgba(0,245,255,.5)',bg:'rgba(0,245,255,.06)',glow:'rgba(0,245,255,.2)'},
+  {color:'rgba(255,0,110,.5)',bg:'rgba(255,0,110,.06)',glow:'rgba(255,0,110,.2)'},
+  {color:'rgba(191,0,255,.5)',bg:'rgba(191,0,255,.06)',glow:'rgba(191,0,255,.2)'},
+  {color:'rgba(0,255,136,.5)',bg:'rgba(0,255,136,.06)',glow:'rgba(0,255,136,.2)'},
+];
+
+function initGame(){
+  const grid=document.getElementById('grid');
+  const n=16;// 4x4 = 8 pairs
+  const emojis=EMOJIS.slice(0,n/2);
+  const deck=[...emojis,...emojis].sort(()=>Math.random()-.5);
+  cards=deck.map((e,i)=>({id:i,emoji:e,flipped:false,matched:false}));
+  flipped=[];matched=0;turn=1;canFlip=true;p1Score=0;p2Score=0;aiMemory={};
+  // Grid columns based on screen width
+  const cols=window.innerWidth<400?3:4;
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML='';
+  cards.forEach((c,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='card-wrap';wrap.dataset.idx=i;
+    wrap.onclick=()=>flipCard(i);
+    wrap.innerHTML=`<div class="card-inner"><div class="card-back">🂠</div><div class="card-face">${c.emoji}</div></div>`;
+    grid.appendChild(wrap);
+  });
+  document.getElementById('result-box').classList.add('hidden');
+  updateHUD();
+}
+
+function flipCard(i){
+  if(!canFlip||cards[i].flipped||cards[i].matched)return;
+  if(mode==='ai'&&turn===2)return;
+  doFlip(i);
+}
+
+function doFlip(i){
+  cards[i].flipped=true;
+  const el=document.querySelectorAll('.card-wrap')[i];
+  el.classList.add('flipped');
+  aiMemory[i]=cards[i].emoji;
+  flipped.push(i);
+  if(flipped.length===2)checkMatch();
+}
+
+function checkMatch(){
+  canFlip=false;
+  const [a,b]=flipped;
+  if(cards[a].emoji===cards[b].emoji){
+    setTimeout(()=>{
+      cards[a].matched=cards[b].matched=true;
+      const mc=MATCH_COLORS[(turn-1)%2];
+      [a,b].forEach(i=>{
+        const el=document.querySelectorAll('.card-wrap')[i];
+        el.classList.add('matched');
+        el.querySelector('.card-face').style.cssText=`--match-color:${mc.color};--match-bg:${mc.bg};--match-glow:${mc.glow}`;
+      });
+      if(turn===1)p1Score++;else p2Score++;
+      matched++;flipped=[];canFlip=true;
+      updateHUD();
+      if(matched===8)endGame();
+      else if(mode==='ai'&&turn===2)setTimeout(aiTurn,600);
+    },400);
+  } else {
+    setTimeout(()=>{
+      [a,b].forEach(i=>{cards[i].flipped=false;document.querySelectorAll('.card-wrap')[i].classList.remove('flipped');});
+      flipped=[];turn=turn===1?2:1;canFlip=true;
+      updateHUD();
+      if(mode==='ai'&&turn===2)setTimeout(aiTurn,500);
+    },900);
+  }
+}
+
+function aiTurn(){
+  if(matched===8)return;
+  // AI finds known pairs
+  const unmatched=cards.map((c,i)=>c.matched?null:i).filter(i=>i!==null);
+  let pick1=null,pick2=null;
+  const memVals=Object.keys(aiMemory);
+  const rememberChance={easy:.25,medium:.6,hard:.95}[aiDiff]||.6;
+  // Try to find known pair
+  if(Math.random()<rememberChance){
+    const byEmoji={};
+    memVals.forEach(k=>{const e=aiMemory[k];if(!cards[k].matched){byEmoji[e]=byEmoji[e]||[];byEmoji[e].push(Number(k));}});
+    for(const e in byEmoji){if(byEmoji[e].length>=2){pick1=byEmoji[e][0];pick2=byEmoji[e][1];break;}}
+  }
+  if(pick1===null){
+    const pool=unmatched.filter(i=>!cards[i].matched);
+    pick1=pool[Math.floor(Math.random()*pool.length)];
+    // Try to find match for pick1 in memory
+    if(Math.random()<rememberChance&&aiMemory[pick1]){
+      const matchIdx=unmatched.find(i=>i!==pick1&&aiMemory[i]===aiMemory[pick1]&&!cards[i].matched);
+      pick2=matchIdx!==undefined?matchIdx:null;
+    }
+    if(pick2===null){const pool2=unmatched.filter(i=>i!==pick1&&!cards[i].matched);pick2=pool2[Math.floor(Math.random()*pool2.length)];}
+  }
+  if(pick1===null||pick2===null){turn=1;updateHUD();return;}
+  doFlip(pick1);
+  setTimeout(()=>doFlip(pick2),600);
+}
+
+function updateHUD(){
+  document.getElementById('p1-score-el').textContent=p1Score;
+  document.getElementById('p2-score-el').textContent=p2Score;
+  document.getElementById('pairs-left').textContent=(8-matched)+' pairs left';
+  const tt=document.getElementById('turn-txt');
+  const hp1=document.getElementById('hp1'),hp2=document.getElementById('hp2');
+  if(turn===1){
+    tt.className='turn-txt tt-p1';tt.textContent=p1N+'\'s Turn';
+    hp1.classList.replace('inactive-turn','active-turn');hp2.classList.replace('active-turn','inactive-turn');
+  } else if(mode==='ai'){
+    tt.className='turn-txt tt-ai';tt.textContent='🤖 AI Thinking...';
+    hp2.classList.replace('inactive-turn','active-turn');hp1.classList.replace('active-turn','inactive-turn');
+  } else {
+    tt.className='turn-txt tt-p2';tt.textContent=p2N+'\'s Turn';
+    hp2.classList.replace('inactive-turn','active-turn');hp1.classList.replace('active-turn','inactive-turn');
+  }
+}
+
+function endGame(){
+  let icon,title,sub,lastResult;
+  if(p1Score>p2Score){icon='🏆';title=p1N+' Wins!';sub='P1: '+p1Score+' pairs · P2: '+p2Score+' pairs';lastResult='p1';}
+  else if(p2Score>p1Score){icon=mode==='ai'?'🤖':'🏅';title=p2N+' Wins!';sub='P2: '+p2Score+' pairs · P1: '+p1Score+' pairs';lastResult=mode==='ai'?'ai':'p2';}
+  else{icon='🤝';title='It\'s a Draw!';sub='Both got '+p1Score+' pairs';lastResult='tie';}
+  document.getElementById('r-icon').textContent=icon;
+  document.getElementById('r-title').textContent=title;
+  document.getElementById('r-title').style.color=p1Score>p2Score?'var(--c0)':p2Score>p1Score?'var(--c2)':'var(--dim)';
+  document.getElementById('r-sub').textContent=sub;
+  if(inTournament){document.getElementById('tourn-btn').classList.remove('hidden');sessionStorage.setItem('t_last_result',lastResult);}
+  document.getElementById('result-box').classList.remove('hidden');
+}
+
+function reportTourn(){window.location.href='../tournament.html?result='+(sessionStorage.getItem('t_last_result')||'tie');}
+window.initGame=initGame;window.reportTourn=reportTourn;
+initGame();
+</script>
+</body>
+</html>
