@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tic Tac Toe · 2P</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--bg:#070410;--dim:#44527a}
+html,body{min-height:100vh;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;display:flex;flex-direction:column;overflow-x:hidden;touch-action:manipulation}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+@keyframes popIn{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.15) rotate(4deg)}100%{transform:scale(1);opacity:1}}
+@keyframes winPulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+.topbar{position:relative;z-index:20;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:rgba(7,4,16,.98);border-bottom:1px solid rgba(191,0,255,.07)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:2px}
+.tlogo span{color:var(--c1)}
+.toplinks{display:flex;gap:6px}
+.tbtn{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:5px 10px;border-radius:5px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:var(--c0)}
+
+/* SCOREBAR */
+.scorebar{position:relative;z-index:20;flex-shrink:0;display:flex;align-items:stretch;background:rgba(7,4,16,.95);border-bottom:1px solid rgba(255,255,255,.05)}
+.sb-p{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px}
+.sb-pr{justify-content:flex-end;flex-direction:row-reverse}
+.sb-sym{font-size:22px;text-shadow:0 0 10px currentColor}
+.sb-name{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px}
+.sbn1{color:var(--c0)}.sbn2{color:var(--c2)}
+.sb-score{font-family:'Orbitron',sans-serif;font-size:34px;font-weight:900;line-height:1}
+.sbs1{color:var(--c0);text-shadow:0 0 12px rgba(0,245,255,.5)}.sbs2{color:var(--c2);text-shadow:0 0 12px rgba(255,0,110,.5)}
+.sb-c{padding:10px 14px;text-align:center;border-left:1px solid rgba(255,255,255,.05);border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex-shrink:0}
+.turn-pill{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:5px 14px;border-radius:10px;letter-spacing:1px;transition:all .25s}
+.tp-x{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.28)}
+.tp-o{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.28)}
+.tp-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.28)}
+.draws-txt{font-size:10px;color:var(--dim);letter-spacing:.5px}
+
+/* MAIN */
+.main{flex:1;position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+
+/* BOARD */
+.board-outer{position:relative;display:inline-block}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;background:rgba(191,0,255,.04);border:1px solid rgba(191,0,255,.12);border-radius:18px;box-shadow:0 0 50px rgba(191,0,255,.06)}
+.cell{width:clamp(82px,23vw,112px);height:clamp(82px,23vw,112px);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-family:'Orbitron',sans-serif;font-size:clamp(30px,8.5vw,48px);font-weight:900;position:relative;overflow:hidden}
+.cell::after{content:'';position:absolute;inset:0;border-radius:14px;background:radial-gradient(circle,rgba(191,0,255,.12),transparent 70%);opacity:0;transition:opacity .2s}
+.cell:hover:not(.filled)::after{opacity:1}
+.cell:hover:not(.filled){border-color:rgba(191,0,255,.38);transform:scale(1.04)}
+.cell:active:not(.filled){transform:scale(.94)}
+.cell.x{color:var(--c0);text-shadow:0 0 22px rgba(0,245,255,.8);border-color:rgba(0,245,255,.22);background:rgba(0,245,255,.05);animation:popIn .25s ease}
+.cell.o{color:var(--c2);text-shadow:0 0 22px rgba(255,0,110,.8);border-color:rgba(255,0,110,.22);background:rgba(255,0,110,.05);animation:popIn .25s ease}
+.cell.win-cell{animation:winPulse .4s ease}
+.cell.x.win-cell{background:rgba(0,245,255,.14)!important;border-color:rgba(0,245,255,.55)!important;box-shadow:0 0 28px rgba(0,245,255,.25)!important}
+.cell.o.win-cell{background:rgba(255,0,110,.14)!important;border-color:rgba(255,0,110,.55)!important;box-shadow:0 0 28px rgba(255,0,110,.25)!important}
+/* WIN LINE */
+.win-svg{position:absolute;inset:-14px;pointer-events:none;z-index:5;overflow:visible}
+.win-svg path{stroke-dasharray:600;stroke-dashoffset:600;stroke-linecap:round;animation:drawLine .55s ease forwards}
+
+/* RESULT */
+.result-box{background:rgba(10,6,20,.97);border:1px solid rgba(191,0,255,.2);border-radius:18px;padding:22px 26px;text-align:center;width:100%;max-width:380px;box-shadow:0 0 50px rgba(191,0,255,.07)}
+.rb-icon{font-size:46px;display:block;margin-bottom:10px;animation:float 2.5s ease-in-out infinite}
+.rb-title{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px;letter-spacing:2px}
+.rb-sub{font-size:13px;color:var(--dim);margin-bottom:16px}
+.rb-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border-radius:9px;cursor:pointer;border:none;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:rgba(191,0,255,.14);color:var(--c1);border:1px solid rgba(191,0,255,.4)}
+.btn-p:hover{background:rgba(191,0,255,.24);box-shadow:0 0 24px rgba(191,0,255,.3);transform:translateY(-2px)}
+.btn-back{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.btn-back:hover{color:#fff;background:rgba(255,255,255,.09)}
+.btn-tourn{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.35)}
+.btn-tourn:hover{background:rgba(255,230,0,.22);transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div class="topbar">
+  <a href="../../index.html" class="tlogo">GAME<span>HUB</span></a>
+  <div class="toplinks">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+    <a href="../tournament.html" class="tbtn" id="t-nav" style="display:none">🏆 Tourn</a>
+  </div>
+</div>
+
+<div class="scorebar">
+  <div class="sb-p">
+    <div class="sb-sym" style="color:var(--c0)">✕</div>
+    <div><div class="sb-name sbn1" id="sbn1">P1</div><div class="sb-score sbs1" id="sc1">0</div></div>
+  </div>
+  <div class="sb-c">
+    <div class="turn-pill tp-x" id="tp">✕ P1's Turn</div>
+    <div class="draws-txt">Draws: <span style="font-family:'Orbitron',sans-serif;font-weight:700;color:var(--dim)" id="draws">0</span></div>
+  </div>
+  <div class="sb-p sb-pr">
+    <div class="sb-sym" style="color:var(--c2)">○</div>
+    <div style="text-align:right"><div class="sb-name sbn2" id="sbn2">P2</div><div class="sb-score sbs2" id="sc2">0</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="board-outer">
+    <div class="board" id="board"></div>
+    <svg class="win-svg" id="win-svg" viewBox="-14 -14 calc(100% + 28px) calc(100% + 28px)" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="result-box" id="result-box" style="display:none">
+    <span class="rb-icon" id="rb-icon">🏆</span>
+    <div class="rb-title" id="rb-title">P1 Wins!</div>
+    <div class="rb-sub" id="rb-sub">✕ takes the round</div>
+    <div class="rb-btns">
+      <button class="btn btn-p" onclick="newRound()">Next Round ↩</button>
+      <button class="btn btn-tourn" id="tourn-btn" style="display:none" onclick="doReport()">Report Result →</button>
+      <a href="../index.html" class="btn btn-back">← Back</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* BG */
+{const bc=document.getElementById('bg-canvas');const bx=bc.getContext('2d');
+function rs(){bc.width=innerWidth;bc.height=innerHeight;}rs();addEventListener('resize',rs);
+let t=0;
+(function tick(){t+=.006;bx.fillStyle='#070410';bx.fillRect(0,0,bc.width,bc.height);
+// Animated bg orbs
+[{x:.2,y:.3,c:'rgba(0,245,255,.04)'},{x:.8,y:.7,c:'rgba(191,0,255,.04)'},{x:.5,y:.5,c:'rgba(255,0,110,.02)'}].forEach(o=>{
+  const rg=bx.createRadialGradient(o.x*bc.width,o.y*bc.height,0,o.x*bc.width,o.y*bc.height,180+Math.sin(t)*(o.x*60));
+  rg.addColorStop(0,o.c);rg.addColorStop(1,'transparent');bx.fillStyle=rg;bx.fillRect(0,0,bc.width,bc.height);
+});
+// Grid
+bx.strokeStyle='rgba(191,0,255,.025)';bx.lineWidth=1;
+const gs=Math.min(bc.width,bc.height)/8;
+for(let x=0;x<bc.width;x+=gs){bx.beginPath();bx.moveTo(x,0);bx.lineTo(x,bc.height);bx.stroke();}
+for(let y=0;y<bc.height;y+=gs){bx.beginPath();bx.moveTo(0,y);bx.lineTo(bc.width,y);bx.stroke();}
+requestAnimationFrame(tick);})();}
+
+const SP=new URLSearchParams(location.search);
+const MODE=SP.get('mode')||'2p', DIFF=SP.get('diff')||'medium', TOURN=SP.get('tournament')==='1';
+const P1N=sessionStorage.getItem('t_p1')||'Player 1', P2N=sessionStorage.getItem('t_p2')||(MODE==='ai'?'AI Bot':'Player 2');
+document.getElementById('sbn1').textContent=P1N.slice(0,10);document.getElementById('sbn2').textContent=P2N.slice(0,10);
+if(TOURN){document.getElementById('t-nav').style.display='';document.getElementById('t-nav').href='../tournament.html?mode='+MODE+'&diff='+DIFF;}
+
+const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+// SVG line coords for win combos (fraction of board, accounting for gap+padding)
+// Board: 3 cells + 2*10px gap + 2*14px padding. Cell = clamp(82..112px)
+// We draw lines in SVG viewBox matching board outer size. Lines just connect cell centers.
+// We'll compute actual pixel positions after board renders.
+let board=Array(9).fill(null),turn='X',gameOver=false,lastResult='tie';
+let scores={X:0,O:0,D:0};
+
+// Build board
+const boardEl=document.getElementById('board');
+for(let i=0;i<9;i++){
+  const c=document.createElement('div');c.className='cell';c.dataset.i=i;
+  c.addEventListener('click',()=>pick(i));boardEl.appendChild(c);
+}
+
+function setTurnUI(){
+  const tp=document.getElementById('tp');const isAI=MODE==='ai'&&turn==='O';
+  if(isAI){tp.className='turn-pill tp-ai';tp.textContent='🤖 AI Thinking...';}
+  else if(turn==='X'){tp.className='turn-pill tp-x';tp.textContent='✕ '+P1N.slice(0,8)+'\'s Turn';}
+  else{tp.className='turn-pill tp-o';tp.textContent='○ '+P2N.slice(0,8)+'\'s Turn';}
+}
+setTurnUI();
+
+function pick(i){if(gameOver||board[i])return;if(MODE==='ai'&&turn==='O')return;makeMove(i);}
+
+function makeMove(i){
+  board[i]=turn;
+  const c=document.querySelectorAll('.cell')[i];
+  c.textContent=turn==='X'?'✕':'○';c.className='cell filled '+turn.toLowerCase();
+  const win=findWin();
+  if(win){endRound(turn,win);}
+  else if(board.every(v=>v)){endRound(null,null);}
+  else{turn=turn==='X'?'O':'X';setTurnUI();if(MODE==='ai'&&turn==='O')setTimeout(aiMove,380);}
+}
+
+function findWin(){for(const w of WINS)if(board[w[0]]&&board[w[0]]===board[w[1]]&&board[w[1]]===board[w[2]])return w;return null;}
+
+/* MINIMAX */
+function minimax(b,isMax,d,alpha,beta){
+  const w=checkWB(b);if(w==='O')return 10-d;if(w==='X')return d-10;if(b.every(v=>v)||d>7)return 0;
+  if(isMax){let best=-Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]='O';best=Math.max(best,minimax(b,false,d+1,alpha,beta));b[i]=null;alpha=Math.max(alpha,best);if(beta<=alpha)break;}}return best;}
+  let best=Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]='X';best=Math.min(best,minimax(b,true,d+1,alpha,beta));b[i]=null;beta=Math.min(beta,best);if(beta<=alpha)break;}}return best;
+}
+function checkWB(b){for(const w of WINS)if(b[w[0]]&&b[w[0]]===b[w[1]]&&b[w[1]]===b[w[2]])return b[w[0]];return null;}
+
+function aiMove(){
+  if(gameOver)return;
+  const empty=board.map((v,i)=>v?null:i).filter(i=>i!==null);
+  let move;
+  if(DIFF==='easy'){move=empty[Math.floor(Math.random()*empty.length)];}
+  else if(DIFF==='medium'){
+    move=Math.random()<.5?empty[Math.floor(Math.random()*empty.length)]:(()=>{let best=-Infinity,bm=empty[0];for(const i of empty){board[i]='O';const s=minimax(board,false,0,-Infinity,Infinity);board[i]=null;if(s>best){best=s;bm=i;}}return bm;})();
+  } else {let best=-Infinity,bm=empty[0];for(const i of empty){board[i]='O';const s=minimax(board,false,0,-Infinity,Infinity);board[i]=null;if(s>best){best=s;bm=i;}}move=bm;}
+  makeMove(move);
+}
+
+/* WIN LINE */
+function drawWinLine(winLine,color){
+  const cells=document.querySelectorAll('.cell');
+  const bo=document.getElementById('board').getBoundingClientRect();
+  const pts=winLine.map(i=>{const r=cells[i].getBoundingClientRect();return{x:r.left-bo.left+r.width/2,y:r.top-bo.top+r.height/2};});
+  const svg=document.getElementById('win-svg');svg.innerHTML='';
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',`M${pts[0].x+14},${pts[0].y+14} L${pts[2].x+14},${pts[2].y+14}`);
+  p.setAttribute('stroke',color);p.setAttribute('stroke-width','4');p.setAttribute('fill','none');
+  p.setAttribute('filter',`drop-shadow(0 0 6px ${color})`);
+  svg.appendChild(p);
+}
+
+function endRound(winner,winLine){
+  gameOver=true;
+  if(winLine){
+    const cells=document.querySelectorAll('.cell');winLine.forEach(i=>cells[i].classList.add('win-cell'));
+    drawWinLine(winLine,winner==='X'?'#00f5ff':'#ff006e');
+  }
+  let icon,title,sub;
+  if(winner==='X'){scores.X++;icon='🏆';title=P1N+' Wins!';sub='✕ takes the round';lastResult='p1';}
+  else if(winner==='O'){scores.O++;icon=MODE==='ai'?'🤖':'🏅';title=P2N+' Wins!';sub='○ takes the round';lastResult=MODE==='ai'?'ai':'p2';}
+  else{scores.D++;icon='🤝';title='Draw!';sub='No winner this round';lastResult='tie';}
+  sessionStorage.setItem('t_last_result',lastResult);
+  document.getElementById('sc1').textContent=scores.X;document.getElementById('sc2').textContent=scores.O;document.getElementById('draws').textContent=scores.D;
+  document.getElementById('rb-icon').textContent=icon;
+  document.getElementById('rb-title').textContent=title;document.getElementById('rb-title').style.color=winner==='X'?'var(--c0)':winner==='O'?'var(--c2)':'var(--dim)';
+  document.getElementById('rb-sub').textContent=sub;
+  if(TOURN)document.getElementById('tourn-btn').style.display='';
+  document.getElementById('result-box').style.display='';
+}
+
+function newRound(){
+  board=Array(9).fill(null);turn='X';gameOver=false;
+  document.querySelectorAll('.cell').forEach(c=>{c.textContent='';c.className='cell';});
+  document.getElementById('win-svg').innerHTML='';
+  document.getElementById('result-box').style.display='none';
+  setTurnUI();
+}
+window.newRound=newRound;
+
+function doReport(){window.location.href='../tournament.html?result='+lastResult;}
+window.doReport=doReport;
+</script>
+</body>
+</html>
