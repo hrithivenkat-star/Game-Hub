@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Neon Tennis · 2P</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--bg:#02080d;--dim:#44527a}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none;display:flex;flex-direction:column}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes cdCount{0%{transform:scale(1.3);opacity:0}30%{opacity:1}80%{transform:scale(1)}100%{transform:scale(.8);opacity:0}}
+@keyframes scoreFlash{0%{transform:scale(1.5);opacity:1}100%{transform:scale(1);opacity:1}}
+
+.topbar{flex-shrink:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:rgba(2,8,13,.98);border-bottom:1px solid rgba(0,245,255,.07)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:2px}
+.tlogo span{color:var(--c1)}
+.toplinks{display:flex;gap:6px}
+.tbtn{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:5px 10px;border-radius:5px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.25)}
+
+/* SCORE BAR */
+.scorebar{flex-shrink:0;z-index:20;display:flex;align-items:stretch;background:rgba(2,8,13,.96);border-bottom:1px solid rgba(255,255,255,.05)}
+.sb-p{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;transition:background .3s}
+.sb-p.winning{background:rgba(0,245,255,.04)}
+.sb-pr{justify-content:flex-end;flex-direction:row-reverse}
+.sb-pr.winning{background:rgba(255,0,110,.04)}
+.sb-name{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px}
+.n1{color:var(--c0)}.n2{color:var(--c2)}
+.sb-score{font-family:'Orbitron',sans-serif;font-size:38px;font-weight:900;line-height:1;transition:all .15s}
+.s1{color:var(--c0);text-shadow:0 0 14px rgba(0,245,255,.5)}.s2{color:var(--c2);text-shadow:0 0 14px rgba(255,0,110,.5)}
+.sb-c{padding:10px 14px;text-align:center;border-left:1px solid rgba(255,255,255,.05);border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex-shrink:0}
+.turn-pill{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:4px 12px;border-radius:9px;letter-spacing:1px;white-space:nowrap;transition:all .25s}
+.tp1{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.28)}
+.tp2{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.28)}
+.tp-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.28)}
+.win-need{font-size:9px;color:var(--dim);letter-spacing:.5px}
+
+.game-wrap{flex:1;position:relative;overflow:hidden}
+canvas#gc{display:block;width:100%;height:100%}
+
+/* MOBILE CONTROLS */
+.mob-ctrls{flex-shrink:0;display:none;background:rgba(2,8,13,.96);border-top:1px solid rgba(255,255,255,.05);padding:8px 12px}
+@media(max-width:900px),(pointer:coarse){.mob-ctrls{display:block}}
+.mc-inner{display:flex;justify-content:space-between;gap:10px}
+.mc-side{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mc-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:2px;font-family:'Orbitron',sans-serif;font-size:8px}
+.mc-btns{display:flex;gap:5px}
+.mcb{width:54px;height:44px;border-radius:9px;font-size:20px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;transition:transform .1s;-webkit-tap-highlight-color:transparent}
+.mcb:active{transform:scale(.88)}
+.mb1{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25);color:var(--c0)}
+.mb2{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.25);color:var(--c2)}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center;background:rgba(2,8,13,.97);backdrop-filter:blur(14px)}
+.ov.hide{display:none}
+.ov-glow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,136,.07),transparent 70%);pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%)}
+.ov-icon{font-size:58px;margin-bottom:14px;position:relative;z-index:1}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(22px,5vw,34px);font-weight:900;margin-bottom:8px;position:relative;z-index:1}
+.ov-sub{font-size:14px;color:var(--dim);max-width:380px;line-height:1.7;margin-bottom:18px;position:relative;z-index:1}
+.ctrl-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 18px;margin-bottom:16px;width:100%;max-width:420px;position:relative;z-index:1}
+.cb-title{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--c4);margin-bottom:10px;text-align:left}
+.cb-row{display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.ci{display:flex;align-items:center;gap:8px;flex:1;min-width:140px}
+.ckey{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.ck1{background:rgba(0,245,255,.12);color:var(--c0);border:1px solid rgba(0,245,255,.3)}
+.ck2{background:rgba(255,0,110,.12);color:var(--c2);border:1px solid rgba(255,0,110,.3)}
+.ckm{background:rgba(255,255,255,.06);color:#aabbdd;border:1px solid rgba(255,255,255,.12)}
+.cdesc{font-size:11px;color:var(--dim)}
+.mode-chip{display:inline-block;font-size:11px;padding:4px 14px;border-radius:10px;font-weight:700;margin-bottom:14px;position:relative;z-index:1}
+.mc-2p{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.25)}
+.mc-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.25)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:13px 26px;border-radius:9px;cursor:pointer;border:none;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-go{background:rgba(0,245,255,.14);color:var(--c0);border:1px solid rgba(0,245,255,.4)}
+.btn-go:hover{background:rgba(0,245,255,.24);box-shadow:0 0 30px rgba(0,245,255,.3);transform:translateY(-2px)}
+.btn-back{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.btn-back:hover{color:#fff;background:rgba(255,255,255,.09)}
+.btn-tourn{background:rgba(255,230,0,.12);color:var(--c4);border:1px solid rgba(255,230,0,.35)}
+.btn-tourn:hover{background:rgba(255,230,0,.22);transform:translateY(-2px)}
+.win-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 22px;margin-bottom:16px;width:100%;max-width:340px;position:relative;z-index:1;text-align:center}
+.wc-score{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:4px}
+.cd-num{font-family:'Orbitron',sans-serif;font-size:clamp(70px,20vw,130px);font-weight:900;color:var(--c4);text-shadow:0 0 50px rgba(255,230,0,.7);position:relative;z-index:1;animation:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../../index.html" class="tlogo">GAME<span>HUB</span></a>
+  <div class="toplinks">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+    <a href="../tournament.html" class="tbtn" id="t-nav" style="display:none">🏆 Tourn</a>
+  </div>
+</div>
+
+<div class="scorebar">
+  <div class="sb-p" id="sbp1">
+    <div><div class="sb-name n1" id="sbn1">P1</div></div>
+    <div class="sb-score s1" id="sc1">0</div>
+  </div>
+  <div class="sb-c">
+    <div class="turn-pill tp1" id="tp">P1 Serve</div>
+    <div class="win-need">First to 5</div>
+  </div>
+  <div class="sb-p sb-pr" id="sbp2">
+    <div class="sb-score s2" id="sc2">0</div>
+    <div><div class="sb-name n2" id="sbn2">P2</div></div>
+  </div>
+</div>
+
+<div class="game-wrap">
+  <canvas id="gc"></canvas>
+</div>
+
+<div class="mob-ctrls">
+  <div class="mc-inner">
+    <div class="mc-side">
+      <div class="mc-lbl" id="mcl1">P1</div>
+      <div class="mc-btns">
+        <button class="mcb mb1" id="b1u">▲</button>
+        <button class="mcb mb1" id="b1d">▼</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 8px">
+      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--dim)">VS</div>
+    </div>
+    <div class="mc-side" id="mc-p2side">
+      <div class="mc-lbl" id="mcl2">P2</div>
+      <div class="mc-btns">
+        <button class="mcb mb2" id="b2u">▲</button>
+        <button class="mcb mb2" id="b2d">▼</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="ov" id="ov-start">
+  <div class="ov-glow"></div>
+  <div class="ov-icon" style="animation:float 2.5s ease-in-out infinite">🎾</div>
+  <div class="ov-title" style="color:var(--c3);text-shadow:0 0 28px rgba(0,255,136,.5)">NEON TENNIS</div>
+  <div class="ov-sub">Volley the neon ball. Use spin and placement to outsmart your opponent. First to 5 points wins!</div>
+  <div class="ctrl-box">
+    <div class="cb-title">⚡ CONTROLS</div>
+    <div class="cb-row">
+      <div class="ci"><span class="ckey ck1">W / S</span><span class="cdesc">P1 move up/down</span></div>
+      <div class="ci"><span class="ckey ck2">↑ / ↓</span><span class="cdesc">P2 move up/down</span></div>
+    </div>
+    <div class="cb-row">
+      <div class="ci"><span class="ckey ckm">📱 ▲▼ buttons</span><span class="cdesc">Move on mobile</span></div>
+    </div>
+  </div>
+  <div id="mode-chip" class="mode-chip mc-2p">2 Players Mode</div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="startGame()">▶ Serve!</button>
+    <a href="../index.html" class="btn btn-back">← Back</a>
+  </div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="ov hide" id="ov-cd">
+  <div class="ov-glow"></div>
+  <div class="cd-num" id="cd-n">3</div>
+</div>
+
+<!-- WIN -->
+<div class="ov hide" id="ov-win">
+  <div class="ov-glow" id="win-glow"></div>
+  <div class="ov-icon" id="win-ico" style="animation:float 2s ease-in-out infinite">🏆</div>
+  <div class="ov-title" id="win-ttl">P1 WINS!</div>
+  <div class="win-card">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">FINAL SCORE</div>
+    <div class="wc-score" id="wc-score">5 — 2</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="startGame()">↩ Rematch</button>
+    <button class="btn btn-tourn hide" id="tourn-btn" onclick="doReport()">Report Result →</button>
+    <a href="../index.html" class="btn btn-back">← Back</a>
+  </div>
+</div>
+
+<script>
+const SP=new URLSearchParams(location.search);
+const MODE=SP.get('mode')||'2p', DIFF=SP.get('diff')||'medium', TOURN=SP.get('tournament')==='1';
+const P1N=sessionStorage.getItem('t_p1')||'Player 1', P2N=sessionStorage.getItem('t_p2')||(MODE==='ai'?'AI Bot':'Player 2');
+
+document.getElementById('sbn1').textContent=P1N.slice(0,10);document.getElementById('sbn2').textContent=P2N.slice(0,10);
+document.getElementById('mcl1').textContent=P1N.slice(0,5);document.getElementById('mcl2').textContent=MODE==='ai'?'AI':P2N.slice(0,5);
+const mc=document.getElementById('mode-chip');mc.className='mode-chip '+(MODE==='ai'?'mc-ai':'mc-2p');
+mc.textContent=MODE==='ai'?`vs AI (${DIFF})`:`${P1N} vs ${P2N}`;
+if(TOURN){document.getElementById('t-nav').style.display='';document.getElementById('t-nav').href='../tournament.html?mode='+MODE+'&diff='+DIFF;}
+if(MODE==='ai'){document.getElementById('mc-p2side').style.opacity='.35';document.getElementById('mc-p2side').style.pointerEvents='none';}
+
+const gc=document.getElementById('gc');const ctx=gc.getContext('2d');let W,H;
+function rszGC(){W=gc.width=gc.offsetWidth;H=gc.height=gc.offsetHeight;}rszGC();addEventListener('resize',rszGC);
+
+const PAD_W=12,WIN_PTS=5,BALL_R=9,P_SPD=6,BALL_INIT=5.5;
+let p1={},p2={},ball={},running=false,afId,pts1=0,pts2=0,lastResult='tie';
+
+function PAD_H(){return Math.max(56,H*.15);}
+
+/* INPUT */
+const KEYS={};
+addEventListener('keydown',e=>{KEYS[e.code]=true;['ArrowUp','ArrowDown','KeyW','KeyS'].includes(e.code)&&e.preventDefault();});
+addEventListener('keyup',e=>{KEYS[e.code]=false;});
+['b1u','b1d','b2u','b2d'].forEach((id,i)=>{
+  const codes=['KeyW','KeyS','ArrowUp','ArrowDown'];const el=document.getElementById(id);
+  el.addEventListener('pointerdown',e=>{e.preventDefault();KEYS[codes[i]]=true;});
+  el.addEventListener('pointerup',()=>KEYS[codes[i]]=false);
+  el.addEventListener('pointerleave',()=>KEYS[codes[i]]=false);
+});
+
+/* STAR BG */
+{const sc=document.createElement('canvas');sc.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';document.body.insertBefore(sc,document.body.firstChild);
+const sx=sc.getContext('2d');function rs(){sc.width=innerWidth;sc.height=innerHeight;}rs();addEventListener('resize',rs);
+const ST=Array.from({length:100},()=>({x:Math.random(),y:Math.random(),r:.3+Math.random(),t:Math.random()*6.28}));
+(function stk(){sx.clearRect(0,0,sc.width,sc.height);ST.forEach(s=>{s.t+=.014;const a=.15+Math.sin(s.t)*.1;sx.globalAlpha=a;sx.fillStyle='#e0e8ff';sx.beginPath();sx.arc(s.x*sc.width,s.y*sc.height,s.r,0,6.28);sx.fill();});sx.globalAlpha=1;requestAnimationFrame(stk);})();}
+
+function mkBall(dir){const ang=(Math.random()-.5)*.7;return{x:W/2,y:H/2,vx:dir*BALL_INIT,vy:Math.sin(ang)*BALL_INIT,hitGlow:0};}
+
+function initRound(dir){
+  rszGC();
+  p1={y:H/2-PAD_H()/2};p2={y:H/2-PAD_H()/2};
+  ball=mkBall(dir||1);
+  if(!running){running=true;loop();}
+}
+
+function doAI(){
+  const spd={easy:.28,medium:.62,hard:.96}[DIFF]||.62;if(Math.random()>spd)return;
+  const cy=p2.y+PAD_H()/2;const aim=ball.vy>=0?ball.y+6:ball.y-6;
+  if(cy<aim-4)p2.y+=P_SPD;else if(cy>aim+4)p2.y-=P_SPD;
+  p2.y=Math.max(0,Math.min(H-PAD_H(),p2.y));
+}
+
+function update(){
+  if(KEYS['KeyW'])p1.y-=P_SPD;if(KEYS['KeyS'])p1.y+=P_SPD;
+  p1.y=Math.max(0,Math.min(H-PAD_H(),p1.y));
+  if(MODE==='ai')doAI();
+  else{if(KEYS['ArrowUp'])p2.y-=P_SPD;if(KEYS['ArrowDown'])p2.y+=P_SPD;p2.y=Math.max(0,Math.min(H-PAD_H(),p2.y));}
+  ball.x+=ball.vx;ball.y+=ball.vy;
+  if(ball.y-BALL_R<0){ball.y=BALL_R;ball.vy=Math.abs(ball.vy);}
+  if(ball.y+BALL_R>H){ball.y=H-BALL_R;ball.vy=-Math.abs(ball.vy);}
+  // P1 paddle hit
+  if(ball.vx<0&&ball.x-BALL_R<20+PAD_W&&ball.x>20&&ball.y>p1.y-BALL_R&&ball.y<p1.y+PAD_H()+BALL_R){
+    ball.vx=Math.abs(ball.vx)*1.05;const rel=(ball.y-(p1.y+PAD_H()/2))/(PAD_H()/2);ball.vy=rel*8.5;ball.x=20+PAD_W+BALL_R;ball.hitGlow=1;
+  }
+  // P2 paddle hit
+  if(ball.vx>0&&ball.x+BALL_R>W-20-PAD_W&&ball.x<W-20&&ball.y>p2.y-BALL_R&&ball.y<p2.y+PAD_H()+BALL_R){
+    ball.vx=-Math.abs(ball.vx)*1.05;const rel=(ball.y-(p2.y+PAD_H()/2))/(PAD_H()/2);ball.vy=rel*8.5;ball.x=W-20-PAD_W-BALL_R;ball.hitGlow=1;
+  }
+  ball.hitGlow=Math.max(0,ball.hitGlow-.04);
+  const spd=Math.hypot(ball.vx,ball.vy);if(spd>18){ball.vx=ball.vx/spd*18;ball.vy=ball.vy/spd*18;}
+  if(ball.x<0){scorePoint(2);return;}if(ball.x>W){scorePoint(1);return;}
+}
+
+function scorePoint(who){
+  running=false;cancelAnimationFrame(afId);
+  if(who===2)pts2++;else pts1++;
+  updateScoreUI();
+  document.getElementById('sc'+(who===1?1:2)).style.animation='scoreFlash .3s ease';
+  setTimeout(()=>{document.getElementById('sc1').style.animation='';document.getElementById('sc2').style.animation='';},400);
+  if(pts1>=WIN_PTS||pts2>=WIN_PTS){setTimeout(showWin,600);}
+  else{setTimeout(()=>{running=true;p1={y:H/2-PAD_H()/2};p2={y:H/2-PAD_H()/2};ball=mkBall(who===1?-1:1);loop();},900);}
+}
+
+function updateScoreUI(){
+  document.getElementById('sc1').textContent=pts1;document.getElementById('sc2').textContent=pts2;
+  const tp=document.getElementById('tp');
+  if(pts1>pts2){tp.className='turn-pill tp1';tp.textContent=P1N.slice(0,6)+' leads';}
+  else if(pts2>pts1){tp.className='turn-pill '+(MODE==='ai'?'tp-ai':'tp2');tp.textContent=P2N.slice(0,6)+' leads';}
+  else{tp.className='turn-pill tp1';tp.textContent=pts1+' — '+pts2;}
+  document.getElementById('sbp1').classList.toggle('winning',pts1>pts2);
+  document.getElementById('sbp2').classList.toggle('winning',pts2>pts1);
+}
+
+function showWin(){
+  const p1w=pts1>pts2;lastResult=p1w?'p1':(MODE==='ai'?'ai':'p2');if(pts1===pts2)lastResult='tie';
+  sessionStorage.setItem('t_last_result',lastResult);
+  document.getElementById('win-ico').textContent=p1w?'🏆':'🏅';
+  const wt=document.getElementById('win-ttl');wt.textContent=(p1w?P1N:P2N).slice(0,14)+' WINS!';wt.style.color=p1w?'var(--c0)':'var(--c2)';
+  document.getElementById('wc-score').textContent=pts1+' — '+pts2;
+  if(TOURN)document.getElementById('tourn-btn').classList.remove('hide');
+  document.getElementById('ov-win').classList.remove('hide');
+}
+
+function doReport(){window.location.href='../tournament.html?result='+lastResult;}
+window.doReport=doReport;
+
+/* DRAW */
+function draw(){
+  ctx.fillStyle='#03090e';ctx.fillRect(0,0,W,H);
+  // Court
+  ctx.strokeStyle='rgba(0,255,136,.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(W/2,H/2,52,52,0,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.beginPath();ctx.moveTo(0,2);ctx.lineTo(W,2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,H-2);ctx.lineTo(W,H-2);ctx.stroke();
+  // Net
+  for(let y=0;y<H;y+=9){ctx.fillStyle=y%18===0?'rgba(255,255,255,.2)':'rgba(255,255,255,.07)';ctx.fillRect(W/2-1,y,2,5);}
+  ctx.shadowColor='rgba(255,255,255,.2)';ctx.shadowBlur=4;ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(W/2-1,0,2,3);ctx.fillRect(W/2-1,H-3,2,3);ctx.shadowBlur=0;
+  // Paddles
+  function drawPad(x,y,col){
+    ctx.shadowColor=col;ctx.shadowBlur=18;
+    const g=ctx.createLinearGradient(x,y,x,y+PAD_H());g.addColorStop(0,col);g.addColorStop(1,col+'88');
+    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(x,y,PAD_W,PAD_H(),PAD_W/2);ctx.fill();ctx.shadowBlur=0;
+  }
+  drawPad(20,p1.y,'#00f5ff');drawPad(W-20-PAD_W,p2.y,MODE==='ai'?'#bf00ff':'#ff006e');
+  // Ball trail
+  ctx.globalAlpha=.14;ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(ball.x-ball.vx*1.5,ball.y-ball.vy*1.5,BALL_R*.7,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ball.x-ball.vx*3,ball.y-ball.vy*3,BALL_R*.4,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  // Ball
+  ctx.shadowColor='#fff';ctx.shadowBlur=8+ball.hitGlow*20;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,BALL_R,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+
+function loop(){if(!running)return;update();draw();afId=requestAnimationFrame(loop);}
+
+function startGame(){
+  document.getElementById('ov-start').classList.add('hide');document.getElementById('ov-win').classList.add('hide');
+  pts1=0;pts2=0;updateScoreUI();running=false;if(afId)cancelAnimationFrame(afId);
+  const cdEl=document.getElementById('cd-n');document.getElementById('ov-cd').classList.remove('hide');
+  let n=3;cdEl.textContent=n;cdEl.style.animation='none';
+  const tick=()=>{
+    cdEl.style.animation='none';void cdEl.offsetWidth;cdEl.style.animation='cdCount .85s ease forwards';cdEl.textContent=n;
+    if(n===0){setTimeout(()=>{document.getElementById('ov-cd').classList.add('hide');rszGC();initRound(1);},400);return;}
+    n--;setTimeout(tick,850);
+  };
+  setTimeout(tick,0);
+}
+window.startGame=startGame;
+</script>
+</body>
+</html>
