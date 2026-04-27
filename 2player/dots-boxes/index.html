@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dots & Boxes · Strategy · Game Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#04020c;--dim:#5a4a80}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none;display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(4,2,12,.97);border-bottom:1px solid rgba(0,245,255,.12);backdrop-filter:blur(20px)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:3px}
+.tlogo em{color:var(--c1);font-style:normal}
+.tbtn{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:5px 10px;border-radius:6px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.3)}
+
+/* SCOREBOARD */
+.scoreboard{flex-shrink:0;display:flex;align-items:stretch;background:rgba(4,2,12,.95);border-bottom:1px solid rgba(255,255,255,.05)}
+.sb-player{flex:1;display:flex;align-items:center;gap:10px;padding:8px 14px}
+.sb-player.right{flex-direction:row-reverse;text-align:right}
+.sb-avatar{width:36px;height:36px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-name{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.sb-score{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;line-height:1}
+.sb-boxes{font-size:9px;color:var(--dim);letter-spacing:1px}
+.sb-mid{flex-shrink:0;padding:6px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.turn-chip{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:4px 14px;border-radius:10px;border:1px solid;transition:all .3s}
+.grid-label{font-size:9px;color:var(--dim);letter-spacing:1px}
+
+/* GAME AREA */
+.game-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#08021a,var(--bg))}
+#gc{display:block;touch-action:none}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:rgba(4,2,12,.96);backdrop-filter:blur(22px);overflow-y:auto}
+.ov.hide{display:none}
+.ov-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,245,255,.06),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.ov-icon{font-size:64px;margin-bottom:12px;animation:floatY 2.5s ease-in-out infinite;position:relative;z-index:1}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,5vw,30px);font-weight:900;margin-bottom:8px;position:relative;z-index:1;letter-spacing:2px}
+.ov-sub{font-size:12px;color:rgba(180,180,220,.6);max-width:460px;line-height:1.8;margin-bottom:14px;position:relative;z-index:1}
+.feat-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.feat{font-size:10px;font-weight:700;padding:4px 11px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--dim)}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;margin-bottom:14px;position:relative;z-index:1}
+.cfg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px;text-align:left}
+.cfg-label{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:8px}
+.cfg-opts{display:flex;gap:5px;flex-wrap:wrap}
+.cfg-opt{font-size:10px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--dim);transition:all .2s;font-family:'Orbitron',sans-serif}
+.cfg-opt.sel{color:var(--c4);border-color:rgba(255,230,0,.4);background:rgba(255,230,0,.08)}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:12px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1}
+.btn-go{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(191,0,255,.15));color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-go:hover{background:linear-gradient(135deg,rgba(0,245,255,.28),rgba(191,0,255,.28));transform:translateY(-2px)}
+.btn-sec{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.08)}
+.btn-sec:hover{color:#fff}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.result-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 24px;margin-bottom:14px;width:100%;max-width:340px;animation:slideUp .4s ease;position:relative;z-index:1}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.res-row:last-child{border:none}
+.res-label{font-size:11px;color:var(--dim)}
+.res-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700}
+
+@media(max-width:480px){.config-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
+  <div style="display:flex;gap:6px">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+    <button class="tbtn" onclick="G.showStart()">⚙️ New</button>
+  </div>
+</div>
+
+<div class="scoreboard">
+  <div class="sb-player" id="sb1">
+    <div class="sb-avatar" id="av1" style="border-color:var(--c0);box-shadow:0 0 10px rgba(0,245,255,.3)">🔵</div>
+    <div>
+      <div class="sb-name" id="name1" style="color:var(--c0)">PLAYER 1</div>
+      <div class="sb-score" id="score1" style="color:var(--c0)">0</div>
+      <div class="sb-boxes" id="boxes1">0 boxes</div>
+    </div>
+  </div>
+  <div class="sb-mid">
+    <div class="turn-chip" id="turnChip">P1 TURN</div>
+    <div class="grid-label" id="gridLabel">5×5 GRID</div>
+  </div>
+  <div class="sb-player right" id="sb2">
+    <div class="sb-avatar" id="av2" style="border-color:var(--c2);box-shadow:0 0 10px rgba(255,0,110,.3)">🔴</div>
+    <div>
+      <div class="sb-name" id="name2" style="color:var(--c2)">PLAYER 2</div>
+      <div class="sb-score" id="score2" style="color:var(--c2)">0</div>
+      <div class="sb-boxes" id="boxes2">0 boxes</div>
+    </div>
+  </div>
+</div>
+
+<div class="game-area">
+  <canvas id="gc"></canvas>
+</div>
+
+<!-- START -->
+<div class="ov" id="ovStart">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🔲</div>
+  <div class="ov-title" style="background:linear-gradient(90deg,var(--c0),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent">DOTS & BOXES</div>
+  <div class="ov-sub">Take turns drawing lines between dots. Complete a box to score a point and get another turn! The player with the most boxes at the end wins!</div>
+  <div class="feat-row">
+    <div class="feat">🤖 Smart AI</div><div class="feat">🎮 Touch Ready</div>
+    <div class="feat">📐 3 Grid Sizes</div><div class="feat">⛓️ Chain Combos</div>
+    <div class="feat">✨ Neon Effects</div><div class="feat">🏆 Tournament</div>
+  </div>
+  <div class="config-grid">
+    <div class="cfg-card">
+      <div class="cfg-label">Grid Size</div>
+      <div class="cfg-opts">
+        <div class="cfg-opt" onclick="setCfg('grid',3,this)">3×3</div>
+        <div class="cfg-opt sel" onclick="setCfg('grid',5,this)">5×5</div>
+        <div class="cfg-opt" onclick="setCfg('grid',7,this)">7×7</div>
+      </div>
+    </div>
+    <div class="cfg-card">
+      <div class="cfg-label">Mode</div>
+      <div class="cfg-opts">
+        <div class="cfg-opt sel" onclick="setCfg('mode','2p',this)">👥 2P</div>
+        <div class="cfg-opt" onclick="setCfg('mode','ai-easy',this)">🤖 Easy</div>
+        <div class="cfg-opt" onclick="setCfg('mode','ai-hard',this)">💀 Hard</div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">▶ Play!</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- WIN -->
+<div class="ov hide" id="ovWin">
+  <div class="ov-glow" style="background:radial-gradient(circle,rgba(255,230,0,.07),transparent 70%)"></div>
+  <div class="ov-icon" id="winIcon">🏆</div>
+  <div class="ov-title" id="winTitle" style="color:var(--c4)">WINNER!</div>
+  <div class="result-box" id="resultBox"></div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">🔄 Rematch</button>
+    <button class="btn btn-go" onclick="G.showStart()">⚙️ New Game</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DOTS & BOXES — neon edition
+   Grid: N×N boxes = (N+1)×(N+1) dots
+   Lines: H lines = N*(N+1), V lines = (N+1)*N
+   AI: easy=random, hard=minimax-lite (chain detection)
+═══════════════════════════════════════════════════ */
+
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const area = document.querySelector('.game-area');
+
+// Config
+let CFG = { grid: 5, mode: '2p' };
+
+function setCfg(key, val, el) {
+  CFG[key] = val;
+  el.closest('.cfg-opts').querySelectorAll('.cfg-opt').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// Colors
+const P_COL = ['#00f5ff', '#ff006e'];
+const P_COL2 = ['rgba(0,245,255,.15)', 'rgba(255,0,110,.15)'];
+const P_GLOW = ['rgba(0,245,255,.4)', 'rgba(255,0,110,.4)'];
+const P_ICONS = ['🔵', '🔴'];
+
+// Game state
+let N, // boxes per side
+    hLines, vLines, // line arrays (0=empty,1=P1,2=P2)
+    boxes, // box owner array
+    turn, // 0=P1, 1=P2
+    scores, // [p1, p2]
+    animating,
+    particles,
+    hoverLine, // {type,r,c} or null
+    mode, aiThinking;
+
+// Layout
+let DOT, PAD, GDIM, OX, OY;
+
+function calcLayout() {
+  const maxW = area.clientWidth - 16;
+  const maxH = area.clientHeight - 16;
+  const dots = N + 1;
+  DOT = Math.min(Math.floor(Math.min(maxW, maxH) / (dots + 0.5)), 56);
+  DOT = Math.max(DOT, 20);
+  PAD = Math.round(DOT * 0.3);
+  GDIM = DOT * N + PAD * 2;
+  canvas.width = GDIM;
+  canvas.height = GDIM;
+  canvas.style.width = GDIM + 'px';
+  canvas.style.height = GDIM + 'px';
+  OX = PAD; OY = PAD;
+}
+window.addEventListener('resize', () => { if (G.running) { calcLayout(); G.draw(); } });
+
+// Helpers
+function hIdx(r, c) { return r * N + c; } // row r, col c (0..N-1 cols, 0..N rows)
+function vIdx(r, c) { return r * (N + 1) + c; } // row r (0..N), col c (0..N-1 ... wait)
+// H lines: (N+1) rows × N cols
+// V lines: N rows × (N+1) cols
+
+function dotX(c) { return OX + c * DOT; }
+function dotY(r) { return OY + r * DOT; }
+
+function getHLine(r, c) { return hLines[r * N + c]; }
+function getVLine(r, c) { return vLines[r * (N + 1) + c]; }
+function setHLine(r, c, p) { hLines[r * N + c] = p; }
+function setVLine(r, c, p) { vLines[r * (N + 1) + c] = p; }
+
+function boxSides(br, bc) {
+  // top, bottom, left, right lines of box (br, bc)
+  return {
+    top:    getHLine(br, bc),
+    bottom: getHLine(br + 1, bc),
+    left:   getVLine(br, bc),
+    right:  getVLine(br, bc + 1),
+  };
+}
+
+function countSides(br, bc) {
+  const s = boxSides(br, bc);
+  return [s.top, s.bottom, s.left, s.right].filter(v => v > 0).length;
+}
+
+function checkBoxes(p) {
+  let got = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (!boxes[r * N + c] && countSides(r, c) === 4) {
+      boxes[r * N + c] = p + 1;
+      scores[p]++;
+      got++;
+      spawnBoxParticle(r, c, P_COL[p]);
+    }
+  }
+  return got;
+}
+
+function spawnBoxParticle(r, c, col) {
+  const cx = dotX(c) + DOT / 2, cy = dotY(r) + DOT / 2;
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = 1.5 + Math.random() * 3;
+    particles.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, col, life: 1, sz: 2 + Math.random() * 3, decay: 0.04 });
+  }
+}
+
+function totalLines() { return hLines.filter(v => v > 0).length + vLines.filter(v => v > 0).length; }
+function totalBoxes() { return N * N; }
+function isGameOver() { return scores[0] + scores[1] === totalBoxes(); }
+
+function makeMove(type, r, c) {
+  if (type === 'h') setHLine(r, c, turn + 1);
+  else setVLine(r, c, turn + 1);
+  const got = checkBoxes(turn);
+  updateHUD();
+  if (isGameOver()) { setTimeout(() => G.showWin(), 400); return; }
+  if (got === 0) turn = 1 - turn; // no box = switch turn
+  updateTurnChip();
+  if (mode !== '2p' && turn === 1 && !isGameOver()) {
+    aiThinking = true;
+    setTimeout(doAI, mode === 'ai-easy' ? 300 : 500);
+  }
+}
+
+// ── AI ──
+function freeLines() {
+  const moves = [];
+  for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++)
+    if (!getHLine(r, c)) moves.push({ type: 'h', r, c });
+  for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++)
+    if (!getVLine(r, c)) moves.push({ type: 'v', r, c });
+  return moves;
+}
+
+function simulateMove(hl, vl, bx, type, r, c, p) {
+  const newHL = [...hl], newVL = [...vl], newBX = [...bx];
+  if (type === 'h') newHL[r * N + c] = p + 1;
+  else newVL[r * (N + 1) + c] = p + 1;
+  let got = 0;
+  for (let br = 0; br < N; br++) for (let bc = 0; bc < N; bc++) {
+    if (!newBX[br * N + bc]) {
+      const top = newHL[br * N + bc], bot = newHL[(br + 1) * N + bc];
+      const lft = newVL[br * (N + 1) + bc], rgt = newVL[br * (N + 1) + bc + 1];
+      if (top && bot && lft && rgt) { newBX[br * N + bc] = p + 1; got++; }
+    }
+  }
+  return { hl: newHL, vl: newVL, bx: newBX, got };
+}
+
+function boxesIfMove(type, r, c) {
+  const res = simulateMove(hLines, vLines, boxes, type, r, c, 1);
+  return res.got;
+}
+
+function dangerousMove(type, r, c) {
+  // Does this line give opponent a box next turn?
+  const res = simulateMove(hLines, vLines, boxes, type, r, c, 0);
+  // Check if any 3-sided box exists after
+  let danger = 0;
+  for (let br = 0; br < N; br++) for (let bc = 0; bc < N; bc++) {
+    if (!res.bx[br * N + bc]) {
+      const sides = [res.hl[br * N + bc], res.hl[(br + 1) * N + bc], res.vl[br * (N + 1) + bc], res.vl[br * (N + 1) + bc + 1]];
+      if (sides.filter(Boolean).length === 3) danger++;
+    }
+  }
+  return danger;
+}
+
+function doAI() {
+  aiThinking = false;
+  const moves = freeLines();
+  if (!moves.length) return;
+  let chosen = null;
+
+  if (mode === 'ai-easy') {
+    chosen = moves[Math.floor(Math.random() * moves.length)];
+  } else {
+    // Hard: 1) take any box, 2) avoid giving boxes, 3) random safe
+    const winning = moves.filter(m => boxesIfMove(m.type, m.r, m.c) > 0);
+    if (winning.length) { chosen = winning[0]; }
+    else {
+      const safe = moves.filter(m => dangerousMove(m.type, m.r, m.c) === 0);
+      chosen = safe.length ? safe[Math.floor(Math.random() * safe.length)] : moves[Math.floor(Math.random() * moves.length)];
+    }
+  }
+  if (chosen) makeMove(chosen.type, chosen.r, chosen.c);
+  G.draw();
+}
+
+// ── CANVAS INTERACTION ──
+function lineFromPoint(mx, my) {
+  const thresh = DOT * 0.28;
+  // Check H lines
+  for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {
+    const x1 = dotX(c), x2 = dotX(c + 1), y = dotY(r);
+    if (my > y - thresh && my < y + thresh && mx > x1 + thresh && mx < x2 - thresh)
+      return { type: 'h', r, c };
+  }
+  // Check V lines
+  for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {
+    const x = dotX(c), y1 = dotY(r), y2 = dotY(r + 1);
+    if (mx > x - thresh && mx < x + thresh && my > y1 + thresh && my < y2 - thresh)
+      return { type: 'v', r, c };
+  }
+  return null;
+}
+
+canvas.addEventListener('pointermove', e => {
+  if (animating || aiThinking || (mode !== '2p' && turn === 1)) { hoverLine = null; return; }
+  const rect = canvas.getBoundingClientRect();
+  hoverLine = lineFromPoint(e.clientX - rect.left, e.clientY - rect.top);
+  G.draw();
+});
+canvas.addEventListener('pointerleave', () => { hoverLine = null; G.draw(); });
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (animating || aiThinking || (mode !== '2p' && turn === 1)) return;
+  const rect = canvas.getBoundingClientRect();
+  const line = lineFromPoint(e.clientX - rect.left, e.clientY - rect.top);
+  if (!line) return;
+  const already = line.type === 'h' ? getHLine(line.r, line.c) : getVLine(line.r, line.c);
+  if (already) return;
+  makeMove(line.type, line.r, line.c);
+  G.draw();
+});
+
+// ── HUD ──
+function updateHUD() {
+  document.getElementById('score1').textContent = scores[0];
+  document.getElementById('score2').textContent = scores[1];
+  document.getElementById('boxes1').textContent = scores[0] + (scores[0] === 1 ? ' box' : ' boxes');
+  document.getElementById('boxes2').textContent = scores[1] + (scores[1] === 1 ? ' box' : ' boxes');
+}
+function updateTurnChip() {
+  const chip = document.getElementById('turnChip');
+  const isAI = mode !== '2p' && turn === 1;
+  chip.textContent = isAI ? '🤖 AI THINKING' : (turn === 0 ? 'P1 TURN' : 'P2 TURN');
+  chip.style.color = P_COL[turn];
+  chip.style.borderColor = P_COL[turn] + '66';
+  chip.style.background = P_COL2[turn];
+}
+
+// ── DRAW ──
+let animId = null, DT = 0;
+function animate() {
+  animId = requestAnimationFrame(animate);
+  DT += 0.04;
+  G.draw();
+  particles = particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy *= 0.94;
+    p.life -= p.decay; p.sz *= 0.97;
+    return p.life > 0;
+  });
+}
+
+const G = {
+  running: false,
+
+  showStart() {
+    document.getElementById('ovStart').classList.remove('hide');
+    document.getElementById('ovWin').classList.add('hide');
+  },
+
+  start() {
+    document.getElementById('ovStart').classList.add('hide');
+    document.getElementById('ovWin').classList.add('hide');
+    N = CFG.grid;
+    mode = CFG.mode;
+    hLines = new Array((N + 1) * N).fill(0);
+    vLines = new Array(N * (N + 1)).fill(0);
+    boxes = new Array(N * N).fill(0);
+    scores = [0, 0];
+    turn = 0;
+    particles = [];
+    hoverLine = null;
+    aiThinking = false;
+    animating = false;
+    this.running = true;
+    calcLayout();
+    document.getElementById('gridLabel').textContent = `${N}×${N} GRID`;
+    document.getElementById('name2').textContent = mode !== '2p' ? 'CPU' : 'PLAYER 2';
+    document.getElementById('av2').textContent = mode !== '2p' ? '🤖' : '🔴';
+    updateHUD();
+    updateTurnChip();
+    if (animId) cancelAnimationFrame(animId);
+    animate();
+  },
+
+  showWin() {
+    cancelAnimationFrame(animId);
+    const p1 = scores[0], p2 = scores[1];
+    const p2name = mode !== '2p' ? 'CPU' : 'Player 2';
+    let title, icon, col;
+    if (p1 > p2) { title = '🔵 Player 1 Wins!'; icon = '🏆'; col = P_COL[0]; }
+    else if (p2 > p1) { title = `${mode !== '2p' ? '🤖 CPU' : '🔴 Player 2'} Wins!`; icon = '🏆'; col = P_COL[1]; }
+    else { title = "It's a Tie!"; icon = '🤝'; col = '#ffe600'; }
+    document.getElementById('winTitle').textContent = title;
+    document.getElementById('winTitle').style.color = col;
+    document.getElementById('winIcon').textContent = icon;
+    document.getElementById('resultBox').innerHTML = `
+      <div class="res-row"><span class="res-label">🔵 Player 1</span><span class="res-val" style="color:${P_COL[0]}">${p1} boxes</span></div>
+      <div class="res-row"><span class="res-label">${mode !== '2p' ? '🤖 CPU' : '🔴 Player 2'}</span><span class="res-val" style="color:${P_COL[1]}">${p2} boxes</span></div>
+      <div class="res-row"><span class="res-label">Total Boxes</span><span class="res-val" style="color:var(--c4)">${N * N}</span></div>
+    `;
+    document.getElementById('ovWin').classList.remove('hide');
+  },
+
+  draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // BG
+    ctx.fillStyle = '#020010';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const dots = N + 1;
+
+    // Draw completed boxes
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const owner = boxes[r * N + c];
+      if (owner) {
+        const pulse = 0.55 + Math.sin(DT * 2 + r * 0.7 + c * 0.5) * 0.08;
+        ctx.fillStyle = owner === 1 ? `rgba(0,245,255,${pulse * 0.22})` : `rgba(255,0,110,${pulse * 0.22})`;
+        ctx.fillRect(dotX(c) + 2, dotY(r) + 2, DOT - 4, DOT - 4);
+        // Score label inside box
+        ctx.fillStyle = owner === 1 ? P_COL[0] : P_COL[1];
+        ctx.font = `bold ${Math.max(10, DOT * 0.28)}px Orbitron, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(owner === 1 ? 'P1' : (mode !== '2p' ? 'AI' : 'P2'), dotX(c) + DOT / 2, dotY(r) + DOT / 2);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Draw H lines
+    for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {
+      const owner = getHLine(r, c);
+      const hover = hoverLine && hoverLine.type === 'h' && hoverLine.r === r && hoverLine.c === c;
+      const x1 = dotX(c) + 6, x2 = dotX(c + 1) - 6, y = dotY(r);
+      ctx.beginPath();
+      ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+      if (owner) {
+        ctx.strokeStyle = P_COL[owner - 1];
+        ctx.lineWidth = Math.max(3, DOT * 0.13);
+        ctx.shadowColor = P_GLOW[owner - 1];
+        ctx.shadowBlur = 10;
+      } else if (hover) {
+        ctx.strokeStyle = P_COL[turn] + 'aa';
+        ctx.lineWidth = Math.max(3, DOT * 0.1);
+        ctx.shadowColor = P_COL[turn];
+        ctx.shadowBlur = 8;
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,.06)';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Draw V lines
+    for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {
+      const owner = getVLine(r, c);
+      const hover = hoverLine && hoverLine.type === 'v' && hoverLine.r === r && hoverLine.c === c;
+      const x = dotX(c), y1 = dotY(r) + 6, y2 = dotY(r + 1) - 6;
+      ctx.beginPath();
+      ctx.moveTo(x, y1); ctx.lineTo(x, y2);
+      if (owner) {
+        ctx.strokeStyle = P_COL[owner - 1];
+        ctx.lineWidth = Math.max(3, DOT * 0.13);
+        ctx.shadowColor = P_GLOW[owner - 1];
+        ctx.shadowBlur = 10;
+      } else if (hover) {
+        ctx.strokeStyle = P_COL[turn] + 'aa';
+        ctx.lineWidth = Math.max(3, DOT * 0.1);
+        ctx.shadowColor = P_COL[turn];
+        ctx.shadowBlur = 8;
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,.06)';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Draw dots
+    for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
+      const x = dotX(c), y = dotY(r);
+      const pulse = 0.7 + Math.sin(DT * 3 + r + c) * 0.3;
+      ctx.save();
+      ctx.shadowColor = '#bf00ff';
+      ctx.shadowBlur = 8 * pulse;
+      ctx.fillStyle = '#bf00ff';
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(3, DOT * 0.1), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.7)';
+      ctx.beginPath();
+      ctx.arc(x - DOT * 0.03, y - DOT * 0.03, Math.max(1, DOT * 0.04), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Particles
+    particles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.life;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = p.col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Score overlay top-right of canvas
+    const rem = N * N - scores[0] - scores[1];
+    if (rem > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,.5)';
+      ctx.beginPath();
+      const lx = canvas.width - 70, ly = 8;
+      ctx.roundRect ? ctx.roundRect(lx, ly, 62, 20, 6) : ctx.rect(lx, ly, 62, 20);
+      ctx.fill();
+      ctx.font = 'bold 10px monospace';
+      ctx.fillStyle = 'rgba(200,200,255,.5)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${rem} left`, lx + 31, ly + 10);
+    }
+  }
+};
+
+window.G = G;
+// URL mode passthrough
+const usp = new URLSearchParams(location.search);
+if (usp.get('mode') === 'ai') {
+  const d = usp.get('diff') || 'easy';
+  CFG.mode = d === 'hard' ? 'ai-hard' : 'ai-easy';
+}
+</script>
+</body>
+</html>
