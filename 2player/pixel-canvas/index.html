@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pixel Canvas · Creative · Game Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#04020c;--dim:#5a4a80}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none}
+body{display:flex;flex-direction:column}
+
+/* TOP */
+.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(4,2,12,.97);border-bottom:1px solid rgba(0,255,136,.12);backdrop-filter:blur(20px);gap:8px}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:2.5px;flex-shrink:0}
+.tlogo em{color:var(--c1);font-style:normal}
+.tbtn{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:4px 9px;border-radius:6px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif;white-space:nowrap}
+.tbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.3)}
+
+/* TOOLBAR */
+.toolbar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:7px 12px;background:rgba(4,2,12,.95);border-bottom:1px solid rgba(255,255,255,.05);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.toolbar::-webkit-scrollbar{display:none}
+.tb-section{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.tb-sep{width:1px;background:rgba(255,255,255,.08);height:28px;flex-shrink:0;margin:0 4px}
+.tool-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .15s;flex-shrink:0}
+.tool-btn:hover,.tool-btn.active{background:rgba(0,255,136,.12);border-color:rgba(0,255,136,.4);box-shadow:0 0 10px rgba(0,255,136,.2)}
+.size-btn{width:28px;height:28px;border-radius:6px;border:1.5px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:700;font-family:'Orbitron',sans-serif;color:var(--dim);transition:all .15s;flex-shrink:0}
+.size-btn.active{color:var(--c3);border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.08)}
+.color-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.color-dot:hover,.color-dot.active{border-color:#fff;transform:scale(1.2);box-shadow:0 0 10px currentColor}
+.timer-pill{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;background:rgba(255,230,0,.08);color:var(--c4);border:1px solid rgba(255,230,0,.2);flex-shrink:0}
+.prompt-pill{font-size:10px;font-weight:700;padding:5px 12px;border-radius:8px;background:rgba(0,245,255,.06);color:var(--c0);border:1px solid rgba(0,245,255,.15);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+
+/* PLAYER INDICATORS */
+.player-bar{flex-shrink:0;display:flex;background:rgba(4,2,12,.9);border-bottom:1px solid rgba(255,255,255,.04)}
+.pb-player{flex:1;padding:6px 12px;display:flex;align-items:center;gap:8px}
+.pb-player.p2{flex-direction:row-reverse}
+.pb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pb-name{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px}
+.pb-pixels{font-size:10px;color:var(--dim)}
+.pb-active{font-size:8px;font-weight:700;padding:2px 8px;border-radius:5px}
+.pb-sep{width:1px;background:rgba(255,255,255,.06);align-self:stretch;flex-shrink:0}
+
+/* CANVAS AREA */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#020010,#001008,#020010)}
+#pc{display:block;cursor:crosshair;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges}
+.canvas-border{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,255,136,.04) 100%)}
+
+/* BOTTOM PANELS for mobile color picking */
+.color-panel{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:rgba(4,2,12,.95);border-top:1px solid rgba(255,255,255,.05);flex-wrap:wrap}
+.cp-section{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.cp-color{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:all .12s;flex-shrink:0}
+.cp-color:hover,.cp-color.active{border-color:#fff;transform:scale(1.15)}
+.cp-sep{width:1px;background:rgba(255,255,255,.08);height:28px}
+.cp-action{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;border:1px solid;transition:all .15s;text-align:center}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:rgba(4,2,12,.96);backdrop-filter:blur(20px);overflow-y:auto}
+.ov.hide{display:none}
+.ov-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,136,.06),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ov-icon{font-size:64px;margin-bottom:12px;animation:floatY 2.5s ease-in-out infinite;position:relative;z-index:1}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,5vw,30px);font-weight:900;margin-bottom:8px;position:relative;z-index:1;letter-spacing:2px}
+.ov-sub{font-size:12px;color:rgba(180,180,220,.6);max-width:460px;line-height:1.8;margin-bottom:14px;position:relative;z-index:1}
+.feat-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.feat{font-size:10px;font-weight:700;padding:4px 11px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--dim)}
+.modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px;margin-bottom:16px;position:relative;z-index:1}
+.mode-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;text-align:left}
+.mode-card:hover,.mode-card.sel{border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.08)}
+.mc-icon{font-size:28px;margin-bottom:8px}
+.mc-name{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:#fff;margin-bottom:4px}
+.mc-desc{font-size:10px;color:var(--dim);line-height:1.4}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:12px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1}
+.btn-go{background:linear-gradient(135deg,rgba(0,255,136,.15),rgba(0,245,255,.15));color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-go:hover{background:linear-gradient(135deg,rgba(0,255,136,.28),rgba(0,245,255,.28));transform:translateY(-2px)}
+.btn-sec{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.08)}
+.btn-sec:hover{color:#fff}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.result-preview{border:2px solid rgba(0,255,136,.3);border-radius:10px;overflow:hidden;margin-bottom:14px;position:relative;z-index:1;box-shadow:0 0 30px rgba(0,255,136,.15)}
+.vote-row{display:flex;gap:14px;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.vote-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 20px;text-align:center;cursor:pointer;transition:all .2s}
+.vote-card:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+.vote-card.selected{border-color:var(--c4);background:rgba(255,230,0,.1)}
+.vc-icon{font-size:28px;margin-bottom:6px}
+.vc-name{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;margin-bottom:4px}
+.vc-votes{font-size:24px;font-weight:900;font-family:'Orbitron',sans-serif;color:var(--c4)}
+
+@media(max-width:480px){.modes-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
+  <div style="display:flex;gap:5px;align-items:center">
+    <div class="prompt-pill" id="promptPill">🎨 Draw anything!</div>
+    <div class="timer-pill" id="timerPill">2:00</div>
+    <a href="../index.html" class="tbtn">← Back</a>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="tb-section">
+    <div class="tool-btn active" id="tool-draw" onclick="setTool('draw')" title="Draw">✏️</div>
+    <div class="tool-btn" id="tool-fill" onclick="setTool('fill')" title="Fill">🪣</div>
+    <div class="tool-btn" id="tool-erase" onclick="setTool('erase')" title="Erase">🧹</div>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section">
+    <div class="size-btn active" data-sz="1" onclick="setSize(1)">1</div>
+    <div class="size-btn" data-sz="2" onclick="setSize(2)">2</div>
+    <div class="size-btn" data-sz="4" onclick="setSize(4)">4</div>
+    <div class="size-btn" data-sz="8" onclick="setSize(8)">8</div>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section" id="toolbarColors"></div>
+  <div class="tb-sep"></div>
+  <div class="tb-section">
+    <div class="tool-btn" onclick="undoLast()" title="Undo">↩️</div>
+    <div class="tool-btn" onclick="clearCanvas()" title="Clear">🗑️</div>
+    <div class="tool-btn" onclick="saveArt()" title="Save">💾</div>
+  </div>
+</div>
+
+<div class="player-bar">
+  <div class="pb-player" id="pb1">
+    <div class="pb-dot" id="pb1dot"></div>
+    <div>
+      <div class="pb-name" id="pb1name">P1</div>
+      <div class="pb-pixels" id="pb1px">0 pixels</div>
+    </div>
+    <div class="pb-active" id="pb1active"></div>
+  </div>
+  <div class="pb-sep"></div>
+  <div class="pb-player p2" id="pb2">
+    <div class="pb-dot" id="pb2dot"></div>
+    <div>
+      <div class="pb-name" id="pb2name">P2</div>
+      <div class="pb-pixels" id="pb2px">0 pixels</div>
+    </div>
+    <div class="pb-active" id="pb2active"></div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="pc"></canvas>
+  <div class="canvas-border"></div>
+</div>
+
+<div class="color-panel" id="colorPanel"></div>
+
+<!-- START OVERLAY -->
+<div class="ov" id="ovStart">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🎨</div>
+  <div class="ov-title" style="background:linear-gradient(90deg,var(--c3),var(--c0));-webkit-background-clip:text;-webkit-text-fill-color:transparent">PIXEL CANVAS</div>
+  <div class="ov-sub">2-player collaborative pixel art! Choose a mode — paint together, compete on a prompt, or build something wild. Every pixel counts!</div>
+  <div class="feat-row">
+    <div class="feat">✏️ 4 Drawing Tools</div><div class="feat">🎨 32 Neon Colors</div>
+    <div class="feat">⏱️ Timed Challenges</div><div class="feat">🗳️ Vote System</div>
+    <div class="feat">💾 Save Your Art</div><div class="feat">🪣 Fill Bucket</div>
+  </div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:10px;position:relative;z-index:1">SELECT MODE</div>
+  <div class="modes-grid">
+    <div class="mode-card sel" onclick="selectMode('freeplay',this)">
+      <div class="mc-icon">🌈</div>
+      <div class="mc-name">Free Paint</div>
+      <div class="mc-desc">Both players paint freely on the same canvas together. No timer, no rules — just create!</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('prompt',this)">
+      <div class="mc-icon">💡</div>
+      <div class="mc-name">Prompt Challenge</div>
+      <div class="mc-desc">A random prompt appears. Players take turns drawing it — then vote who drew it better!</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('half',this)">
+      <div class="mc-icon">⚔️</div>
+      <div class="mc-name">Half & Half</div>
+      <div class="mc-desc">P1 owns the left half, P2 owns the right half. Draw the same prompt, judge who wins!</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('mimic',this)">
+      <div class="mc-icon">🪞</div>
+      <div class="mc-name">Mimic Mode</div>
+      <div class="mc-desc">P1 draws anything in secret. P2 tries to replicate it from memory. How close can you get?</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">🎨 Start Drawing!</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- REVEAL / VOTE OVERLAY -->
+<div class="ov hide" id="ovReveal">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🗳️</div>
+  <div class="ov-title" style="color:var(--c4)" id="revealTitle">TIME'S UP!</div>
+  <div class="ov-sub" id="revealSub">Who drew the prompt better? Vote!</div>
+  <canvas id="resultCanvas" class="result-preview" width="320" height="200" style="image-rendering:pixelated"></canvas>
+  <div class="vote-row" id="voteRow">
+    <div class="vote-card" onclick="vote(1)">
+      <div class="vc-icon">🔵</div>
+      <div class="vc-name">P1 WON</div>
+      <div class="vc-votes" id="vote1">0</div>
+    </div>
+    <div class="vote-card" onclick="vote(2)">
+      <div class="vc-icon">🔴</div>
+      <div class="vc-name">P2 WON</div>
+      <div class="vc-votes" id="vote2">0</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.newRound()">🔄 New Prompt</button>
+    <button class="btn btn-go" onclick="G.start()">🆕 New Game</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   PIXEL CANVAS — 2-player collaborative/competitive art
+   Tools: draw, fill, erase | Sizes: 1,2,4,8 px
+   Modes: freeplay, prompt, half, mimic
+   32 neon + classic colors
+═══════════════════════════════════════════════════════ */
+
+const canvas = document.getElementById('pc');
+const ctx = canvas.getContext('2d');
+const wrap = document.querySelector('.canvas-wrap');
+
+// Canvas resolution (pixel grid) — each "pixel" is a cell
+const COLS = 64, ROWS = 40;
+let CELL = 8;
+let CW, CH;
+
+function resizeCanvas() {
+  const maxW = wrap.clientWidth - 8;
+  const maxH = wrap.clientHeight - 8;
+  CELL = Math.min(Math.floor(maxW / COLS), Math.floor(maxH / ROWS));
+  CELL = Math.max(4, CELL);
+  CW = COLS * CELL; CH = ROWS * CELL;
+  canvas.width = CW; canvas.height = CH;
+  canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+  redraw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// Pixel grid — RGBA per cell
+const grid = new Array(ROWS).fill(null).map(() => new Array(COLS).fill(null));
+const history = [];
+let currentTool = 'draw';
+let currentSize = 1;
+let currentColor = '#00f5ff';
+let isDrawing = false;
+let lastCell = null;
+let gameMode = 'freeplay';
+let currentPlayer = 1;
+let p1pixels = 0, p2pixels = 0;
+let timerVal = 0, timerInterval = null;
+let votes = [0, 0];
+
+// 32 neon + earth colors
+const PALETTE = [
+  // Neons
+  '#00f5ff','#bf00ff','#ff006e','#00ff88','#ffe600','#ff6b00','#ff00ff','#0088ff',
+  '#ff4444','#44ff44','#ffaa00','#aa00ff','#00ffaa','#ff0088','#00aaff','#ffff00',
+  // Mids
+  '#ff8888','#88ff88','#8888ff','#ffcc88','#88ffcc','#cc88ff','#ff88cc','#88ccff',
+  // Darks + blacks + whites
+  '#ffffff','#cccccc','#888888','#444444','#222222','#111111','#000000','#000820',
+];
+
+// PROMPTS for challenge mode
+const PROMPTS = [
+  '🏠 A house', '🌲 A tree', '🐶 A dog', '🚀 A rocket', '⭐ A star',
+  '🌈 A rainbow', '🐟 A fish', '🍕 A pizza', '🏔️ A mountain', '🌙 The moon',
+  '🦋 A butterfly', '🤖 A robot', '🐉 A dragon', '🏆 A trophy', '🎸 A guitar',
+  '🌺 A flower', '🦁 A lion', '🍉 A watermelon', '⚡ Lightning', '🌊 Ocean waves',
+];
+
+const P1_COLORS = ['#00f5ff','#0088ff','#00ffaa','#88ffcc','#00aaff','#44ff44','#88ff88'];
+const P2_COLORS = ['#ff006e','#ff6b00','#ff4444','#ff00ff','#ffaa00','#ff88cc','#bf00ff'];
+
+// Build palette in toolbar + bottom panel
+function buildPalettes() {
+  // Toolbar (desktop) — show 12 most common
+  const tbColors = document.getElementById('toolbarColors');
+  PALETTE.slice(0, 16).forEach(col => {
+    const d = document.createElement('div');
+    d.className = 'color-dot' + (col === currentColor ? ' active' : '');
+    d.style.background = col;
+    d.style.boxShadow = `0 0 6px ${col}88`;
+    d.onclick = () => setColor(col);
+    tbColors.appendChild(d);
+  });
+
+  // Bottom panel (mobile-friendly)
+  const panel = document.getElementById('colorPanel');
+  const sec1 = document.createElement('div');
+  sec1.className = 'cp-section';
+  PALETTE.forEach(col => {
+    const d = document.createElement('div');
+    d.className = 'cp-color' + (col === currentColor ? ' active' : '');
+    d.style.background = col;
+    d.style.boxShadow = `0 0 5px ${col}66`;
+    d.onclick = () => setColor(col);
+    sec1.appendChild(d);
+  });
+  panel.appendChild(sec1);
+
+  const sep = document.createElement('div');
+  sep.className = 'cp-sep';
+  panel.appendChild(sep);
+
+  // Player color presets
+  const pSec = document.createElement('div');
+  pSec.className = 'cp-section';
+  const p1btn = document.createElement('div');
+  p1btn.className = 'cp-action';
+  p1btn.style.color = '#00f5ff';
+  p1btn.style.borderColor = '#00f5ff44';
+  p1btn.textContent = '🔵 P1 Colors';
+  p1btn.onclick = () => { setColor(P1_COLORS[0]); currentPlayer = 1; updatePlayerBar(); };
+  const p2btn = document.createElement('div');
+  p2btn.className = 'cp-action';
+  p2btn.style.color = '#ff006e';
+  p2btn.style.borderColor = '#ff006e44';
+  p2btn.textContent = '🔴 P2 Colors';
+  p2btn.onclick = () => { setColor(P2_COLORS[0]); currentPlayer = 2; updatePlayerBar(); };
+  pSec.appendChild(p1btn);
+  pSec.appendChild(p2btn);
+  panel.appendChild(pSec);
+}
+buildPalettes();
+
+function setColor(col) {
+  currentColor = col;
+  document.querySelectorAll('.color-dot, .cp-color').forEach(d => d.classList.toggle('active', d.style.background === hexToRgb(col) || d.style.background === col));
+  if (currentTool === 'erase') setTool('draw');
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('.tool-btn[id^=tool-]').forEach(b => b.classList.toggle('active', b.id === 'tool-' + t));
+}
+
+function setSize(sz) {
+  currentSize = sz;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.sz) === sz));
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, CW, CH);
+  // Draw background
+  ctx.fillStyle = '#000820';
+  ctx.fillRect(0, 0, CW, CH);
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,245,255,.06)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,CH); ctx.stroke(); }
+  for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(CW,y*CELL); ctx.stroke(); }
+  // Half line for "half" mode
+  if (gameMode === 'half') {
+    ctx.strokeStyle = 'rgba(255,255,255,.15)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(CW/2, 0); ctx.lineTo(CW/2, CH); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // Pixels
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (grid[r][c]) {
+        ctx.fillStyle = grid[r][c];
+        ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+      }
+    }
+  }
+}
+
+function getCell(ex, ey) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ex - rect.left, y = ey - rect.top;
+  const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return null;
+  return { col, row };
+}
+
+function paintAt(col, row) {
+  const half = COLS / 2;
+  if (gameMode === 'half') {
+    if (currentPlayer === 1 && col >= half) return;
+    if (currentPlayer === 2 && col < half) return;
+  }
+  const color = currentTool === 'erase' ? null : currentColor;
+  for (let dr = 0; dr < currentSize; dr++) {
+    for (let dc = 0; dc < currentSize; dc++) {
+      const r = row + dr, c = col + dc;
+      if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+        if (grid[r][c] !== color) {
+          grid[r][c] = color;
+          if (color) {
+            if (currentPlayer === 1) p1pixels++;
+            else p2pixels++;
+          }
+        }
+      }
+    }
+  }
+  redraw();
+  updatePlayerBar();
+}
+
+function floodFill(startCol, startRow, newColor) {
+  const oldColor = grid[startRow][startCol];
+  if (oldColor === newColor) return;
+  const stack = [[startCol, startRow]];
+  const visited = new Set();
+  while (stack.length > 0) {
+    const [c, r] = stack.pop();
+    const key = r * COLS + c;
+    if (visited.has(key)) continue;
+    if (c < 0 || c >= COLS || r < 0 || r >= ROWS) continue;
+    if (grid[r][c] !== oldColor) continue;
+    visited.add(key);
+    grid[r][c] = newColor;
+    stack.push([c+1,r],[c-1,r],[c,r+1],[c,r-1]);
+  }
+  if (newColor) p1pixels += visited.size;
+  redraw();
+  updatePlayerBar();
+}
+
+function undoLast() {
+  if (history.length === 0) return;
+  const snap = history.pop();
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) grid[r][c] = snap[r][c];
+  redraw();
+}
+
+function saveSnapshot() {
+  history.push(grid.map(r => [...r]));
+  if (history.length > 20) history.shift();
+}
+
+function clearCanvas() {
+  saveSnapshot();
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) grid[r][c] = null;
+  p1pixels = 0; p2pixels = 0;
+  redraw();
+  updatePlayerBar();
+}
+
+function saveArt() {
+  const link = document.createElement('a');
+  link.download = 'pixel-art.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+// Pointer events
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const cell = getCell(e.clientX, e.clientY);
+  if (!cell) return;
+  isDrawing = true;
+  saveSnapshot();
+  if (currentTool === 'fill') {
+    floodFill(cell.col, cell.row, currentColor);
+  } else {
+    paintAt(cell.col, cell.row);
+    lastCell = cell;
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!isDrawing) return;
+  const cell = getCell(e.clientX, e.clientY);
+  if (!cell) return;
+  if (lastCell && (cell.col !== lastCell.col || cell.row !== lastCell.row)) {
+    // Interpolate
+    const dc = cell.col - lastCell.col, dr = cell.row - lastCell.row;
+    const steps = Math.max(Math.abs(dc), Math.abs(dr));
+    for (let i = 0; i <= steps; i++) {
+      const c = Math.round(lastCell.col + dc * i / steps);
+      const r = Math.round(lastCell.row + dr * i / steps);
+      paintAt(c, r);
+    }
+    lastCell = cell;
+  }
+});
+canvas.addEventListener('pointerup', () => { isDrawing = false; lastCell = null; });
+canvas.addEventListener('pointerleave', () => { isDrawing = false; lastCell = null; });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+function updatePlayerBar() {
+  document.getElementById('pb1px').textContent = p1pixels + ' pixels';
+  document.getElementById('pb2px').textContent = p2pixels + ' pixels';
+  const p1active = currentPlayer === 1;
+  document.getElementById('pb1active').style.cssText = p1active ? 'background:rgba(0,245,255,.15);color:var(--c0);border:1px solid rgba(0,245,255,.3)' : '';
+  document.getElementById('pb1active').textContent = p1active ? '✏️ Drawing' : '';
+  document.getElementById('pb2active').style.cssText = !p1active ? 'background:rgba(255,0,110,.15);color:var(--c2);border:1px solid rgba(255,0,110,.3)' : '';
+  document.getElementById('pb2active').textContent = !p1active ? '✏️ Drawing' : '';
+}
+
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  timerVal = seconds;
+  const pill = document.getElementById('timerPill');
+  pill.style.display = '';
+  timerInterval = setInterval(() => {
+    timerVal--;
+    const m = Math.floor(timerVal / 60), s = timerVal % 60;
+    pill.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (timerVal <= 10) { pill.style.color = '#ff006e'; pill.style.borderColor = 'rgba(255,0,110,.4)'; }
+    if (timerVal <= 0) {
+      clearInterval(timerInterval);
+      G.timeUp();
+    }
+  }, 1000);
+}
+
+let selectedMode = 'freeplay';
+function selectMode(m, el) {
+  selectedMode = m;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function vote(player) {
+  votes[player - 1]++;
+  document.getElementById('vote1').textContent = votes[0];
+  document.getElementById('vote2').textContent = votes[1];
+  document.querySelectorAll('.vote-card').forEach((c, i) => c.classList.toggle('selected', i === player - 1));
+}
+
+const G = {
+  start() {
+    document.querySelectorAll('.ov').forEach(o => o.classList.add('hide'));
+    clearCanvas();
+    gameMode = selectedMode;
+    p1pixels = 0; p2pixels = 0;
+    votes = [0, 0];
+
+    // Setup players
+    document.getElementById('pb1dot').style.background = '#00f5ff';
+    document.getElementById('pb1dot').style.boxShadow = '0 0 6px #00f5ff';
+    document.getElementById('pb1name').style.color = '#00f5ff';
+    document.getElementById('pb2dot').style.background = '#ff006e';
+    document.getElementById('pb2dot').style.boxShadow = '0 0 6px #ff006e';
+    document.getElementById('pb2name').style.color = '#ff006e';
+
+    const timerPill = document.getElementById('timerPill');
+    const promptPill = document.getElementById('promptPill');
+
+    if (gameMode === 'freeplay') {
+      timerPill.style.display = 'none';
+      promptPill.textContent = '🌈 Free paint — both players draw!';
+      currentPlayer = 1;
+      updatePlayerBar();
+      return;
+    }
+
+    if (gameMode === 'prompt' || gameMode === 'half') {
+      const prompt = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
+      promptPill.textContent = `Prompt: ${prompt}`;
+      startTimer(120);
+      if (gameMode === 'half') {
+        promptPill.textContent = `⚔️ L = P1 · R = P2 · ${prompt}`;
+        document.getElementById('pb1name').textContent = 'P1 (Left)';
+        document.getElementById('pb2name').textContent = 'P2 (Right)';
+      }
+      currentPlayer = 1;
+      updatePlayerBar();
+      return;
+    }
+
+    if (gameMode === 'mimic') {
+      promptPill.textContent = '🎨 P1: Draw anything in 60s!';
+      startTimer(60);
+      currentPlayer = 1;
+      updatePlayerBar();
+    }
+  },
+
+  timeUp() {
+    clearInterval(timerInterval);
+    if (gameMode === 'mimic') {
+      // Phase 2: P2 tries to replicate
+      const snap = grid.map(r => [...r]);
+      document.getElementById('promptPill').textContent = '🪞 P2: Replicate from memory — clearing in 3s!';
+      setTimeout(() => {
+        clearCanvas();
+        document.getElementById('promptPill').textContent = '🪞 P2: Now draw what you saw! 60s!';
+        currentPlayer = 2;
+        updatePlayerBar();
+        startTimer(60);
+        // After P2 timer, show both
+        G._mimicSnap = snap;
+      }, 3000);
+      return;
+    }
+    this.showReveal();
+  },
+
+  showReveal() {
+    const title = document.getElementById('revealTitle');
+    const sub = document.getElementById('revealSub');
+    const voteRow = document.getElementById('voteRow');
+    votes = [0, 0];
+    document.getElementById('vote1').textContent = '0';
+    document.getElementById('vote2').textContent = '0';
+    document.querySelectorAll('.vote-card').forEach(c => c.classList.remove('selected'));
+
+    if (gameMode === 'prompt' || gameMode === 'half') {
+      title.textContent = "TIME'S UP!";
+      sub.textContent = 'Who drew the prompt better? Both players vote!';
+      voteRow.style.display = 'flex';
+    } else {
+      title.textContent = 'MIMIC REVEAL!';
+      sub.textContent = 'See the original vs the replica — who got it right?';
+      voteRow.style.display = 'flex';
+    }
+
+    // Copy canvas to result preview
+    const rc = document.getElementById('resultCanvas');
+    const rctx = rc.getContext('2d');
+    rc.width = CW; rc.height = CH;
+    rc.style.maxWidth = '320px';
+    rc.style.width = '100%';
+    rctx.drawImage(canvas, 0, 0);
+
+    document.getElementById('ovReveal').classList.remove('hide');
+  },
+
+  newRound() {
+    document.getElementById('ovReveal').classList.add('hide');
+    this.start();
+  }
+};
+
+window.G = G;
+
+// Init
+resizeCanvas();
+document.getElementById('pb1name').textContent = 'P1 — ARTIST';
+document.getElementById('pb2name').textContent = 'P2 — ARTIST';
+document.getElementById('pb1dot').style.cssText = 'background:#00f5ff;box-shadow:0 0 6px #00f5ff';
+document.getElementById('pb2dot').style.cssText = 'background:#ff006e;box-shadow:0 0 6px #ff006e';
+document.getElementById('pb1name').style.color = '#00f5ff';
+document.getElementById('pb2name').style.color = '#ff006e';
+document.getElementById('timerPill').style.display = 'none';
+updatePlayerBar();
+</script>
+</body>
+</html>
