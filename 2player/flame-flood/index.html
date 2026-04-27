@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Flame & Flood Co-op · Game Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--fire:#ff6b00;--water:#00aaff;--bg:#04020c;--dim:#6a5890;--gold:#ffe600}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none;display:flex;flex-direction:column}
+.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:linear-gradient(180deg,rgba(10,4,24,.99),rgba(4,2,12,.97));border-bottom:1px solid rgba(191,0,255,.18);box-shadow:0 2px 24px rgba(0,0,0,.6)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#00f5ff;text-decoration:none;letter-spacing:3px;text-shadow:0 0 18px rgba(0,245,255,.45)}
+.tlogo em{color:#bf00ff;font-style:normal}
+.tbtn{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border:1px solid rgba(255,255,255,.09);padding:5px 12px;border-radius:6px;background:rgba(255,255,255,.03);cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:#00f5ff;border-color:rgba(0,245,255,.3)}
+.banners{flex-shrink:0;display:flex;background:linear-gradient(180deg,rgba(8,2,21,.99),rgba(4,2,12,.97));border-bottom:1px solid rgba(255,255,255,.05)}
+.bn{flex:1;display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:3px solid transparent}
+.bn.act{border-bottom-color:var(--bc)}
+.bn-r{justify-content:flex-end;flex-direction:row-reverse}
+.bn-av{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;background:rgba(255,255,255,.04)}
+.bn-name{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.bn-sub{font-size:10px;color:var(--dim);margin-top:1px}
+.bn-div{width:1px;background:rgba(255,255,255,.06);align-self:stretch;flex-shrink:0}
+.turn-mid{padding:6px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
+.lv-pill{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:3px 12px;border-radius:10px;background:rgba(191,0,255,.12);color:#bf00ff;border:1px solid rgba(191,0,255,.3)}
+.turn-sub{font-size:9px;color:var(--dim)}
+.game-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0d0520,#04020c)}
+#gc{display:block;border-radius:4px;box-shadow:0 0 60px rgba(191,0,255,.12),0 0 120px rgba(0,0,0,.9)}
+.touch-zone{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;pointer-events:none;padding:10px 8px;gap:6px}
+.ctrl-grp{display:flex;gap:6px;pointer-events:all;align-items:flex-end}
+.cbtn{width:52px;height:52px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);transition:transform .08s,background .1s;touch-action:none;font-weight:700}
+.cbtn.pressed{transform:scale(.85)}
+.cf{border-color:rgba(255,107,0,.6);color:rgba(255,160,80,.9)}
+.cf.pressed{background:rgba(255,107,0,.3)}
+.cw{border-color:rgba(0,170,255,.6);color:rgba(80,200,255,.9)}
+.cw.pressed{background:rgba(0,170,255,.3)}
+.cj-f{width:58px;height:58px;font-size:11px;line-height:1.3;text-align:center;border-color:rgba(255,107,0,.9)}
+.cj-w{width:58px;height:58px;font-size:11px;line-height:1.3;text-align:center;border-color:rgba(0,170,255,.9)}
+.ov{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center;background:rgba(4,2,12,.96);backdrop-filter:blur(22px);overflow-y:auto}
+.ov.hide{display:none}
+.ov-blob{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(191,0,255,.07),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:blobFloat 6s ease-in-out infinite}
+@keyframes blobFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-53%) scale(1.06)}}
+@keyframes iconFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.ov-icon{font-size:58px;margin-bottom:10px;position:relative;z-index:1;animation:iconFloat 2.6s ease-in-out infinite}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(17px,4.2vw,28px);font-weight:900;margin-bottom:8px;position:relative;z-index:1;letter-spacing:2px}
+.ov-sub{font-size:12px;color:var(--dim);max-width:460px;line-height:1.8;margin-bottom:14px;position:relative;z-index:1}
+.feats{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;position:relative;z-index:1}
+.feat{font-size:10px;font-weight:700;padding:4px 11px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--dim)}
+.ctrl-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 16px;margin-bottom:12px;width:100%;max-width:450px;position:relative;z-index:1}
+.cc-title{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--gold);margin-bottom:9px;text-align:left}
+.cc-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.cc-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+.cc-icon{font-size:20px}
+.cc-label{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px}
+.cc-keys{font-size:10px;color:var(--dim)}
+.legend{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.leg{font-size:10px;font-weight:700;padding:4px 10px;border-radius:7px;display:flex;align-items:center;gap:5px}
+.lf{background:rgba(255,107,0,.12);color:#ff9944;border:1px solid rgba(255,107,0,.3)}
+.lw{background:rgba(0,170,255,.12);color:#44ccff;border:1px solid rgba(0,170,255,.3)}
+.ln{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.mech-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;position:relative;z-index:1;max-width:450px;width:100%}
+.mech{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-size:10px;color:var(--dim)}
+.mech-ico{font-size:15px}
+.lv-select{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;position:relative;z-index:1}
+.lvb{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;padding:6px 11px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--dim);transition:all .2s}
+.lvb.active{color:var(--gold);border-color:rgba(255,230,0,.4);background:rgba(255,230,0,.08)}
+.lvb:hover:not(.active){color:#fff;border-color:rgba(255,255,255,.2)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:10px;cursor:pointer;border:none;transition:all .22s;text-decoration:none;display:inline-flex;align-items:center;gap:7px}
+.btn-go{background:linear-gradient(135deg,rgba(255,107,0,.2),rgba(0,170,255,.2));color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-go:hover{background:linear-gradient(135deg,rgba(255,107,0,.35),rgba(0,170,255,.35));transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.btn-sec{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.1)}
+.btn-sec:hover{color:#fff;border-color:rgba(255,255,255,.22)}
+.result-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 22px;margin-bottom:14px;width:100%;max-width:380px;position:relative;z-index:1;animation:slideUp .3s ease}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
+  <div style="display:flex;gap:6px">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+  </div>
+</div>
+<div class="banners">
+  <div class="bn act" style="--bc:var(--fire)">
+    <div class="bn-av" style="border-color:var(--fire);box-shadow:0 0 12px rgba(255,107,0,.4)">🔥</div>
+    <div><div class="bn-name" style="color:var(--fire)">FLAME</div><div class="bn-sub">W jump · A/D move</div></div>
+  </div>
+  <div class="bn-div"></div>
+  <div class="turn-mid">
+    <div class="lv-pill" id="lvPill">LEVEL 1</div>
+    <div class="turn-sub" id="statusTxt">Reach your exits!</div>
+  </div>
+  <div class="bn-div"></div>
+  <div class="bn bn-r act" style="--bc:var(--water)">
+    <div class="bn-av" style="border-color:var(--water);box-shadow:0 0 12px rgba(0,170,255,.4)">💧</div>
+    <div style="text-align:right"><div class="bn-name" style="color:var(--water)">FLOOD</div><div class="bn-sub">↑ jump · ←/→ move</div></div>
+  </div>
+</div>
+<div class="game-area">
+  <canvas id="gc"></canvas>
+  <div class="touch-zone">
+    <div class="ctrl-grp">
+      <div class="cbtn cf" data-k="a">◀</div>
+      <div class="cbtn cf cj-f" data-k="w">🔥<br>JUMP</div>
+      <div class="cbtn cf" data-k="d">▶</div>
+    </div>
+    <div class="ctrl-grp">
+      <div class="cbtn cw" data-k="ArrowLeft">◀</div>
+      <div class="cbtn cw cj-w" data-k="ArrowUp">💧<br>JUMP</div>
+      <div class="cbtn cw" data-k="ArrowRight">▶</div>
+    </div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="ov" id="ovStart">
+  <div class="ov-blob"></div>
+  <div class="ov-icon">🔥💧</div>
+  <div class="ov-title" style="background:linear-gradient(90deg,var(--fire),var(--water));-webkit-background-clip:text;-webkit-text-fill-color:transparent">FLAME & FLOOD CO-OP</div>
+  <div class="ov-sub">Two players, one goal — work together across 8 levels with elemental hazards, pressure plates, bounce pads, ice, conveyors, wind & more!</div>
+  <div class="feats">
+    <div class="feat">🚪 Pressure Plates</div><div class="feat">🍄 Bounce Pads</div>
+    <div class="feat">🧊 Ice Floors</div><div class="feat">↔ Conveyors</div>
+    <div class="feat">🌬 Wind Zones</div><div class="feat">🔃 Toggle Doors</div>
+    <div class="feat">═ One-Way Platforms</div><div class="feat">⭐ Star Coins</div>
+  </div>
+  <div class="mech-grid">
+    <div class="mech"><span class="mech-ico">🔥</span>Flame walks on lava safely</div>
+    <div class="mech"><span class="mech-ico">💧</span>Flood swims in pools safely</div>
+    <div class="mech"><span class="mech-ico">⬛</span>Stand on plate → open door</div>
+    <div class="mech"><span class="mech-ico">🔃</span>Toggle plate flips door on/off</div>
+    <div class="mech"><span class="mech-ico">🍄</span>Bounce pad launches you high</div>
+    <div class="mech"><span class="mech-ico">🧊</span>Ice makes you slide far</div>
+    <div class="mech"><span class="mech-ico">↔</span>Conveyors push you sideways</div>
+    <div class="mech"><span class="mech-ico">🌬</span>Wind drifts you in one direction</div>
+  </div>
+  <div class="ctrl-card">
+    <div class="cc-title">🎮 CONTROLS</div>
+    <div class="cc-row">
+      <div class="cc-item"><div class="cc-icon">🔥</div><div><div class="cc-label" style="color:var(--fire)">FLAME (P1)</div><div class="cc-keys">W jump · A left · D right</div></div></div>
+      <div class="cc-item"><div class="cc-icon">💧</div><div><div class="cc-label" style="color:var(--water)">FLOOD (P2)</div><div class="cc-keys">↑ jump · ← left · → right</div></div></div>
+    </div>
+    <div class="legend">
+      <div class="leg lf">🔥 Lava = safe for Flame</div>
+      <div class="leg lw">💧 Pool = safe for Flood</div>
+      <div class="leg ln">⬛ Hold plate → opens 🟪 door</div>
+    </div>
+  </div>
+  <div class="lv-select" id="lvSelect"></div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.startGame()">▶ Play Together!</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- WIN -->
+<div class="ov hide" id="ovWin">
+  <div class="ov-blob"></div>
+  <div class="ov-icon">🎉</div>
+  <div class="ov-title" style="color:#00ff88">LEVEL COMPLETE!</div>
+  <div class="result-card"><div style="font-size:13px;color:var(--dim);text-align:center" id="winSub">Both reached their exits!</div></div>
+  <div class="btn-row">
+    <button class="btn btn-go" id="nextBtn" onclick="G.nextLevel()">Next Level →</button>
+    <button class="btn btn-go" onclick="G.startGame()">↩ Retry</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- DEAD -->
+<div class="ov hide" id="ovDead">
+  <div class="ov-blob"></div>
+  <div class="ov-icon">💀</div>
+  <div class="ov-title" style="color:#ff006e">TRY AGAIN!</div>
+  <div class="result-card"><div style="font-size:13px;color:var(--dim);text-align:center" id="deadSub">Someone hit the wrong hazard!</div></div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.startGame()">↩ Retry Level</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<script>
+const T={EMPTY:0,WALL:1,LAVA:2,WATER:3,EXIT_F:4,EXIT_W:5,
+         PLATE:6,DOOR:7,BOUNCE:8,CONV_L:9,CONV_R:10,
+         ICE:11,ONEWAY:12,WIND_L:13,WIND_R:14};
+
+const TILE=40,WT=20,HT=13,PW=22,PH=28;
+const GRAV=0.42,JVEL=-10.5,MAXVX=4.2;
+const FRIC_G=0.74,FRIC_I=0.975,FRIC_A=0.88;
+const CONV_F=1.5,WIND_F=0.44;
+
+const canvas=document.getElementById('gc');
+const ctx=canvas.getContext('2d');
+const area=document.querySelector('.game-area');
+let SCL=1;
+function calcScale(){
+  SCL=Math.min(area.clientWidth/(WT*TILE),area.clientHeight/(HT*TILE));
+  canvas.width=Math.round(WT*TILE*SCL);
+  canvas.height=Math.round(HT*TILE*SCL);
+  canvas.style.width=canvas.width+'px';
+  canvas.style.height=canvas.height+'px';
+}
+window.addEventListener('resize',()=>{if(G&&G.state==='play')calcScale();});
+
+const K={};
+document.addEventListener('keydown',e=>{K[e.key]=true;if(['w','a','d','ArrowUp','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{K[e.key]=false;});
+document.querySelectorAll('.cbtn').forEach(b=>{
+  const k=b.dataset.k;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();K[k]=true;b.classList.add('pressed');});
+  b.addEventListener('pointerup',e=>{e.preventDefault();K[k]=false;b.classList.remove('pressed');});
+  b.addEventListener('pointercancel',e=>{K[k]=false;b.classList.remove('pressed');});
+  b.addEventListener('pointerleave',e=>{K[k]=false;b.classList.remove('pressed');});
+});
+
+/* ================================================================
+   LEVEL DESIGN RULES (all 8 levels redesigned):
+   
+   1. Both players start safely on solid ground, no hazards nearby
+   2. Each player can immediately reach THEIR plate without crossing hazards
+   3. Flame's plate opens Flood's door; Flood's plate opens Flame's door
+   4. After doors open, paths to exits are clear
+   5. Hazards (lava/water) are only placed where the IMMUNE player walks,
+      or as optional challenge zones the players must avoid
+   6. Exits are reachable once both doors are open
+   ================================================================ */
+
+const W1=T.WALL,LV=T.LAVA,WA=T.WATER,EF=T.EXIT_F,EW=T.EXIT_W,
+      PL=T.PLATE,DR=T.DOOR,BN=T.BOUNCE,CL=T.CONV_L,CR=T.CONV_R,
+      IC=T.ICE,OW=T.ONEWAY,WL=T.WIND_L,WR=T.WIND_R,_o=0;
+
+const LEVELS=[
+
+/* ── LEVEL 1: Welcome ──────────────────────────────────────────────
+   Layout (row by row, cols 0-19):
+   - Row 11 = floor for both players
+   - Flame starts left (col 2), Flood starts right (col 17)
+   - Flame walks right to plate at col 9 → opens Flood's door (col 15,row 7)
+   - Flood walks left to plate at col 10 → opens Flame's door (col 4,row 7)
+   - After doors open: Flame goes right+up to fire exit (col 17,row 3)
+   - After doors open: Flood goes left+up to water exit (col 2,row 3)
+   - Lava pool in center bottom (harmless crossing for Flame to reach plate area)
+   - Water pool on right bottom (harmless for Flood)
+   ──────────────────────────────────────────────────────────────── */
+{name:'Welcome',theme:'purple',
+ hint:'Stand on ⬛ plates to open 🟪 doors for each other! Flame stands on RIGHT plate, Flood on LEFT plate.',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // row 0
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 1
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 2
+  [W1,_o,EW,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EF,_o,W1], // row 3  exits
+  [W1,W1,W1,W1,DR,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,DR,W1,W1,W1,W1], // row 4  doors + walls
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 5
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 6
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,W1,W1,W1], // row 7  mid-wall with gap
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 8
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1], // row 9
+  [W1,_o,_o,_o,W1,W1,W1,W1,W1,PL,PL,W1,W1,W1,W1,W1,_o,_o,_o,W1], // row 10 plates on platform
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // row 11 floor
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // row 12
+ ],
+ // Plate at (9,10) opens door at (4,4) [Flame's door] — so FLOOD stands on left plate
+ // Plate at (10,10) opens door at (15,4) [Flood's door] — so FLAME stands on right plate
+ // But both plates are adjacent — ONE player can't hold both. 
+ // Solution: each player stands on ONE plate, together they open BOTH doors simultaneously.
+ plates:[
+   {x:9, y:10, doors:[0], type:'hold'},   // left plate  → opens Flame's left door
+   {x:10,y:10, doors:[1], type:'hold'},   // right plate → opens Flood's right door
+ ],
+ doors:[{x:4,y:4},{x:15,y:4}],
+ exits:[{x:2,y:3,t:'w'},{x:17,y:3,t:'f'}],
+ coins:[{x:9,y:8},{x:10,y:8},{x:9,y:6},{x:10,y:6}],
+ fStart:{x:2,y:9},    // Flame starts bottom-left area
+ wStart:{x:17,y:9},   // Flood starts bottom-right area
+},
+
+/* ── LEVEL 2: Side by Side ─────────────────────────────────────────
+   Simpler: players walk to their OWN side plate, opens own side door, go up to exit.
+   Flame on left half, Flood on right half. Separated by wall with gap at top.
+   Each player ONLY needs to hold their own plate to open their own door.
+   Wait — that's too easy. Let: Flame's plate opens FLOOD's door, Flood's plate opens FLAME's door.
+   So they must coordinate: both hold simultaneously.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Coordination',theme:'orange',
+ hint:'🍄 Bounce to reach the plates! Both must stand on plates AT THE SAME TIME.',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EF,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EW,W1], // exits top row
+  [W1,W1,DR,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,W1,W1,W1,_o,_o,_o,_o,W1,W1,W1,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,W1,W1,PL,W1,_o,_o,_o,_o,_o,_o,_o,_o,W1,PL,W1,W1,_o,W1], // plates on raised platforms
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,BN,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,BN,_o,_o,W1], // bounce pads to reach plates
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // floor
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:4, y:7, doors:[1], type:'hold'}, // left plate (Flame stands here) → opens Flood's right door
+   {x:15,y:7, doors:[0], type:'hold'}, // right plate (Flood stands here) → opens Flame's left door
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'f'},{x:18,y:1,t:'w'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:5},{x:10,y:5}],
+ fStart:{x:2,y:9},
+ wStart:{x:17,y:9},
+},
+
+/* ── LEVEL 3: Conveyor Crossing ────────────────────────────────────
+   Conveyors in the middle. Players start on opposite sides.
+   Must ride conveyors to reach plates. Plates on far sides open doors near exits.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Conveyor Crossing',theme:'yellow',
+ hint:'↔ Ride the conveyors to reach the plates on the far side!',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EW,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EF,W1], // exits
+  [W1,W1,DR,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,CR,CR,CR,CR,CR,CR,CL,CL,CL,CL,_o,PL,_o,_o,W1], // plates + conveyors
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // floor
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ // Flame starts right (col 17), needs to walk LEFT past conveyors to plate at col 3
+ // Flood starts left (col 2), needs to walk RIGHT past conveyors to plate at col 16
+ // Left plate (col 3) opens Flood's door (col 17); right plate (col 16) opens Flame's door (col 2)
+ plates:[
+   {x:3, y:7, doors:[1], type:'hold'}, // Flame comes here → opens Flood's door
+   {x:16,y:7, doors:[0], type:'hold'}, // Flood comes here → opens Flame's door
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'w'},{x:18,y:1,t:'f'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:5},{x:10,y:5}],
+ fStart:{x:17,y:7},   // Flame starts right, plate is on left
+ wStart:{x:2,y:7},    // Flood starts left, plate is on right
+},
+
+/* ── LEVEL 4: Ice Age ──────────────────────────────────────────────
+   Ice floors make movement slippery. Toggle plates — step on once to open, again to close.
+   Players start in separate chambers. Must slide across ice to reach toggle plates.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Ice Age',theme:'cyan',
+ hint:'🧊 Slippery ice! Step on toggle plates once to open doors — step again to close!',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EW,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EF,W1], // exits
+  [W1,W1,DR,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,IC,IC,IC,IC,_o,_o,IC,IC,IC,IC,_o,_o,_o,_o,W1], // ice strips
+  [W1,_o,_o,_o,_o,IC,IC,IC,IC,_o,_o,IC,IC,IC,IC,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,W1,W1,W1], // mid-wall with center gap
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,PL,_o,_o,W1], // toggle plates bottom
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1], // floor
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:3, y:10, doors:[1], type:'toggle'}, // left toggle → Flood's door
+   {x:16,y:10, doors:[0], type:'toggle'}, // right toggle → Flame's door
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'w'},{x:18,y:1,t:'f'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:6},{x:10,y:6}],
+ fStart:{x:17,y:9},
+ wStart:{x:2,y:9},
+},
+
+/* ── LEVEL 5: Wind Tunnel ──────────────────────────────────────────
+   Wind zones push players sideways. Must fight wind or use it to reach plates.
+   Flame on right, Flood on left. Wind blows LEFT in upper chamber, RIGHT in lower.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Wind Tunnel',theme:'teal',
+ hint:'🌬 Wind pushes you! Fight it or use it to reach the plates.',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EF,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EW,W1], // exits
+  [W1,W1,DR,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,WL,WL,WL,WL,WL,WL,WR,WR,WR,WR,_o,_o,_o,_o,W1], // wind row
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,W1,W1,W1], // mid wall with gap
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,WR,WR,WR,WR,_o,_o,WL,WL,WL,WL,_o,_o,_o,_o,W1], // lower wind
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,PL,_o,_o,W1], // plates
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:3, y:10, doors:[1], type:'hold'},
+   {x:16,y:10, doors:[0], type:'hold'},
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'f'},{x:18,y:1,t:'w'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:7},{x:10,y:7}],
+ fStart:{x:2,y:10},
+ wStart:{x:17,y:10},
+},
+
+/* ── LEVEL 6: Switcheroo ───────────────────────────────────────────
+   Exits are on the WRONG side — Flame's exit is on Flood's side and vice versa.
+   Must cross paths without dying. Center section has lava (Flame safe) and water (Flood safe).
+   ──────────────────────────────────────────────────────────────── */
+{name:'Switcheroo',theme:'magenta',
+ hint:'🔄 Your exit is on the OTHER side — cross paths without touching wrong hazards!',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,EF,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EW,_o,W1], // exits swapped sides
+  [W1,W1,W1,W1,_o,_o,DR,_o,_o,_o,_o,_o,_o,DR,_o,_o,W1,W1,W1,W1], // doors with gaps
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,LV,LV,WA,WA,_o,_o,_o,_o,_o,_o,_o,W1], // hazards center (safe crossing spots)
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,W1,W1,W1,W1,_o,_o,_o,W1,W1,W1,W1,_o,_o,_o,W1,W1,W1,W1,W1], // wall with gaps
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,PL,_o,_o,W1], // plates bottom
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:3, y:10, doors:[0], type:'hold'}, // left plate → opens left door
+   {x:16,y:10, doors:[1], type:'hold'}, // right plate → opens right door
+ ],
+ doors:[{x:6,y:3},{x:13,y:3}],
+ exits:[{x:2,y:2,t:'f'},{x:17,y:2,t:'w'}],
+ coins:[{x:9,y:4},{x:10,y:4},{x:9,y:6},{x:10,y:6}],
+ fStart:{x:2,y:10},   // Flame starts left but exit is right
+ wStart:{x:17,y:10},  // Flood starts right but exit is left
+},
+
+/* ── LEVEL 7: Tower Climbers ───────────────────────────────────────
+   One-way platforms — jump through from below, can't fall through from above.
+   Players must climb towers using one-way platforms. Bounce pads help.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Tower Climbers',theme:'red',
+ hint:'Jump UP through ═ one-way platforms — you can\'t fall through them from above!',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EF,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EW,W1], // exits top
+  [W1,W1,DR,W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,OW,OW,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,OW,OW,_o,W1], // one-way platforms
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,OW,OW,_o,_o,_o,_o,_o,_o,OW,OW,_o,_o,_o,_o,W1], // lower one-ways
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,PL,_o,_o,W1], // plates
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,_o,_o,W1,W1,W1,W1,W1,W1,W1,W1,W1], // floor with center gap
+  [W1,_o,_o,_o,_o,BN,_o,_o,_o,_o,_o,_o,_o,BN,_o,_o,_o,_o,_o,W1], // bounce pads below
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:3, y:8, doors:[1], type:'hold'}, // left plate → Flood's door
+   {x:16,y:8, doors:[0], type:'hold'}, // right plate → Flame's door
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'f'},{x:18,y:1,t:'w'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:5},{x:10,y:5}],
+ fStart:{x:17,y:8},
+ wStart:{x:2,y:8},
+},
+
+/* ── LEVEL 8: Gauntlet ─────────────────────────────────────────────
+   Every mechanic! Wind, conveyors, ice, bounce, one-way — all combined.
+   Larger open arena. Both players must navigate obstacles to reach plates.
+   ──────────────────────────────────────────────────────────────── */
+{name:'Gauntlet',theme:'gold',
+ hint:'⚔️ All mechanics at once! Navigate every hazard to reach the plates together.',
+ map:[
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,EW,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,EF,W1], // exits
+  [W1,W1,DR,W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1,DR,W1,W1], // doors
+  [W1,_o,_o,_o,_o,_o,_o,OW,OW,_o,_o,OW,OW,_o,_o,_o,_o,_o,_o,W1], // one-ways
+  [W1,_o,_o,_o,_o,WR,WR,WR,_o,_o,_o,_o,WL,WL,WL,_o,_o,_o,_o,W1], // wind
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,W1,IC,IC,IC,_o,_o,_o,_o,_o,_o,_o,_o,IC,IC,IC,W1,_o,W1], // ice strips
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,_o,_o,CR,CR,CR,_o,_o,_o,_o,CL,CL,CL,_o,_o,_o,_o,W1], // conveyors
+  [W1,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,_o,W1],
+  [W1,_o,_o,PL,_o,_o,BN,_o,_o,_o,_o,_o,_o,BN,_o,_o,PL,_o,_o,W1], // plates + bounces
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+  [W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1,W1],
+ ],
+ plates:[
+   {x:3, y:10, doors:[1], type:'hold'}, // left plate → Flood's door
+   {x:16,y:10, doors:[0], type:'hold'}, // right plate → Flame's door
+ ],
+ doors:[{x:2,y:2},{x:17,y:2}],
+ exits:[{x:1,y:1,t:'w'},{x:18,y:1,t:'f'}],
+ coins:[{x:9,y:3},{x:10,y:3},{x:9,y:6},{x:10,y:6}],
+ fStart:{x:17,y:10},
+ wStart:{x:2,y:10},
+},
+];
+
+/* ── PARTICLES ── */
+let PARTS=[];
+function spawnP(x,y,col,n,o){
+  o=o||{};
+  for(let i=0;i<(n||8);i++){
+    const a=(o.angle||0)+(Math.random()-.5)*(o.spread||Math.PI*2);
+    const sp=(o.speed||2.5)*(.5+Math.random()*.8);
+    PARTS.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(o.up||1.5),col,
+      life:1,decay:o.decay||.035,sz:(o.sz||3.5)*(.6+Math.random()*.8),grav:o.grav!=null?o.grav:.12});
+  }
+}
+function tickP(){
+  for(const p of PARTS){p.x+=p.vx;p.y+=p.vy;p.vy+=p.grav;p.vx*=.95;p.life-=p.decay;p.sz*=.96;}
+  PARTS=PARTS.filter(p=>p.life>0&&p.sz>.3);
+}
+function drawP(){
+  for(const p of PARTS){
+    ctx.save();ctx.globalAlpha=Math.max(0,p.life);
+    ctx.shadowColor=p.col;ctx.shadowBlur=p.sz*2;
+    ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ── PHYSICS HELPERS ── */
+function gT(map,tx,ty){
+  if(tx<0||tx>=WT||ty<0||ty>=HT)return T.WALL;
+  return(map[ty]&&map[ty][tx]!=null)?map[ty][tx]:T.WALL;
+}
+function solidH(map,doors,open,tx,ty){
+  const t=gT(map,tx,ty);
+  if(t===T.WALL)return true;
+  if(t===T.DOOR){const i=doors.findIndex(d=>d.x===tx&&d.y===ty);return i>=0&&!open[i];}
+  if(t===T.CONV_L||t===T.CONV_R||t===T.ICE||t===T.BOUNCE)return true;
+  return false;
+}
+function solidDown(map,doors,open,tx,ty,pBot,pVy){
+  const t=gT(map,tx,ty);
+  if(t===T.WALL)return{s:true,b:false};
+  if(t===T.DOOR){const i=doors.findIndex(d=>d.x===tx&&d.y===ty);if(i>=0&&!open[i])return{s:true,b:false};}
+  if(t===T.BOUNCE)return{s:true,b:true};
+  if(t===T.CONV_L||t===T.CONV_R||t===T.ICE)return{s:true,b:false};
+  if(t===T.ONEWAY&&pVy>0){
+    if(pBot-pVy<=ty*TILE+3)return{s:true,b:false};
+  }
+  return{s:false,b:false};
+}
+
+function resolveX(p,map,doors,open){
+  if(p.vx>0){
+    const cx=Math.floor((p.x+PW)/TILE);
+    for(const py of[p.y+3,p.y+PH/2,p.y+PH-3]){
+      if(solidH(map,doors,open,cx,Math.floor(py/TILE))){p.x=cx*TILE-PW;p.vx=0;return;}
+    }
+  }else if(p.vx<0){
+    const cx=Math.floor(p.x/TILE);
+    for(const py of[p.y+3,p.y+PH/2,p.y+PH-3]){
+      if(solidH(map,doors,open,cx,Math.floor(py/TILE))){p.x=(cx+1)*TILE;p.vx=0;return;}
+    }
+  }
+}
+
+function resolveY(p,map,doors,open){
+  if(p.vy>0){
+    const cy=Math.floor((p.y+PH)/TILE);
+    for(const px of[p.x+3,p.x+PW/2,p.x+PW-3]){
+      const r=solidDown(map,doors,open,Math.floor(px/TILE),cy,p.y+PH,p.vy);
+      if(r.s){
+        p.y=cy*TILE-PH;p.onG=true;
+        if(r.b){p.vy=JVEL*1.45;p.onG=false;spawnP(p.x+PW/2,p.y+PH,p.isfire?'#ff8844':'#44aaff',8,{speed:3,sz:3,decay:.06,up:3,spread:1.2,angle:-Math.PI/2});}
+        else p.vy=0;
+        return;
+      }
+    }
+  }else if(p.vy<0){
+    const cy=Math.floor(p.y/TILE);
+    for(const px of[p.x+3,p.x+PW/2,p.x+PW-3]){
+      const t=gT(map,Math.floor(px/TILE),cy);
+      const isCeil=(t===T.WALL)||(t===T.DOOR&&(()=>{const i=doors.findIndex(d=>d.x===Math.floor(px/TILE)&&d.y===cy);return i>=0&&!open[i];})());
+      if(isCeil){p.y=(cy+1)*TILE;p.vy=0;return;}
+    }
+  }
+}
+
+function stepPlayer(p,map,doors,open,iL,iR,iJ){
+  if(p.dead)return;
+  const ftx=Math.floor((p.x+PW/2)/TILE),fty=Math.floor((p.y+PH+1)/TILE);
+  const ft=gT(map,ftx,fty);
+  const onIce=p.onG&&ft===T.ICE;
+  p.vx*=p.onG?(onIce?FRIC_I:FRIC_G):FRIC_A;
+  const ac=p.onG?1.6:.72;
+  if(iL){p.vx-=MAXVX*ac*.28;p.dir=-1;}
+  if(iR){p.vx+=MAXVX*ac*.28;p.dir=1;}
+  p.vx=Math.max(-MAXVX*1.4,Math.min(MAXVX*1.4,p.vx));
+  if(p.onG){
+    if(ft===T.CONV_L)p.vx=Math.max(-MAXVX*1.6,p.vx-CONV_F);
+    if(ft===T.CONV_R)p.vx=Math.min(MAXVX*1.6,p.vx+CONV_F);
+  }
+  const mx=Math.floor((p.x+PW/2)/TILE),my=Math.floor((p.y+PH/2)/TILE);
+  const mt=gT(map,mx,my);
+  if(mt===T.WIND_L)p.vx-=WIND_F;
+  if(mt===T.WIND_R)p.vx+=WIND_F;
+  if(p.onG)p.coy=9;else p.coy=Math.max(0,(p.coy||0)-1);
+  if(iJ)p.jbuf=9;else p.jbuf=Math.max(0,(p.jbuf||0)-1);
+  if(p.jbuf>0&&p.coy>0){
+    p.vy=JVEL;p.onG=false;p.coy=0;p.jbuf=0;
+    spawnP(p.x+PW/2,p.y+PH,p.isfire?'#ff6600':'#0099ee',5,{speed:2,sz:2,decay:.08,up:1.5,spread:.9,angle:-Math.PI/2});
+  }
+  p.vy=Math.min(p.vy+GRAV,16);
+  p.x+=p.vx;resolveX(p,map,doors,open);
+  p.onG=false;p.y+=p.vy;resolveY(p,map,doors,open);
+  if(p.y>HT*TILE+80)p.dead=true;
+  if(p.onG&&Math.abs(p.vx)>.8&&Math.random()<.22)
+    spawnP(p.x+PW/2,p.y+PH,p.isfire?'rgba(255,120,0,.5)':'rgba(0,150,255,.5)',2,{speed:.8,sz:1.6,decay:.14,up:.2,spread:.4,angle:-Math.PI/2,grav:.04});
+}
+
+function chkHazard(p,isfire,map){
+  if(p.dead)return;
+  for(const[px,py]of[[p.x+5,p.y+5],[p.x+PW-5,p.y+5],[p.x+PW/2,p.y+PH/2],[p.x+5,p.y+PH-5],[p.x+PW-5,p.y+PH-5]]){
+    const t=gT(map,Math.floor(px/TILE),Math.floor(py/TILE));
+    if(isfire&&t===T.WATER){p.dead=true;return;}
+    if(!isfire&&t===T.LAVA){p.dead=true;return;}
+  }
+}
+
+/* ── THEME PALETTES ── */
+const TH={
+  purple: {bg1:'#0a0320',bg2:'#04020c',w1:'#1e0e3a',w2:'#140828',we:'rgba(191,0,255,.24)'},
+  orange: {bg1:'#150a00',bg2:'#0a0400',w1:'#2e1200',w2:'#1a0900',we:'rgba(255,100,0,.24)'},
+  yellow: {bg1:'#141000',bg2:'#080800',w1:'#2a2200',w2:'#181400',we:'rgba(255,220,0,.24)'},
+  cyan:   {bg1:'#001520',bg2:'#000a12',w1:'#002030',w2:'#001020',we:'rgba(0,200,255,.24)'},
+  teal:   {bg1:'#001510',bg2:'#000a08',w1:'#002018',w2:'#001010',we:'rgba(0,255,180,.24)'},
+  magenta:{bg1:'#180010',bg2:'#0c0008',w1:'#2a0020',w2:'#180010',we:'rgba(255,0,200,.24)'},
+  red:    {bg1:'#150000',bg2:'#0a0000',w1:'#2a0000',w2:'#180000',we:'rgba(255,50,50,.24)'},
+  gold:   {bg1:'#141000',bg2:'#0a0800',w1:'#2a2000',w2:'#181200',we:'rgba(255,200,0,.32)'},
+};
+
+let DT=0;
+function rRect(x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function drawTile(t,rx,ry,tc,tr,th,plates,doors,open){
+  if(t===T.EMPTY)return;
+  if(t===T.WALL){
+    const g=ctx.createLinearGradient(rx,ry,rx+TILE,ry+TILE);
+    g.addColorStop(0,th.w1);g.addColorStop(1,th.w2);
+    ctx.fillStyle=g;ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.fillStyle=th.we;ctx.fillRect(rx,ry,TILE,2);
+    ctx.fillStyle='rgba(255,255,255,.03)';ctx.fillRect(rx+2,ry+2,2,2);
+  }
+  else if(t===T.LAVA){
+    const wv=Math.sin(DT*2.5+tc*.7)*3;
+    const g=ctx.createLinearGradient(rx,ry,rx,ry+TILE);
+    g.addColorStop(0,'#ff5500');g.addColorStop(.6,'#cc2200');g.addColorStop(1,'#881100');
+    ctx.fillStyle=g;ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();ctx.shadowColor='#ff4400';ctx.shadowBlur=10;
+    ctx.fillStyle='rgba(255,180,50,.6)';ctx.fillRect(rx,ry+wv,TILE,5);ctx.restore();
+  }
+  else if(t===T.WATER){
+    const wv=Math.sin(DT*2+tc*.9)*3;
+    const g=ctx.createLinearGradient(rx,ry,rx,ry+TILE);
+    g.addColorStop(0,'#0088ee');g.addColorStop(.6,'#0044aa');g.addColorStop(1,'#001166');
+    ctx.fillStyle=g;ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();ctx.shadowColor='#00aaff';ctx.shadowBlur=10;
+    ctx.fillStyle='rgba(100,200,255,.5)';ctx.fillRect(rx,ry+wv,TILE,5);ctx.restore();
+  }
+  else if(t===T.EXIT_F){
+    const p=.6+Math.sin(DT*3)*.4;
+    ctx.save();ctx.shadowColor='#ff8800';ctx.shadowBlur=20*p;
+    ctx.fillStyle=`rgba(255,80,0,${.1+p*.12})`;ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.strokeStyle=`rgba(255,${(100+p*80)|0},0,${.6+p*.4})`;ctx.lineWidth=2;
+    ctx.strokeRect(rx+2,ry+2,TILE-4,TILE-4);ctx.restore();
+    ctx.font=`${TILE*.6}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🔥',rx+TILE/2,ry+TILE/2);
+  }
+  else if(t===T.EXIT_W){
+    const p=.6+Math.sin(DT*3+1.2)*.4;
+    ctx.save();ctx.shadowColor='#00bbff';ctx.shadowBlur=20*p;
+    ctx.fillStyle=`rgba(0,${(100+p*80)|0},255,${.1+p*.12})`;ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.strokeStyle=`rgba(0,${(150+p*100)|0},255,${.6+p*.4})`;ctx.lineWidth=2;
+    ctx.strokeRect(rx+2,ry+2,TILE-4,TILE-4);ctx.restore();
+    ctx.font=`${TILE*.6}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('💧',rx+TILE/2,ry+TILE/2);
+  }
+  else if(t===T.PLATE){
+    const pi=plates.findIndex(p=>p.x===tc&&p.y===tr);
+    const active=pi>=0&&plates[pi].active;
+    const tog=pi>=0&&plates[pi].type==='toggle';
+    ctx.fillStyle=active?'rgba(255,220,0,.22)':'rgba(255,220,0,.05)';ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();if(active){ctx.shadowColor='#ffe600';ctx.shadowBlur=14;}
+    ctx.fillStyle=active?'#ffe600':'#554400';ctx.fillRect(rx+4,ry+TILE-7,TILE-8,6);ctx.restore();
+    ctx.fillStyle=active?'rgba(255,230,0,.9)':'rgba(255,230,0,.4)';
+    ctx.font=`${TILE*.42}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(tog?'🔃':'▼',rx+TILE/2,ry+TILE*.45);
+  }
+  else if(t===T.DOOR){
+    const di=doors.findIndex(d=>d.x===tc&&d.y===tr);
+    if(di>=0&&open[di]){
+      ctx.fillStyle='rgba(136,68,204,.06)';ctx.fillRect(rx,ry,TILE,TILE);
+    }else{
+      const g=ctx.createLinearGradient(rx,ry,rx,ry+TILE);
+      g.addColorStop(0,'#55289a');g.addColorStop(1,'#331870');
+      ctx.fillStyle=g;ctx.fillRect(rx,ry,TILE,TILE);
+      ctx.strokeStyle='rgba(180,100,255,.7)';ctx.lineWidth=2;ctx.strokeRect(rx+1,ry+1,TILE-2,TILE-2);
+      ctx.fillStyle='rgba(200,140,255,.45)';
+      for(let bx=5;bx<TILE-3;bx+=5)ctx.fillRect(rx+bx,ry+4,2,TILE-8);
+    }
+  }
+  else if(t===T.BOUNCE){
+    const bob=Math.sin(DT*4+tc)*2;
+    ctx.fillStyle='rgba(0,255,100,.07)';ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();ctx.shadowColor='#00ff88';ctx.shadowBlur=12;
+    ctx.fillStyle='#00cc55';
+    ctx.beginPath();ctx.ellipse(rx+TILE/2,ry+TILE-8+bob,TILE/2-3,10,0,0,Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(rx+TILE/2-7,ry+TILE-14+bob,4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(rx+TILE/2+5,ry+TILE-16+bob,3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  else if(t===T.CONV_L||t===T.CONV_R){
+    const dir=t===T.CONV_L?-1:1;
+    ctx.fillStyle='rgba(255,180,0,.1)';ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.fillStyle='#ffaa00';ctx.fillRect(rx,ry,TILE,2);
+    ctx.fillStyle='rgba(255,180,0,.7)';
+    ctx.font=`${TILE*.4}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(t===T.CONV_L?'←':'→',rx+TILE/2,ry+TILE/2);
+    const off=(((DT*40*dir)%TILE)+TILE)%TILE;
+    ctx.fillStyle='rgba(255,180,0,.3)';ctx.fillRect(rx+off,ry+TILE-5,Math.min(8,TILE-off),4);
+  }
+  else if(t===T.ICE){
+    ctx.fillStyle='rgba(150,230,255,.1)';ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();ctx.shadowColor='#88eeff';ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(150,230,255,.75)';ctx.fillRect(rx,ry,TILE,3);ctx.restore();
+    ctx.strokeStyle='rgba(150,230,255,.18)';ctx.lineWidth=1;ctx.beginPath();
+    ctx.moveTo(rx+TILE/2,ry+4);ctx.lineTo(rx+TILE/2,ry+TILE-4);
+    ctx.moveTo(rx+4,ry+TILE/2);ctx.lineTo(rx+TILE-4,ry+TILE/2);ctx.stroke();
+  }
+  else if(t===T.ONEWAY){
+    ctx.fillStyle='rgba(180,100,255,.14)';ctx.fillRect(rx,ry+TILE-8,TILE,8);
+    ctx.save();ctx.shadowColor='#bb66ff';ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(180,100,255,.82)';ctx.fillRect(rx,ry+TILE-4,TILE,4);ctx.restore();
+    ctx.fillStyle='rgba(180,100,255,.4)';ctx.font=`${TILE*.3}px sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('↑',rx+TILE/2,ry+TILE*.32);
+  }
+  else if(t===T.WIND_L||t===T.WIND_R){
+    const dir=t===T.WIND_L?-1:1;
+    const an=(((DT*1.5*dir)%1)+1)%1;
+    ctx.fillStyle='rgba(0,200,180,.05)';ctx.fillRect(rx,ry,TILE,TILE);
+    ctx.save();ctx.globalAlpha=.28+an*.35;ctx.strokeStyle='rgba(0,220,200,.65)';ctx.lineWidth=1.5;
+    ctx.beginPath();
+    const sx=t===T.WIND_L?rx+TILE-an*TILE:rx+an*TILE;
+    ctx.moveTo(sx,ry+8);ctx.lineTo(sx-dir*12,ry+8);
+    ctx.moveTo(sx,ry+TILE/2);ctx.lineTo(sx-dir*16,ry+TILE/2);
+    ctx.moveTo(sx,ry+TILE-8);ctx.lineTo(sx-dir*10,ry+TILE-8);
+    ctx.stroke();ctx.restore();
+  }
+}
+
+function drawPlayer(p,isfire){
+  if(p.dead)return;
+  const col=isfire?'#ff6b00':'#00aaff';
+  const light=isfire?'#ffcc66':'#66eeff';
+  const glow=isfire?'rgba(255,107,0,.8)':'rgba(0,170,255,.8)';
+  ctx.save();ctx.translate(p.x+PW/2,p.y+PH/2);
+  const mv=Math.abs(p.vx)>.3;
+  const sx=p.onG?(mv?1.1:1):(p.vy<0?.87:1.08);
+  const sy=p.onG?(mv?.9:1):(p.vy<0?1.14:.92);
+  ctx.scale(p.dir<0?-sx:sx,sy);
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(0,PH/2+3,PW/2,4,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowColor=glow;ctx.shadowBlur=18;
+  const gr=ctx.createRadialGradient(-PW*.1,-PH*.2,3,0,0,PW*.8);
+  gr.addColorStop(0,light);gr.addColorStop(1,col);
+  ctx.fillStyle=gr;rRect(-PW/2,-PH/2,PW,PH,6);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(5,-5,5,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(6.5,-5,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.arc(7.5,-6.2,1.2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=isfire?'#ffaa44':'#44ddff';ctx.lineWidth=1.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(2,p.onG?2:3,4,.2,Math.PI-.2);ctx.stroke();
+  const bob=Math.sin(DT*3+(isfire?0:Math.PI))*2.5;
+  ctx.font=`${PH*.55}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText(isfire?'🔥':'💧',0,-PH/2-2+bob);
+  if(p.atExit){
+    const ring=.5+Math.sin(DT*6)*.5;
+    ctx.save();ctx.globalAlpha=ring;ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.shadowColor=col;ctx.shadowBlur=22;
+    ctx.beginPath();ctx.arc(0,0,PW/2+6,0,Math.PI*2);ctx.stroke();ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* ── GAME CONTROLLER ── */
+const G={
+  state:'start',lvIdx:0,lvData:null,
+  map:null,plates:null,doors:null,open:null,coins:null,
+  fire:null,water:null,shake:0,frameId:null,deadTimer:null,
+
+  mk(s,isfire){
+    return{x:s.x*TILE+4,y:s.y*TILE,vx:0,vy:0,dir:isfire?1:-1,onG:false,dead:false,atExit:false,coy:0,jbuf:0,dTick:0,isfire};
+  },
+
+  init(){
+    const d=LEVELS[this.lvIdx];this.lvData=d;
+    this.map=d.map.map(r=>[...r]);
+    this.plates=d.plates.map(p=>({...p,active:false}));
+    this.doors=d.doors.map(x=>({...x}));
+    this.open=new Array(d.doors.length).fill(false);
+    this.coins=(d.coins||[]).map(c=>({...c,collected:false}));
+    for(const dor of this.doors)this.map[dor.y][dor.x]=T.DOOR;
+    this.fire=this.mk(d.fStart,true);
+    this.water=this.mk(d.wStart,false);
+    PARTS=[];this.shake=0;
+    document.getElementById('lvPill').textContent=`LEVEL ${this.lvIdx+1} · ${d.name}`;
+    document.getElementById('statusTxt').textContent=d.hint||'Reach your exits!';
+  },
+
+  updPlates(){
+    for(const pl of this.plates){
+      const px=pl.x*TILE,py=pl.y*TILE;
+      const fOn=this.fire.x+PW>px&&this.fire.x<px+TILE&&this.fire.y+PH>py&&this.fire.y<py+TILE;
+      const wOn=this.water.x+PW>px&&this.water.x<px+TILE&&this.water.y+PH>py&&this.water.y<py+TILE;
+      const was=pl.active;pl.active=fOn||wOn;
+      if(pl.type==='toggle'){
+        if(pl.active&&!was)for(const di of pl.doors)this.open[di]=!this.open[di];
+      }else{
+        for(const di of pl.doors)this.open[di]=pl.active;
+      }
+      for(const di of pl.doors){
+        const dor=this.doors[di];
+        this.map[dor.y][dor.x]=this.open[di]?T.EMPTY:T.DOOR;
+      }
+    }
+  },
+
+  chkExits(){
+    let f=false,w=false;
+    for(const ex of this.lvData.exits){
+      const px=ex.x*TILE,py=ex.y*TILE;
+      if(ex.t==='f'&&this.fire.x+PW>px&&this.fire.x<px+TILE&&this.fire.y+PH>py&&this.fire.y<py+TILE)f=true;
+      if(ex.t==='w'&&this.water.x+PW>px&&this.water.x<px+TILE&&this.water.y+PH>py&&this.water.y<py+TILE)w=true;
+    }
+    this.fire.atExit=f;this.water.atExit=w;return f&&w;
+  },
+
+  chkCoins(){
+    for(const c of this.coins){
+      if(c.collected)continue;
+      const cx=c.x*TILE,cy=c.y*TILE;
+      if((this.fire.x+PW>cx&&this.fire.x<cx+TILE&&this.fire.y+PH>cy&&this.fire.y<cy+TILE)||
+         (this.water.x+PW>cx&&this.water.x<cx+TILE&&this.water.y+PH>cy&&this.water.y<cy+TILE)){
+        c.collected=true;
+        spawnP(cx+TILE/2,cy+TILE/2,'#ffe600',14,{speed:4,sz:3,decay:.04,up:3});
+        spawnP(cx+TILE/2,cy+TILE/2,'#fff',6,{speed:2,sz:2,decay:.06});
+      }
+    }
+  },
+
+  draw(){
+    DT+=.045;
+    const th=TH[this.lvData.theme]||TH.purple;
+    ctx.save();
+    if(this.shake>0){
+      ctx.translate((Math.random()-.5)*this.shake*SCL,(Math.random()-.5)*this.shake*SCL);
+      this.shake*=.72;if(this.shake<.3)this.shake=0;
+    }
+    ctx.scale(SCL,SCL);
+    const bg=ctx.createLinearGradient(0,0,0,HT*TILE);
+    bg.addColorStop(0,th.bg1);bg.addColorStop(1,th.bg2);
+    ctx.fillStyle=bg;ctx.fillRect(0,0,WT*TILE,HT*TILE);
+    ctx.strokeStyle='rgba(255,255,255,.02)';ctx.lineWidth=.5;
+    for(let x=0;x<=WT;x++){ctx.beginPath();ctx.moveTo(x*TILE,0);ctx.lineTo(x*TILE,HT*TILE);ctx.stroke();}
+    for(let y=0;y<=HT;y++){ctx.beginPath();ctx.moveTo(0,y*TILE);ctx.lineTo(WT*TILE,y*TILE);ctx.stroke();}
+    for(let r=0;r<HT;r++)for(let c=0;c<WT;c++)
+      drawTile(this.map[r][c],c*TILE,r*TILE,c,r,th,this.plates,this.doors,this.open);
+    for(let r=0;r<HT;r++)for(let c=0;c<WT;c++){
+      const t=this.map[r][c];
+      if(t===T.LAVA&&Math.random()<.01)spawnP(c*TILE+Math.random()*TILE,r*TILE+4,'#ff8844',1,{speed:1.5,sz:2,decay:.07,up:2.2,grav:.18});
+      if(t===T.WATER&&Math.random()<.008)spawnP(c*TILE+Math.random()*TILE,r*TILE+4,'#44aaff',1,{speed:1.2,sz:1.8,decay:.07,up:1.8,grav:.14});
+    }
+    for(const c of this.coins){
+      if(c.collected)continue;
+      const cx=c.x*TILE+TILE/2,cy=c.y*TILE+TILE/2;
+      const bob=Math.sin(DT*3+c.x)*3,pulse=.7+Math.sin(DT*4+c.x)*.3;
+      ctx.save();ctx.shadowColor='#ffe600';ctx.shadowBlur=12*pulse;
+      ctx.fillStyle=`rgba(255,220,0,${.8+pulse*.2})`;ctx.beginPath();ctx.arc(cx,cy+bob,5.5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,255,200,.85)';ctx.beginPath();ctx.arc(cx-1.5,cy+bob-2.5,2.2,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    if(this.coins.length>0){
+      const got=this.coins.filter(c=>c.collected).length,tot=this.coins.length;
+      ctx.fillStyle='rgba(0,0,0,.4)';rRect(WT*TILE/2-40,5,80,22,8);ctx.fill();
+      ctx.fillStyle='#ffe600';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(`⭐ ${got}/${tot}`,WT*TILE/2,16);
+    }
+    drawP();drawPlayer(this.fire,true);drawPlayer(this.water,false);
+    ctx.restore();
+  },
+
+  loop(ts){
+    if(this.state!=='play')return;
+    this.frameId=requestAnimationFrame(t=>this.loop(t));
+    stepPlayer(this.fire,this.map,this.doors,this.open,K['a'],K['d'],K['w']||K['W']);
+    stepPlayer(this.water,this.map,this.doors,this.open,K['ArrowLeft'],K['ArrowRight'],K['ArrowUp']);
+    chkHazard(this.fire,true,this.map);
+    chkHazard(this.water,false,this.map);
+    this.updPlates();
+    this.chkCoins();
+    tickP();
+    if(this.fire.dead){this.fire.dTick++;if(this.fire.dTick%3===0)spawnP(this.fire.x+PW/2,this.fire.y+PH/2,'#ff6600',4,{speed:3,sz:3,decay:.04,up:2});}
+    if(this.water.dead){this.water.dTick++;if(this.water.dTick%3===0)spawnP(this.water.x+PW/2,this.water.y+PH/2,'#0099ee',4,{speed:3,sz:3,decay:.04,up:2});}
+    if((this.fire.dead||this.water.dead)&&!this.deadTimer){
+      this.shake=16;
+      this.deadTimer=setTimeout(()=>{
+        this.state='dead';
+        document.getElementById('deadSub').textContent=
+          (this.fire.dead&&this.water.dead)?'Both hit the wrong hazard!'
+          :this.fire.dead?'🔥 Flame fell into water!':'💧 Flood fell into lava!';
+        document.getElementById('ovDead').classList.remove('hide');
+      },800);
+    }
+    if(!this.fire.dead&&!this.water.dead&&this.chkExits()){
+      this.state='win';cancelAnimationFrame(this.frameId);
+      const got=this.coins.filter(c=>c.collected).length,tot=this.coins.length;
+      document.getElementById('winSub').textContent=
+        `Lv ${this.lvIdx+1}: ${this.lvData.name} — 🔥💧 Both escaped!`+(tot>0?` ⭐ ${got}/${tot}`:'');
+      document.getElementById('nextBtn').style.display=this.lvIdx<LEVELS.length-1?'':'none';
+      document.getElementById('ovWin').classList.remove('hide');
+    }
+    this.draw();
+  },
+
+  startGame(){
+    ['ovStart','ovWin','ovDead'].forEach(id=>document.getElementById(id).classList.add('hide'));
+    cancelAnimationFrame(this.frameId);
+    clearTimeout(this.deadTimer);this.deadTimer=null;
+    Object.keys(K).forEach(k=>{K[k]=false;});
+    calcScale();this.init();
+    this.state='play';
+    this.frameId=requestAnimationFrame(t=>this.loop(t));
+  },
+
+  nextLevel(){this.lvIdx=Math.min(this.lvIdx+1,LEVELS.length-1);this.syncBtns();this.startGame();},
+  setLevel(i){this.lvIdx=i;this.syncBtns();},
+  syncBtns(){document.querySelectorAll('.lvb').forEach((b,i)=>b.classList.toggle('active',i===this.lvIdx));}
+};
+
+const sel=document.getElementById('lvSelect');
+LEVELS.forEach((lv,i)=>{
+  const b=document.createElement('button');
+  b.className='lvb'+(i===0?' active':'');
+  b.textContent=`Lv.${i+1} · ${lv.name}`;
+  b.onclick=()=>G.setLevel(i);
+  sel.appendChild(b);
+});
+window.G=G;
+</script>
+</body>
+</html>
