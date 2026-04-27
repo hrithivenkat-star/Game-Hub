@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Shadow Sync · Co-op · Game Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#04020c;--dim:#5a4a80}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none}
+body{display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(4,2,12,.97);border-bottom:1px solid rgba(0,245,255,.12);backdrop-filter:blur(20px)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:3px}
+.tlogo em{color:var(--c1);font-style:normal}
+.tbtn{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:5px 10px;border-radius:6px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.3)}
+
+/* HUD */
+.hud{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(4,2,12,.9);border-bottom:1px solid rgba(255,255,255,.05)}
+.hud-p{display:flex;align-items:center;gap:8px}
+.hud-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.hud-name{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px}
+.hud-key{font-size:9px;color:var(--dim)}
+.hud-mid{text-align:center}
+.hud-score{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;color:var(--c4)}
+.hud-level{font-size:9px;color:var(--dim);letter-spacing:1px}
+.sync-bar-wrap{flex-shrink:0;padding:6px 16px;background:rgba(4,2,12,.8);border-bottom:1px solid rgba(255,255,255,.04)}
+.sync-label{font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between}
+.sync-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.sync-fill{height:100%;border-radius:4px;transition:width .1s,background .3s;background:linear-gradient(90deg,var(--c2),var(--c4),var(--c3))}
+
+/* GAME AREA */
+.game-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#080220,var(--bg))}
+#gc{display:block}
+
+/* TOUCH CONTROLS */
+.touch-zone{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;pointer-events:none;padding:10px 8px;gap:6px}
+.ctrl-grp{display:flex;gap:6px;pointer-events:all;align-items:flex-end}
+.cbtn{width:50px;height:50px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);transition:transform .08s;touch-action:none}
+.cbtn.pressed{transform:scale(.84)}
+.c1{border-color:rgba(0,245,255,.5);color:rgba(0,245,255,.8)}
+.c1.pressed{background:rgba(0,245,255,.2)}
+.c2{border-color:rgba(191,0,255,.5);color:rgba(191,0,255,.8)}
+.c2.pressed{background:rgba(191,0,255,.2)}
+.cjump{width:56px;height:56px;font-size:12px;font-weight:700;text-align:center;line-height:1.3}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:rgba(4,2,12,.95);backdrop-filter:blur(20px);overflow-y:auto}
+.ov.hide{display:none}
+.ov-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,245,255,.06),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ov-icon{font-size:64px;margin-bottom:12px;animation:floatY 2.5s ease-in-out infinite;position:relative;z-index:1}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,5vw,32px);font-weight:900;margin-bottom:8px;position:relative;z-index:1}
+.ov-sub{font-size:12px;color:rgba(180,180,220,.6);max-width:460px;line-height:1.8;margin-bottom:16px;position:relative;z-index:1}
+.feat-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.feat{font-size:10px;font-weight:700;padding:4px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--dim)}
+.ctrl-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 18px;margin-bottom:14px;width:100%;max-width:420px;position:relative;z-index:1}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ctrl-p{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.ctrl-em{font-size:20px}
+.ctrl-label{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px}
+.ctrl-keys{font-size:10px;color:var(--dim)}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:12px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1}
+.btn-go{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(191,0,255,.15));color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-go:hover{background:linear-gradient(135deg,rgba(0,245,255,.28),rgba(191,0,255,.28));transform:translateY(-2px)}
+.btn-sec{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.08)}
+.btn-sec:hover{color:#fff}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.result-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 24px;margin-bottom:14px;width:100%;max-width:360px;position:relative;z-index:1}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.res-row:last-child{border:none}
+.res-label{font-size:11px;color:var(--dim)}
+.res-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--c4)}
+
+/* LEVEL SELECT */
+.lvl-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.lvl-btn{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--dim);transition:all .2s}
+.lvl-btn.active{color:var(--c4);border-color:rgba(255,230,0,.4);background:rgba(255,230,0,.08)}
+
+@media(max-width:420px){.cbtn{width:44px;height:44px}.cjump{width:50px;height:50px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
+  <div style="display:flex;gap:6px">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="hud-p">
+    <div class="hud-icon" style="background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.3)">🔵</div>
+    <div><div class="hud-name" style="color:var(--c0)">PLAYER 1</div><div class="hud-key">A/D + W</div></div>
+  </div>
+  <div class="hud-mid">
+    <div class="hud-score" id="scoreDisp">0</div>
+    <div class="hud-level" id="levelDisp">LEVEL 1</div>
+  </div>
+  <div class="hud-p" style="flex-direction:row-reverse">
+    <div class="hud-icon" style="background:rgba(191,0,255,.12);border:1px solid rgba(191,0,255,.3)">🟣</div>
+    <div style="text-align:right"><div class="hud-name" style="color:var(--c1)">PLAYER 2</div><div class="hud-key">←/→ + ↑</div></div>
+  </div>
+</div>
+
+<div class="sync-bar-wrap">
+  <div class="sync-label">
+    <span>SYNC POWER</span>
+    <span id="syncPct">0%</span>
+  </div>
+  <div class="sync-track"><div class="sync-fill" id="syncFill" style="width:0%"></div></div>
+</div>
+
+<div class="game-area">
+  <canvas id="gc"></canvas>
+  <div class="touch-zone">
+    <div class="ctrl-grp">
+      <div class="cbtn c1" data-k="a">◀</div>
+      <div class="cbtn c1 cjump" data-k="w">🔵<br>JUMP</div>
+      <div class="cbtn c1" data-k="d">▶</div>
+    </div>
+    <div class="ctrl-grp">
+      <div class="cbtn c2" data-k="ArrowLeft">◀</div>
+      <div class="cbtn c2 cjump" data-k="ArrowUp">🟣<br>JUMP</div>
+      <div class="cbtn c2" data-k="ArrowRight">▶</div>
+    </div>
+  </div>
+</div>
+
+<!-- START OVERLAY -->
+<div class="ov" id="ovStart">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🌀</div>
+  <div class="ov-title" style="background:linear-gradient(90deg,var(--c0),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent">SHADOW SYNC</div>
+  <div class="ov-sub">Two players — one shared body! P1 controls LEFT/RIGHT movement. P2 controls JUMPING. Work together to survive 8 levels of mind-bending platforming!</div>
+  <div class="feat-row">
+    <div class="feat">🌀 Shared Control</div>
+    <div class="feat">⚡ Sync Meter</div>
+    <div class="feat">🌀 Mirror Zones</div>
+    <div class="feat">💎 Crystals</div>
+    <div class="feat">🔥 Hazards</div>
+    <div class="feat">🏆 8 Levels</div>
+  </div>
+  <div class="ctrl-box">
+    <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--c4);margin-bottom:10px;text-align:left">🎮 SPLIT CONTROLS</div>
+    <div class="ctrl-row">
+      <div class="ctrl-p"><div class="ctrl-em">🔵</div><div><div class="ctrl-label" style="color:var(--c0)">P1 — MOVEMENT</div><div class="ctrl-keys">A move left · D move right</div></div></div>
+      <div class="ctrl-p"><div class="ctrl-em">🟣</div><div><div class="ctrl-label" style="color:var(--c1)">P2 — JUMPING</div><div class="ctrl-keys">↑ to jump · double-tap = double jump</div></div></div>
+    </div>
+  </div>
+  <div class="ov-sub" style="font-size:11px;margin-bottom:14px">⚡ SYNC METER: The more in-sync your timing, the higher it charges. Full sync = POWER DASH that destroys obstacles!</div>
+  <div class="lvl-btns" id="lvlBtns"></div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">▶ Let's Sync!</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="ov hide" id="ovWin">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🎉</div>
+  <div class="ov-title" style="color:var(--c3)">SYNCED!</div>
+  <div class="result-box" id="winBox"></div>
+  <div class="btn-row">
+    <button class="btn btn-go" id="nextLvlBtn" onclick="G.nextLevel()">Next Level →</button>
+    <button class="btn btn-go" onclick="G.start()">↩ Retry</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- DEAD OVERLAY -->
+<div class="ov hide" id="ovDead">
+  <div class="ov-glow" style="background:radial-gradient(circle,rgba(255,0,110,.06),transparent 70%)"></div>
+  <div class="ov-icon">💀</div>
+  <div class="ov-title" style="color:var(--c2)">OUT OF SYNC!</div>
+  <div class="ov-sub" id="deadMsg">You fell! Communicate better!</div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">↩ Retry Level</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   SHADOW SYNC — 2-player co-op platformer
+   P1 = movement (A/D), P2 = jump (↑ / double-jump)
+   Sync meter fills when both act at similar timing.
+   Full sync = DASH ability, clears dangers.
+═══════════════════════════════════════════════ */
+
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const area = document.querySelector('.game-area');
+let SCL = 1, CW, CH;
+
+function resize() {
+  SCL = Math.min(area.clientWidth / 480, area.clientHeight / 320);
+  CW = Math.round(480 * SCL); CH = Math.round(320 * SCL);
+  canvas.width = CW; canvas.height = CH;
+  canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
+}
+window.addEventListener('resize', () => { resize(); });
+resize();
+
+/* INPUT */
+const K = {};
+document.addEventListener('keydown', e => {
+  K[e.key] = true;
+  if (['w','a','d','ArrowUp','ArrowLeft','ArrowRight','ArrowDown',' '].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { K[e.key] = false; });
+document.querySelectorAll('.cbtn').forEach(b => {
+  const k = b.dataset.k;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); K[k] = true; b.classList.add('pressed'); });
+  b.addEventListener('pointerup', e => { K[k] = false; b.classList.remove('pressed'); });
+  b.addEventListener('pointercancel', e => { K[k] = false; b.classList.remove('pressed'); });
+  b.addEventListener('pointerleave', e => { K[k] = false; b.classList.remove('pressed'); });
+});
+
+/* LEVELS — each level is a list of platform rects + hazards + crystals + goal */
+const TILE = 32;
+const LEVELS = [
+  { name:'Tutorial',   col1:'#00f5ff', col2:'#bf00ff',
+    plats:[{x:0,y:9,w:6},{x:7,y:7,w:4},{x:12,y:5,w:4},{x:14,y:9,w:1}],
+    hazards:[], crystals:[{x:8,y:6},{x:10,y:6},{x:13,y:4}], goal:{x:14,y:8}
+  },
+  { name:'Leap of Faith', col1:'#00f5ff', col2:'#ff006e',
+    plats:[{x:0,y:9,w:3},{x:4,y:8,w:2},{x:7,y:6,w:2},{x:10,y:7,w:2},{x:13,y:9,w:2}],
+    hazards:[{x:3,y:10,w:1},{x:6,y:10,w:1},{x:9,y:10,w:1}],
+    crystals:[{x:4,y:7},{x:7,y:5},{x:10,y:6}], goal:{x:13,y:8}
+  },
+  { name:'Spike Run', col1:'#00ff88', col2:'#bf00ff',
+    plats:[{x:0,y:9,w:15}],
+    hazards:[{x:2,y:8,w:1,spike:true},{x:5,y:8,w:1,spike:true},{x:8,y:8,w:1,spike:true},{x:11,y:8,w:1,spike:true}],
+    crystals:[{x:3,y:8},{x:6,y:8},{x:9,y:8},{x:12,y:8}], goal:{x:14,y:8}
+  },
+  { name:'Sky High', col1:'#ffe600', col2:'#bf00ff',
+    plats:[{x:0,y:9,w:2},{x:3,y:7,w:2},{x:6,y:5,w:2},{x:9,y:3,w:2},{x:12,y:1,w:3}],
+    hazards:[{x:2,y:10,w:1},{x:5,y:10,w:1},{x:8,y:10,w:1},{x:11,y:10,w:1}],
+    crystals:[{x:3,y:6},{x:6,y:4},{x:9,y:2},{x:12,y:0},{x:13,y:0}], goal:{x:14,y:0}
+  },
+  { name:'Moving Ground', col1:'#ff6b00', col2:'#00f5ff',
+    plats:[{x:0,y:9,w:2},{x:12,y:9,w:3},{x:6,y:7,w:3,move:true,mx:4,ms:0.6}],
+    hazards:[{x:2,y:10,w:10}],
+    crystals:[{x:6,y:6},{x:8,y:6}], goal:{x:13,y:8}
+  },
+  { name:'Crystal Cave', col1:'#00f5ff', col2:'#ff006e',
+    plats:[{x:0,y:9,w:4},{x:5,y:7,w:3},{x:9,y:5,w:3},{x:13,y:9,w:2}],
+    hazards:[{x:4,y:10,w:1},{x:8,y:10,w:1},{x:12,y:10,w:1}],
+    crystals:[{x:1,y:8},{x:2,y:8},{x:5,y:6},{x:6,y:6},{x:9,y:4},{x:10,y:4}], goal:{x:13,y:8}
+  },
+  { name:'Finale A', col1:'#bf00ff', col2:'#ffe600',
+    plats:[{x:0,y:9,w:2},{x:3,y:8,w:2},{x:6,y:6,w:2},{x:9,y:7,w:2,move:true,mx:2,ms:0.8},{x:12,y:5,w:3}],
+    hazards:[{x:2,y:10,w:1,spike:true},{x:5,y:10,w:1,spike:true},{x:8,y:10,w:1,spike:true}],
+    crystals:[{x:3,y:7},{x:6,y:5},{x:12,y:4},{x:13,y:4}], goal:{x:14,y:4}
+  },
+  { name:'Grand Finale', col1:'#ff006e', col2:'#00ff88',
+    plats:[{x:0,y:9,w:2},{x:3,y:7,w:1},{x:5,y:8,w:1},{x:7,y:6,w:1},{x:9,y:7,w:2,move:true,mx:3,ms:1.1},{x:12,y:5,w:3}],
+    hazards:[{x:2,y:10,w:1,spike:true},{x:4,y:10,w:1},{x:6,y:10,w:1,spike:true},{x:8,y:10,w:1}],
+    crystals:[{x:3,y:6},{x:5,y:7},{x:7,y:5},{x:12,y:4},{x:13,y:4},{x:14,y:4}], goal:{x:14,y:4}
+  },
+];
+
+// Build level select buttons
+const lvlContainer = document.getElementById('lvlBtns');
+LEVELS.forEach((lv, i) => {
+  const b = document.createElement('button');
+  b.className = 'lvl-btn' + (i === 0 ? ' active' : '');
+  b.textContent = `Lv.${i+1}`;
+  b.onclick = () => G.setLevel(i);
+  lvlContainer.appendChild(b);
+});
+
+/* GAME ENGINE */
+const G = {
+  state: 'start', lvIdx: 0, frameId: null,
+  score: 0, totalScore: 0,
+  px: 0, py: 0, pvx: 0, pvy: 0, onGround: false,
+  canDJump: true, jumpCount: 0,
+  sync: 0, dash: false, dashTimer: 0,
+  crystals: [], plats: [], hazards: [], goal: null,
+  p1act: 0, p2act: 0, // action timestamps for sync calc
+  lastJumpTime: 0, lastMoveTime: 0, particles: [],
+
+  get lv() { return LEVELS[this.lvIdx]; },
+
+  setLevel(i) {
+    this.lvIdx = i;
+    document.querySelectorAll('.lvl-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  },
+
+  init() {
+    const lv = this.lv;
+    // place platforms with world coords
+    this.plats = lv.plats.map(p => ({ ...p, rx: p.x, t: 0 }));
+    this.hazards = lv.hazards.map(h => ({ ...h }));
+    this.crystals = lv.crystals.map(c => ({ ...c, collected: false }));
+    this.goal = { ...lv.goal, reached: false };
+    // player start
+    this.px = (this.plats[0].x * TILE) + 16;
+    this.py = (this.plats[0].y * TILE) - 20;
+    this.pvx = 0; this.pvy = 0;
+    this.onGround = false; this.jumpCount = 0;
+    this.sync = 0; this.dash = false; this.dashTimer = 0;
+    this.particles = [];
+    this.score = this.crystals.length * 10;
+    document.getElementById('levelDisp').textContent = `LEVEL ${this.lvIdx + 1} · ${lv.name.toUpperCase()}`;
+    document.getElementById('scoreDisp').textContent = this.totalScore;
+  },
+
+  start() {
+    document.querySelectorAll('.ov').forEach(o => o.classList.add('hide'));
+    if (this.frameId) cancelAnimationFrame(this.frameId);
+    Object.keys(K).forEach(k => K[k] = false);
+    this.init();
+    this.state = 'play';
+    this.frameId = requestAnimationFrame(t => this.loop(t));
+  },
+
+  nextLevel() {
+    this.lvIdx = Math.min(this.lvIdx + 1, LEVELS.length - 1);
+    document.querySelectorAll('.lvl-btn').forEach((b, j) => b.classList.toggle('active', j === this.lvIdx));
+    this.start();
+  },
+
+  spawnParticle(x, y, col, n = 6) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1 + Math.random() * 3;
+      this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5, col, life: 1, sz: 3 + Math.random() * 3 });
+    }
+  },
+
+  update() {
+    const lv = this.lv;
+    const s = SCL;
+    const PW = 20, PH = 24;
+    const GRAV = 0.45, MAXVY = 14;
+
+    // Move platforms
+    this.plats.forEach(p => {
+      if (p.move) {
+        p.t = (p.t || 0) + 0.02 * p.ms;
+        p.rx = p.x + Math.sin(p.t) * p.mx;
+      }
+    });
+
+    // Sync meter — P1 moved recently AND P2 jumped recently = sync
+    const now = Date.now();
+    if (K['a'] || K['d']) this.lastMoveTime = now;
+    const prevJump = this.lastJumpTime;
+    const timeDiff = Math.abs(this.lastMoveTime - this.lastJumpTime);
+    if (timeDiff < 400 && this.lastMoveTime > 0 && this.lastJumpTime > 0) {
+      this.sync = Math.min(1, this.sync + 0.008);
+    } else {
+      this.sync = Math.max(0, this.sync - 0.003);
+    }
+
+    // Dash
+    if (this.dashTimer > 0) {
+      this.dashTimer--;
+      this.pvx = this.pvx > 0 ? 8 : -8;
+    }
+
+    // P1: movement
+    const SPEED = 3.2 + this.sync * 1.5;
+    if (K['a']) { this.pvx -= 0.8; if (this.pvx < -SPEED) this.pvx = -SPEED; }
+    else if (K['d']) { this.pvx += 0.8; if (this.pvx > SPEED) this.pvx = SPEED; }
+    else { this.pvx *= 0.8; }
+
+    // P2: jump (ArrowUp)
+    if ((K['ArrowUp'] || K['w']) && !this._jumpHeld) {
+      if (this.jumpCount < 2) {
+        const jStr = this.jumpCount === 0 ? -9.5 : -7;
+        this.pvy = jStr - this.sync * 1.5;
+        this.jumpCount++;
+        this.onGround = false;
+        this.lastJumpTime = Date.now();
+        this.spawnParticle(this.px, this.py + PH, '#bf00ff', 5);
+      }
+      this._jumpHeld = true;
+    }
+    if (!K['ArrowUp'] && !K['w']) this._jumpHeld = false;
+
+    // Gravity
+    if (!this.onGround) this.pvy = Math.min(this.pvy + GRAV, MAXVY);
+
+    // Move X
+    this.px += this.pvx;
+
+    // Platform collision X (push back)
+    this.plats.forEach(p => {
+      const pr = { x: p.rx * TILE, y: p.y * TILE, w: p.w * TILE, h: 12 };
+      if (this.px + PW > pr.x && this.px < pr.x + pr.w &&
+          this.py + PH > pr.y && this.py < pr.y + pr.h) {
+        if (this.pvx > 0) this.px = pr.x - PW;
+        else this.px = pr.x + pr.w;
+        this.pvx = 0;
+      }
+    });
+
+    // Move Y
+    this.py += this.pvy;
+    this.onGround = false;
+
+    // Platform collision Y
+    this.plats.forEach(p => {
+      const pr = { x: p.rx * TILE, y: p.y * TILE, w: p.w * TILE, h: 12 };
+      if (this.px + PW > pr.x + 4 && this.px < pr.x + pr.w - 4 &&
+          this.py + PH > pr.y && this.py + PH < pr.y + pr.h + 12 &&
+          this.pvy > 0) {
+        this.py = pr.y - PH;
+        this.pvy = 0;
+        this.onGround = true;
+        this.jumpCount = 0;
+        // If on moving platform, ride it
+        if (p.move) this.px += Math.cos(p.t || 0) * 0.02 * p.mx * p.ms;
+      }
+    });
+
+    // Wall clamp
+    this.px = Math.max(0, Math.min(480 - PW, this.px));
+
+    // Fell off bottom
+    if (this.py > 340) { this.die('You fell! Call out "JUMP!" next time!'); return; }
+
+    // Hazards
+    for (const h of this.hazards) {
+      const hr = { x: h.x * TILE, y: h.y * TILE, w: h.w * TILE, h: TILE };
+      if (this.px + 4 < hr.x + hr.w && this.px + PW - 4 > hr.x &&
+          this.py + 4 < hr.y + hr.h && this.py + PH - 4 > hr.y) {
+        // Dash can clear non-spike hazards
+        if (this.dashTimer > 0 && !h.spike) continue;
+        this.die(h.spike ? 'Hit a spike! Use SYNC DASH to clear hazards!' : 'Touched lava! Build sync meter then DASH!');
+        return;
+      }
+    }
+
+    // Crystals
+    for (const c of this.crystals) {
+      if (c.collected) continue;
+      const cx = c.x * TILE + 16, cy = c.y * TILE + 16;
+      if (Math.abs(this.px + 10 - cx) < 20 && Math.abs(this.py + 12 - cy) < 20) {
+        c.collected = true;
+        this.totalScore += 100;
+        this.spawnParticle(cx, cy, '#ffe600', 10);
+        document.getElementById('scoreDisp').textContent = this.totalScore;
+      }
+    }
+
+    // Sync dash trigger: when sync >= 1 and P1+P2 both press (D + ArrowUp)
+    if (this.sync >= 0.95 && (K['d'] || K['a']) && (K['ArrowUp'] || K['w']) && this.dashTimer === 0) {
+      this.dashTimer = 20;
+      this.sync = 0;
+      this.spawnParticle(this.px + 10, this.py + 12, '#ffe600', 20);
+      this.spawnParticle(this.px + 10, this.py + 12, '#00f5ff', 10);
+    }
+
+    // Goal
+    const gx = this.goal.x * TILE, gy = this.goal.y * TILE;
+    if (this.px + PW > gx && this.px < gx + TILE &&
+        this.py + PH > gy && this.py < gy + TILE) {
+      this.win();
+    }
+
+    // Particles
+    this.particles = this.particles.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.04; p.sz *= 0.96;
+      return p.life > 0;
+    });
+
+    // Update sync UI
+    const sp = Math.round(this.sync * 100);
+    document.getElementById('syncFill').style.width = sp + '%';
+    document.getElementById('syncPct').textContent = sp + '%';
+  },
+
+  die(msg) {
+    this.state = 'dead';
+    cancelAnimationFrame(this.frameId);
+    document.getElementById('deadMsg').textContent = msg;
+    document.getElementById('ovDead').classList.remove('hide');
+  },
+
+  win() {
+    this.state = 'win';
+    cancelAnimationFrame(this.frameId);
+    const got = this.crystals.filter(c => c.collected).length;
+    const tot = this.crystals.length;
+    this.totalScore += (got === tot ? 500 : got * 50) + Math.round(this.sync * 200);
+    document.getElementById('scoreDisp').textContent = this.totalScore;
+    document.getElementById('winBox').innerHTML = `
+      <div class="res-row"><span class="res-label">Level</span><span class="res-val">${this.lvIdx + 1} · ${this.lv.name}</span></div>
+      <div class="res-row"><span class="res-label">Crystals</span><span class="res-val">💎 ${got}/${tot}</span></div>
+      <div class="res-row"><span class="res-label">Sync Bonus</span><span class="res-val">+${Math.round(this.sync * 200)}</span></div>
+      <div class="res-row"><span class="res-label">Total Score</span><span class="res-val" style="color:var(--c4)">⭐ ${this.totalScore}</span></div>
+    `;
+    document.getElementById('nextLvlBtn').style.display = this.lvIdx < LEVELS.length - 1 ? '' : 'none';
+    document.getElementById('ovWin').classList.remove('hide');
+  },
+
+  draw() {
+    ctx.clearRect(0, 0, CW, CH);
+    ctx.save();
+    ctx.scale(SCL, SCL);
+    const W = 480, H = 320;
+
+    // BG
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#05011a');
+    bg.addColorStop(1, '#000810');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(0,245,255,.03)';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= W; x += TILE) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y <= H; y += TILE) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    const lv = this.lv;
+
+    // Platforms
+    this.plats.forEach(p => {
+      const px = p.rx * TILE, py = p.y * TILE, pw = p.w * TILE, ph = 12;
+      const pg = ctx.createLinearGradient(px, py, px, py + ph);
+      pg.addColorStop(0, lv.col1 + 'cc');
+      pg.addColorStop(1, lv.col1 + '44');
+      ctx.fillStyle = pg;
+      ctx.shadowColor = lv.col1;
+      ctx.shadowBlur = 12;
+      ctx.fillRect(px, py, pw, ph);
+      ctx.fillStyle = 'rgba(255,255,255,.3)';
+      ctx.fillRect(px, py, pw, 2);
+      ctx.shadowBlur = 0;
+      // moving indicator
+      if (p.move) {
+        ctx.fillStyle = 'rgba(255,230,0,.4)';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('↔', px + pw / 2, py + 22);
+      }
+    });
+
+    // Hazards
+    this.hazards.forEach(h => {
+      const hx = h.x * TILE, hy = h.y * TILE, hw = h.w * TILE;
+      if (h.spike) {
+        ctx.fillStyle = '#ff4444';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 10;
+        for (let i = 0; i < h.w; i++) {
+          const sx = hx + i * TILE;
+          ctx.beginPath();
+          ctx.moveTo(sx + 4, hy + TILE);
+          ctx.lineTo(sx + TILE / 2, hy + 4);
+          ctx.lineTo(sx + TILE - 4, hy + TILE);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+      } else {
+        const wv = Math.sin(Date.now() * 0.003 + h.x) * 3;
+        const hg = ctx.createLinearGradient(hx, hy, hx, hy + TILE);
+        hg.addColorStop(0, '#ff4400');
+        hg.addColorStop(1, '#880000');
+        ctx.fillStyle = hg;
+        ctx.shadowColor = '#ff4400';
+        ctx.shadowBlur = 14;
+        ctx.fillRect(hx, hy, hw, TILE);
+        ctx.fillStyle = 'rgba(255,200,0,.5)';
+        ctx.fillRect(hx, hy + wv, hw, 4);
+        ctx.shadowBlur = 0;
+      }
+    });
+
+    // Crystals
+    this.crystals.forEach(c => {
+      if (c.collected) return;
+      const cx = c.x * TILE + 16, cy = c.y * TILE + 16;
+      const bob = Math.sin(Date.now() * 0.003 + c.x * 0.7) * 4;
+      const pulse = 0.7 + Math.sin(Date.now() * 0.004 + c.x) * 0.3;
+      ctx.save();
+      ctx.shadowColor = '#ffe600';
+      ctx.shadowBlur = 12 * pulse;
+      ctx.fillStyle = `rgba(255,220,0,${0.8 + pulse * 0.2})`;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + bob - 8);
+      ctx.lineTo(cx + 6, cy + bob);
+      ctx.lineTo(cx, cy + bob + 8);
+      ctx.lineTo(cx - 6, cy + bob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,200,.6)';
+      ctx.beginPath();
+      ctx.moveTo(cx - 1, cy + bob - 6);
+      ctx.lineTo(cx + 2, cy + bob);
+      ctx.lineTo(cx - 1, cy + bob + 6);
+      ctx.lineTo(cx - 3, cy + bob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Goal portal
+    const gt = Date.now() * 0.002;
+    const gx = this.goal.x * TILE + 16, gy = this.goal.y * TILE + 16;
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(gt);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const r = 14 + Math.sin(gt * 3 + i) * 3;
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = `rgba(0,255,136,${0.5 + Math.sin(gt + i) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+    ctx.fillStyle = 'rgba(0,255,136,.15)';
+    ctx.beginPath();
+    ctx.arc(gx, gy, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = 'bold 12px Orbitron, sans-serif';
+    ctx.fillStyle = '#00ff88';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EXIT', gx, gy);
+
+    // Player (shared body)
+    const PW = 20, PH = 24;
+    const px = this.px, py = this.py;
+
+    // Dash trail
+    if (this.dashTimer > 0) {
+      for (let i = 1; i <= 4; i++) {
+        const tx = px - this.pvx * i * 2;
+        ctx.globalAlpha = 0.15 * (5 - i) / 5;
+        ctx.fillStyle = '#ffe600';
+        ctx.fillRect(tx, py, PW, PH);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Player body — left half P1 color, right half P2 color
+    const grad = ctx.createLinearGradient(px, py, px + PW, py);
+    grad.addColorStop(0, lv.col1);
+    grad.addColorStop(0.5, '#ffffff');
+    grad.addColorStop(1, lv.col2);
+    ctx.shadowColor = this.dashTimer > 0 ? '#ffe600' : '#ffffff';
+    ctx.shadowBlur = this.dashTimer > 0 ? 24 : 14;
+    ctx.fillStyle = grad;
+    this._rRect(px, py, PW, PH, 5);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(px + 6, py + 9, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 14, py + 9, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(px + 7, py + 9, 1.8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 15, py + 9, 1.8, 0, Math.PI * 2); ctx.fill();
+    // Smile / grimace based on sync
+    ctx.strokeStyle = this.sync > 0.6 ? '#00ff88' : '#ff006e';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (this.sync > 0.6) ctx.arc(px + 10, py + 15, 4, 0.2, Math.PI - 0.2);
+    else { ctx.moveTo(px + 6, py + 17); ctx.lineTo(px + 14, py + 17); }
+    ctx.stroke();
+
+    // Sync indicator above player
+    if (this.sync > 0.1) {
+      const sc = `rgba(255,230,0,${this.sync})`;
+      ctx.fillStyle = sc;
+      ctx.shadowColor = '#ffe600';
+      ctx.shadowBlur = 8 * this.sync;
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡'.repeat(Math.ceil(this.sync * 3)), px + 10, py - 6);
+      ctx.shadowBlur = 0;
+    }
+
+    // Particles
+    this.particles.forEach(p => {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.col;
+      ctx.shadowColor = p.col;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  },
+
+  _rRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  },
+
+  loop() {
+    if (this.state !== 'play') return;
+    this.frameId = requestAnimationFrame(() => this.loop());
+    this.update();
+    this.draw();
+  }
+};
+
+window.G = G;
+</script>
+</body>
+</html>
