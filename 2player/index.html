@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;
-  --c7:#0088ff;--c8:#ff00ff;
+  --c6:#ff4444;--c7:#0088ff;--c8:#ff00ff;--c9:#00ffaa;--ca:#ffaa00;--cb:#aa00ff;
   --bg:#04020c;--surface:#0a0618;--dim:#5a4a80;--card:#0d0820
 }
 html,body{min-height:100%;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;overflow-x:hidden}
@@ -88,7 +88,8 @@ html,body{min-height:100%;background:var(--bg);font-family:'Rajdhani',sans-serif
 .gc-meta{flex:1}
 .gc-cat{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
 .gc-name{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.1}
-.new-badge{background:var(--c3);color:#000;font-size:8px;font-weight:900;letter-spacing:1px;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle}
+.new-badge{background:var(--c3);color:#000;font-size:8px;font-weight:900;letter-spacing:1px;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;animation:newPulse 2s ease-in-out infinite}
+@keyframes newPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.4)}50%{box-shadow:0 0 0 4px rgba(0,255,136,0)}}
 .hot-badge{background:var(--c5);color:#fff;font-size:8px;font-weight:900;letter-spacing:1px;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle}
 .gc-body{padding:0 20px 16px}
 .gc-desc{font-size:12px;color:rgba(180,180,220,.6);line-height:1.5;margin-bottom:12px}
@@ -98,6 +99,9 @@ html,body{min-height:100%;background:var(--bg);font-family:'Rajdhani',sans-serif
 .tag-ai{background:rgba(191,0,255,.1);color:var(--c1);border:1px solid rgba(191,0,255,.2)}
 .tag-tourn{background:rgba(255,230,0,.1);color:var(--c4);border:1px solid rgba(255,230,0,.2)}
 .tag-new{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.2)}
+.tag-team{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.2)}
+.tag-battle{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.2)}
+.tag-creative{background:rgba(0,255,136,.1);color:var(--c3);border:1px solid rgba(0,255,136,.2)}
 .gc-controls{font-size:10px;color:rgba(150,150,200,.5);border-top:1px solid rgba(255,255,255,.05);padding-top:10px}
 .gc-play{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
 .play-btn{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 18px;border-radius:7px;border:1px solid rgba(191,0,255,.4);background:rgba(191,0,255,.1);color:var(--c1);transition:all .2s;white-space:nowrap}
@@ -148,7 +152,7 @@ footer{position:relative;z-index:1;text-align:center;padding:30px 20px;border-to
 </head>
 <body>
 <div class="bg-grid"></div>
-<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div><div class="orb" style="width:250px;height:250px;background:var(--c3);top:60%;left:20%;animation-delay:-6s;opacity:.08"></div><div class="orb" style="width:200px;height:200px;background:var(--c4);bottom:10%;right:30%;animation-delay:-10s;opacity:.08"></div></div>
 
 <nav class="topbar">
   <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
@@ -164,13 +168,13 @@ footer{position:relative;z-index:1;text-align:center;padding:30px 20px;border-to
 <div class="ticker-wrap">
   <div class="ticker" id="ticker">
     <span class="ticker-item"><span>🏆</span>Tournament Mode — 7 Games · Crown the Champion</span>
-    <span class="ticker-item"><span>🆕</span>Parkour Race — First to Finish Wins!</span>
+    <span class="ticker-item"><span>🆕</span>Shadow Sync — 2 Players, 1 Body · Sync to Survive!</span>
     <span class="ticker-item"><span>🤖</span>All Games Support AI — Easy · Medium · Hard</span>
     <span class="ticker-item"><span>🎱</span>Carrom — Physics Updated with Power Shots</span>
     <span class="ticker-item"><span>🐍</span>Snake & Ladders — Animations Upgraded!</span>
     <span class="ticker-item"><span>👥</span>12 Games · Same Device · vs AI · Tournament</span>
     <span class="ticker-item"><span>🏆</span>Tournament Mode — 7 Games · Crown the Champion</span>
-    <span class="ticker-item"><span>🆕</span>Parkour Race — First to Finish Wins!</span>
+    <span class="ticker-item"><span>🆕</span>Shadow Sync — 2 Players, 1 Body · Sync to Survive!</span>
     <span class="ticker-item"><span>🤖</span>All Games Support AI — Easy · Medium · Hard</span>
     <span class="ticker-item"><span>🎱</span>Carrom — Physics Updated with Power Shots</span>
     <span class="ticker-item"><span>🐍</span>Snake & Ladders — Animations Upgraded!</span>
@@ -179,13 +183,14 @@ footer{position:relative;z-index:1;text-align:center;padding:30px 20px;border-to
 </div>
 
 <div class="hero">
-  <div class="hero-badge">✨ UPGRADED · 12 GAMES · ALL WITH AI</div>
+  <div class="hero-badge">✨ UPGRADED · 15 GAMES · ALL WITH AI</div>
   <h1><span class="h1-line1">2 PLAYER</span><span class="h1-line2">BATTLES</span></h1>
-  <p class="hero-sub">12 neon arcade games — play with a friend on the same device, challenge the AI at 3 difficulty levels, or run a full 7-game tournament to crown a champion!</p>
+  <p class="hero-sub">15 neon arcade games — teamwork co-op, arena battles, creative pixel art &amp; more! Play same-device, challenge AI at 3 levels, or run a full tournament!</p>
 </div>
 
 <div class="stats">
-  <div class="stat"><div class="stat-v">12</div><div class="stat-l">Games</div></div>
+  <div class="stat"><div class="stat-v">15</div><div class="stat-l">Games</div></div>
+  <div class="stat"><div class="stat-v" style="color:var(--c0)">5</div><div class="stat-l">New Today</div></div>
   <div class="stat"><div class="stat-v" style="color:var(--c1)">3</div><div class="stat-l">AI Levels</div></div>
   <div class="stat"><div class="stat-v" style="color:var(--c4)">7</div><div class="stat-l">Tourn. Games</div></div>
   <div class="stat"><div class="stat-v" style="color:var(--c3)">ALL</div><div class="stat-l">Mobile Ready</div></div>
@@ -219,6 +224,9 @@ footer{position:relative;z-index:1;text-align:center;padding:30px 20px;border-to
     <button class="filter-btn" onclick="filterCat('action',this)">Action</button>
     <button class="filter-btn" onclick="filterCat('strategy',this)">Strategy</button>
     <button class="filter-btn" onclick="filterCat('skill',this)">Skill</button>
+    <button class="filter-btn" onclick="filterCat('teamwork',this)">🤝 Team</button>
+    <button class="filter-btn" onclick="filterCat('battle',this)">⚔️ Battle</button>
+    <button class="filter-btn" onclick="filterCat('creative',this)">🎨 Creative</button>
     <button class="filter-btn" onclick="filterCat('new',this)">🆕 New</button>
   </div>
 
@@ -253,7 +261,7 @@ footer{position:relative;z-index:1;text-align:center;padding:30px 20px;border-to
 let currentMode='2p', currentDiff='medium', currentCat='all';
 
 const GAMES=[
-  {id:'parkour',icon:'🏃',cat:'action',name:'Parkour Race',badge:'new',desc:'Sprint and jump through neon platforms! First player to reach the finish line wins. Dodge spikes, grab speed boosts.',controls:'P1: A/D + W jump · P2: ←/→ + ↑ jump · 📱 Buttons',stars:5,url:'parkour/index.html',glow:'rgba(0,255,136,.5)',c1:'rgba(0,255,136,.06)',c2:'rgba(0,245,255,.04)'},
+
   {id:'carrom',icon:'🎱',cat:'skill',name:'Carrom',badge:'hot',desc:'Flick the striker to pocket your pieces. Aim precisely, adjust power, then fire! Power shots, spin & Queen bonus.',controls:'Drag to aim, release to flick · 📱 Touch drag',stars:5,url:'carrom/index.html',glow:'rgba(191,0,255,.5)',c1:'rgba(191,0,255,.06)',c2:'rgba(0,245,255,.04)'},
   {id:'snakeladder',icon:'🐍',cat:'strategy',name:'Snake & Ladders',badge:'',desc:'Classic board game with animated snakes, glowing ladders, power-up tiles and smooth dice animations. Race to 100!',controls:'Tap dice to roll · Fully animated · 📱 Touch',stars:4,url:'snake-ladders/index.html',glow:'rgba(0,255,136,.5)',c1:'rgba(0,255,136,.06)',c2:'rgba(255,230,0,.04)'},
   {id:'chess',icon:'♟️',cat:'strategy',name:'Chess',badge:'',desc:'Full neon chess with minimax AI. Check, checkmate, castling, en passant — all rules supported!',controls:'Click piece → click target · 📱 Tap',stars:5,url:'chess/index.html',glow:'rgba(255,230,0,.5)',c1:'rgba(255,230,0,.06)',c2:'rgba(191,0,255,.04)'},
@@ -263,8 +271,13 @@ const GAMES=[
   {id:'seabattle',icon:'🚢',cat:'strategy',name:'Sea Battle',badge:'',desc:'Place ships secretly, then take turns guessing enemy positions. Sink all enemy ships first to win!',controls:'Tap grid squares · 📱 Touch',stars:4,url:'sea-battle/index.html',glow:'rgba(0,136,255,.5)',c1:'rgba(0,136,255,.06)',c2:'rgba(0,255,136,.04)'},
   {id:'gravity',icon:'🚀',cat:'action',name:'Gravity Run',badge:'',desc:'Flip gravity to dodge obstacles. Split-screen — each player controls their own lane. Survive longest!',controls:'P1: W · P2: ↑ · 📱 Tap half',stars:4,url:'gravity/index.html',glow:'rgba(255,107,0,.5)',c1:'rgba(255,107,0,.06)',c2:'rgba(255,230,0,.04)'},
   {id:'koty',icon:'👑',cat:'action',name:'King of the Yard',badge:'',desc:'Grab the crown and hold it! Bump your opponent to steal it. Hold it longest before time runs out!',controls:'P1: WASD · P2: Arrows · 📱 Joystick',stars:4,url:'koty/index.html',glow:'rgba(255,230,0,.5)',c1:'rgba(255,230,0,.06)',c2:'rgba(255,107,0,.04)'},
-  {id:'cornhole',icon:'🎯',cat:'skill',name:'Cornhole',badge:'',desc:'Toss bean bags into the hole or onto the board. 3 pts for hole, 1 pt on board. First to 21!',controls:'Drag & release to throw · 📱 Touch drag',stars:3,url:'cornhole/index.html',glow:'rgba(0,255,136,.5)',c1:'rgba(0,255,136,.06)',c2:'rgba(255,230,0,.04)'},
+
   {id:'brokentiles',icon:'💥',cat:'action',name:'Broken Tiles',badge:'',desc:'Tiles crack and fall as you walk on them. Stay on solid tiles while your opponent falls into the void!',controls:'P1: WASD · P2: Arrows · 📱 Joystick',stars:4,url:'broken-tiles/index.html',glow:'rgba(255,0,60,.5)',c1:'rgba(255,0,60,.06)',c2:'rgba(255,107,0,.04)'},
+  {id:'shadowsync',icon:'🌀',cat:'teamwork',name:'Shadow Sync',badge:'new',desc:'Two players — ONE shared body! P1 controls movement, P2 controls jumping. Sync your timing to unlock double-jumps, speed boosts and power dash. 8 levels!',controls:'P1: A/D move · P2: ↑ jump (double-tap = double jump) · 📱 Buttons',stars:5,url:'shadow-sync/index.html',glow:'rgba(0,245,255,.6)',c1:'rgba(0,245,255,.08)',c2:'rgba(191,0,255,.05)'},
+  {id:'neonduel',icon:'⚔️',cat:'battle',name:'Neon Duel',badge:'new',desc:'Top-down arena shooter! Move in 4 directions, blast bullets, dodge shots, grab power-ups — health packs, shields, speed & rapid fire. Best of 5 rounds wins!',controls:'P1: WASD move · Q fire · P2: Arrows move · / fire · 📱 D-pad + FIRE',stars:5,url:'neon-duel/index.html',glow:'rgba(255,0,110,.6)',c1:'rgba(255,0,110,.08)',c2:'rgba(191,0,255,.05)'},
+  {id:'pixelcanvas',icon:'🎨',cat:'creative',name:'Pixel Canvas',badge:'new',desc:'2-player collaborative pixel art! 4 modes: Free Paint, Prompt Challenge, Half & Half battle, or Mimic Mode. 32 neon colors, fill bucket, undo & save your masterpiece!',controls:'Touch/click to draw · Both players share canvas · 📱 Full touch',stars:5,url:'pixel-canvas/index.html',glow:'rgba(0,255,136,.6)',c1:'rgba(0,255,136,.08)',c2:'rgba(0,245,255,.05)'},
+  {id:'dotsboxes',icon:'🔲',cat:'strategy',name:'Dots & Boxes',badge:'new',desc:'Take turns drawing lines between dots. Complete a box to score — and earn another turn! Chain combos, smart AI opponent and neon glowing grid. 3 grid sizes!',controls:'Click/tap a line between dots · 📱 Full touch',stars:5,url:'dots-boxes/index.html',glow:'rgba(191,0,255,.6)',c1:'rgba(191,0,255,.08)',c2:'rgba(0,245,255,.05)'},
+  {id:'flameflood',icon:'🔥',cat:'teamwork',name:'Flame & Flood',badge:'new',desc:'2-player co-op platformer! Flame walks on lava, Flood swims in water. Stand on plates to open doors for each other. 8 levels with conveyors, bounce pads, ice, wind & more!',controls:'P1 Flame: W jump · A/D move · P2 Flood: ↑ jump · ←/→ move · 📱 Buttons',stars:5,url:'flame-flood/index.html',glow:'rgba(255,107,0,.6)',c1:'rgba(255,107,0,.08)',c2:'rgba(0,170,255,.05)'},
 ];
 
 function setMode(m,el){
@@ -311,7 +324,7 @@ function renderGames(){
         <div class="gc-desc">${g.desc}</div>
         <div class="gc-tags">
           <span class="tag tag-2p">👥 2P</span>
-          <span class="tag tag-ai">🤖 AI</span>
+          ${g.cat==='teamwork'?'<span class="tag tag-team">🤝 Team</span>':g.cat==='battle'?'<span class="tag tag-battle">⚔️ Battle</span>':g.cat==='creative'?'<span class="tag tag-creative">🎨 Create</span>':'<span class="tag tag-ai">🤖 AI</span>'}
           <span class="tag tag-tourn">🏆 Tourn</span>
           ${g.badge==='new'?'<span class="tag tag-new">🆕 New</span>':''}
         </div>
@@ -332,7 +345,7 @@ function showToast(msg){
 
 renderGames();
 // Welcome toast
-setTimeout(()=>showToast('✨ 12 games updated! Parkour is new!'),1200);
+setTimeout(()=>showToast('✨ 5 new games! Shadow Sync · Neon Duel · Pixel Canvas · Dots & Boxes · Flame & Flood!'),1200);
 </script>
 </body>
 </html>
