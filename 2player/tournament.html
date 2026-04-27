@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>Tournament — 2 Player</title>
+<title>Tournament Mode · 15 Games · Game Hub</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#03030f;--card:#080818;--dim:#5566aa}
 html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(255,230,0,.07),transparent),radial-gradient(ellipse 60% 50% at 20% 110%,rgba(191,0,255,.05),transparent);pointer-events:none;z-index:0}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(255,230,0,.07),transparent),radial-gradient(ellipse 60% 50% at 20% 110%,rgba(191,0,255,.05),transparent),radial-gradient(ellipse 40% 40% at 80% 60%,rgba(0,245,255,.04),transparent),radial-gradient(ellipse 30% 30% at 50% 80%,rgba(0,255,136,.03),transparent);pointer-events:none;z-index:0}
 body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,230,0,.014)1px,transparent 1px),linear-gradient(90deg,rgba(255,230,0,.014)1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
@@ -144,7 +144,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(3,3,15,.92);backdrop-filter
     <div class="setup">
       <span class="setup-icon">🏆</span>
       <h1>TOURNAMENT</h1>
-      <p class="setup-sub">7 random games. 1 point per win. The highest scorer after all 7 games is crowned the champion!</p>
+      <p class="setup-sub">7 random games from 15 titles. 1 point per win. Chain wins to build momentum — the highest scorer is crowned Champion!</p>
       <div class="player-inputs">
         <div class="pi-box pi-1">
           <div class="pi-label">🟦 Player 1</div>
@@ -173,7 +173,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(3,3,15,.92);backdrop-filter
     <div class="bracket">
       <div class="bracket-header">
         <h2>🏆 TOURNAMENT</h2>
-        <p id="bracket-sub" style="font-size:13px;color:var(--dim)">7 games · 1 point per win</p>
+        <p id="bracket-sub" style="font-size:13px;color:var(--dim)">7 of 15 games · 1 point per win · Ties = 0.5 each</p>
       </div>
 
       <div class="score-board">
@@ -232,11 +232,14 @@ const ALL_GAMES=[
   {id:'tictactoe',name:'Tic Tac Toe',icon:'❌',path:'tictactoe/index.html'},
   {id:'memory',name:'Memory Match',icon:'🃏',path:'memory/index.html'},
   {id:'chess',name:'Chess',icon:'♟️',path:'chess/index.html'},
-  {id:'king-yard',name:'King of Yard',icon:'👑',path:'king-yard/index.html'},
+  {id:'koty',name:'King of the Yard',icon:'👑',path:'koty/index.html'},
   {id:'carrom',name:'Carrom',icon:'🎱',path:'carrom/index.html'},
-  {id:'cornhole',name:'Cornhole',icon:'🎯',path:'cornhole/index.html'},
   {id:'broken-tiles',name:'Broken Tiles',icon:'💥',path:'broken-tiles/index.html'},
-  {id:'snake-ladders',name:'Snake & Ladders',icon:'🐍',path:'snake-ladders/index.html'},
+  {id:'shadow-sync',name:'Shadow Sync',icon:'🌀',path:'shadow-sync/index.html'},
+  {id:'neon-duel',name:'Neon Duel',icon:'⚔️',path:'neon-duel/index.html'},
+  {id:'dots-boxes',name:'Dots & Boxes',icon:'🔲',path:'dots-boxes/index.html'},
+  {id:'flame-flood',name:'Flame & Flood',icon:'🔥',path:'flame-flood/index.html'},
+  {id:'pixel-canvas',name:'Pixel Canvas',icon:'🎨',path:'pixel-canvas/index.html'},
 ];
 
 let tournMode='1v1',diff='easy';
