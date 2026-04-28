@@ -1,13 +1,38 @@
 {
-  "name": "GameHub Neon Arcade",
+  "name": "GameHub — Neon Arcade",
   "short_name": "GameHub",
-  "description": "25+ neon arcade games",
+  "description": "40+ neon arcade games: mini games, timed challenges, multiplayer arena and 2-player mode.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
+  "orientation": "any",
+  "background_color": "#04020c",
   "theme_color": "#00f5ff",
+  "categories": ["games", "entertainment"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mini Games",
+      "short_name": "Mini",
+      "description": "14 classic arcade games",
+      "url": "/minigames/index.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "2 Player Mode",
+      "short_name": "2 Player",
+      "description": "13 local co-op and versus games",
+      "url": "/2player/index.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Multiplayer Arena",
+      "short_name": "Arena",
+      "description": "Live online multiplayer",
+      "url": "/multiplayer/index.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
