@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — Page Not Found · GameHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--bg:#04020c;--dim:#5a4a80}
+html,body{height:100%;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;overflow:hidden}
+.bg-orbs{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 8s ease-in-out infinite}
+.o1{width:400px;height:400px;background:var(--c1);top:-100px;left:-100px;opacity:.07;animation-delay:0s}
+.o2{width:300px;height:300px;background:var(--c0);bottom:-80px;right:-80px;opacity:.07;animation-delay:-3s}
+.o3{width:200px;height:200px;background:var(--c2);top:50%;left:50%;opacity:.05;animation-delay:-6s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.05)}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,245,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,.03) 1px,transparent 1px);background-size:40px 40px}
+.wrap{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.code{font-family:'Orbitron',sans-serif;font-size:clamp(80px,20vw,160px);font-weight:900;line-height:1;margin-bottom:8px;position:relative;background:linear-gradient(135deg,var(--c0),var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(0,245,255,.3));animation:glitch 4s infinite}
+.code::before,.code::after{content:'404';position:absolute;inset:0;font-family:'Orbitron',sans-serif;font-size:inherit;font-weight:900;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.code::before{background:linear-gradient(135deg,var(--c2),var(--c1));animation:glitchBefore 4s infinite;opacity:.7;clip-path:polygon(0 30%,100% 30%,100% 50%,0 50%)}
+.code::after{background:linear-gradient(135deg,var(--c0),var(--c3));animation:glitchAfter 4s infinite;opacity:.7;clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%)}
+@keyframes glitch{0%,90%,100%{transform:none}92%{transform:translateX(-3px)}94%{transform:translateX(3px)}96%{transform:translateX(-1px)}}
+@keyframes glitchBefore{0%,90%,100%{transform:none}92%{transform:translateX(4px)}94%{transform:translateX(-4px)}}
+@keyframes glitchAfter{0%,90%,100%{transform:none}93%{transform:translateX(-4px)}95%{transform:translateX(4px)}}
+.icon{font-size:48px;margin-bottom:12px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.title{font-family:'Orbitron',sans-serif;font-size:clamp(16px,4vw,24px);font-weight:700;letter-spacing:2px;color:#fff;margin-bottom:8px}
+.sub{font-size:14px;color:var(--dim);max-width:400px;line-height:1.7;margin-bottom:28px}
+.scanline{position:absolute;top:0;left:0;right:0;height:2px;background:rgba(0,245,255,.15);animation:scan 3s linear infinite;pointer-events:none}
+@keyframes scan{0%{top:0}100%{top:100%}}
+.nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.nav-btn{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:11px 20px;border-radius:10px;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;border:1px solid}
+.btn-home{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(191,0,255,.15));color:#fff;border-color:rgba(255,255,255,.2)}
+.btn-home:hover{background:linear-gradient(135deg,rgba(0,245,255,.3),rgba(191,0,255,.3));transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.btn-2p{background:rgba(0,255,136,.08);color:var(--c3);border-color:rgba(0,255,136,.25)}
+.btn-2p:hover{background:rgba(0,255,136,.18);transform:translateY(-2px)}
+.btn-mini{background:rgba(191,0,255,.08);color:var(--c1);border-color:rgba(191,0,255,.25)}
+.btn-mini:hover{background:rgba(191,0,255,.18);transform:translateY(-2px)}
+.btn-timed{background:rgba(255,0,110,.08);color:var(--c2);border-color:rgba(255,0,110,.25)}
+.btn-timed:hover{background:rgba(255,0,110,.18);transform:translateY(-2px)}
+.bad-url{font-size:11px;color:rgba(255,255,255,.2);font-family:monospace;margin-top:4px;word-break:break-all;max-width:400px}
+.divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--c0),transparent);margin:0 auto 20px}
+.dots{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+.dot{width:8px;height:8px;border-radius:50%;animation:dotPulse 1.5s ease-in-out infinite}
+.dot:nth-child(1){background:var(--c0);animation-delay:0s}
+.dot:nth-child(2){background:var(--c1);animation-delay:.2s}
+.dot:nth-child(3){background:var(--c2);animation-delay:.4s}
+.dot:nth-child(4){background:var(--c3);animation-delay:.6s}
+@keyframes dotPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.foot{position:fixed;bottom:16px;font-size:10px;color:rgba(255,255,255,.15);letter-spacing:2px;font-family:'Orbitron',sans-serif}
+@media(max-width:480px){.nav{gap:8px}.nav-btn{font-size:9px;padding:9px 14px}}
+</style>
+</head>
+<body>
+<div class="bg-orbs">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+</div>
+<div class="grid"></div>
+<div class="wrap">
+  <div class="icon">🕹️</div>
+  <div class="code" style="position:relative">
+    404
+    <div class="scanline"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="title">LEVEL NOT FOUND</div>
+  <div class="sub">This page got deleted, moved, or never existed.<br>Let's get you back in the game.</div>
+  <div class="bad-url" id="badUrl"></div>
+  <div class="dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <div class="nav">
+    <a href="/index.html" class="nav-btn btn-home">⌂ Home Hub</a>
+    <a href="/2player/index.html" class="nav-btn btn-2p">👥 2 Player</a>
+    <a href="/minigames/index.html" class="nav-btn btn-mini">🎮 Mini Games</a>
+    <a href="/timed-challenge/index.html" class="nav-btn btn-timed">⏱️ Timed Mode</a>
+  </div>
+</div>
+<div class="foot" id="foot">GAMEHUB · PAGE NOT FOUND</div>
+<script>
+  const url = window.location.pathname;
+  if(url && url !== '/') document.getElementById('badUrl').textContent = 'Tried: ' + url;
+  let t = 15;
+  const foot = document.getElementById('foot');
+  const iv = setInterval(() => {
+    t--;
+    foot.textContent = 'GAMEHUB · RETURNING TO HUB IN ' + t + 's';
+    if(t <= 0){ clearInterval(iv); window.location.href = '/index.html'; }
+  }, 1000);
+</script>
+</body>
+</html>
