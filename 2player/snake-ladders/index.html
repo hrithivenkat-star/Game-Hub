@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Snake & Ladders · 2P · Game Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#04020c;--dim:#5a4a80}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:#e0e8ff;touch-action:none;display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(4,2,12,.98);border-bottom:1px solid rgba(0,255,136,.12)}
+.tlogo{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:var(--c0);text-decoration:none;letter-spacing:3px}
+.tlogo em{color:var(--c1);font-style:normal}
+.tbtn{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);border:1px solid rgba(255,255,255,.07);padding:5px 10px;border-radius:6px;background:none;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.tbtn:hover{color:var(--c0);border-color:rgba(0,245,255,.3)}
+
+/* HUD */
+.hud{flex-shrink:0;display:flex;align-items:stretch;background:rgba(4,2,12,.95);border-bottom:1px solid rgba(255,255,255,.05)}
+.hud-p{flex:1;display:flex;align-items:center;gap:10px;padding:8px 14px}
+.hud-p.p2{flex-direction:row-reverse;text-align:right}
+.hud-av{width:36px;height:36px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hud-name{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.hud-pos{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;line-height:1}
+.hud-sub{font-size:9px;color:var(--dim)}
+.hud-mid{flex-shrink:0;padding:6px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.turn-pill{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:4px 14px;border-radius:10px;border:1px solid;transition:all .3s;white-space:nowrap}
+.game-info{font-size:9px;color:var(--dim);letter-spacing:1px}
+
+/* DICE + ROLL BTN */
+.dice-bar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 14px;background:rgba(4,2,12,.9);border-bottom:1px solid rgba(255,255,255,.04)}
+.dice{width:52px;height:52px;border-radius:12px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:32px;font-family:'Orbitron',sans-serif;font-weight:900;transition:all .2s;flex-shrink:0;backdrop-filter:blur(4px)}
+.dice.rolling{animation:diceSpin .5s ease-in-out}
+@keyframes diceSpin{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-15deg) scale(1.1)}75%{transform:rotate(15deg) scale(1.1)}100%{transform:rotate(0) scale(1)}}
+.roll-btn{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:12px 28px;border-radius:10px;cursor:pointer;border:1px solid;transition:all .2s;display:flex;align-items:center;gap:8px}
+.roll-btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+.roll-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+
+/* GAME AREA */
+.game-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#060220,var(--bg))}
+#gc{display:block;touch-action:none}
+
+/* EVENT LOG */
+.log{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(4,2,12,.85);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;color:#e0e8ff;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(8px);transition:opacity .3s;pointer-events:none;text-align:center}
+.log.hide{opacity:0}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:rgba(4,2,12,.96);backdrop-filter:blur(22px);overflow-y:auto}
+.ov.hide{display:none}
+.ov-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,136,.07),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ov-icon{font-size:64px;margin-bottom:12px;animation:floatY 2.5s ease-in-out infinite;position:relative;z-index:1}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,5vw,30px);font-weight:900;margin-bottom:8px;position:relative;z-index:1;letter-spacing:2px}
+.ov-sub{font-size:12px;color:rgba(180,180,220,.6);max-width:460px;line-height:1.8;margin-bottom:14px;position:relative;z-index:1}
+.feat-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;position:relative;z-index:1}
+.feat{font-size:10px;font-weight:700;padding:4px 11px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--dim)}
+.btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:12px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1}
+.btn-go{background:linear-gradient(135deg,rgba(0,255,136,.15),rgba(0,245,255,.15));color:#fff;border:1px solid rgba(255,255,255,.18)}
+.btn-go:hover{background:linear-gradient(135deg,rgba(0,255,136,.28),rgba(0,245,255,.28));transform:translateY(-2px)}
+.btn-sec{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid rgba(255,255,255,.08)}
+.btn-sec:hover{color:#fff}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.res-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 24px;margin-bottom:14px;width:100%;max-width:340px;position:relative;z-index:1}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.res-row:last-child{border:none}
+.res-l{font-size:11px;color:var(--dim)}
+.res-v{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700}
+
+/* POWER-UP LEGEND */
+.pu-legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;position:relative;z-index:1}
+.pu-item{font-size:10px;font-weight:700;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--dim);display:flex;align-items:center;gap:5px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://game-hub-jade-gamma.vercel.app/index.html" class="tlogo">GAME<em>HUB</em></a>
+  <div style="display:flex;gap:6px">
+    <a href="../index.html" class="tbtn">← 2P Hub</a>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="hud-p" id="hudP1">
+    <div class="hud-av" id="av1" style="border-color:var(--c0);box-shadow:0 0 10px rgba(0,245,255,.3)">🔵</div>
+    <div>
+      <div class="hud-name" style="color:var(--c0)">PLAYER 1</div>
+      <div class="hud-pos" id="pos1" style="color:var(--c0)">1</div>
+      <div class="hud-sub">square</div>
+    </div>
+  </div>
+  <div class="hud-mid">
+    <div class="turn-pill" id="turnPill">P1 TURN</div>
+    <div class="game-info">RACE TO 100</div>
+  </div>
+  <div class="hud-p p2" id="hudP2">
+    <div class="hud-av" id="av2" style="border-color:var(--c2);box-shadow:0 0 10px rgba(255,0,110,.3)">🔴</div>
+    <div>
+      <div class="hud-name" style="color:var(--c2)">PLAYER 2</div>
+      <div class="hud-pos" id="pos2" style="color:var(--c2)">1</div>
+      <div class="hud-sub">square</div>
+    </div>
+  </div>
+</div>
+
+<div class="dice-bar">
+  <div class="dice" id="diceEl">🎲</div>
+  <button class="roll-btn" id="rollBtn" onclick="G.roll()"
+    style="background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(0,255,136,.15));color:#fff;border-color:rgba(0,245,255,.3)">
+    🎲 ROLL DICE
+  </button>
+  <div id="bonusTag" style="font-family:'Orbitron',sans-serif;font-size:9px;color:var(--c4);letter-spacing:1px;opacity:0;transition:opacity .3s">BONUS ROLL!</div>
+</div>
+
+<div class="game-area">
+  <canvas id="gc"></canvas>
+  <div class="log hide" id="logEl"></div>
+</div>
+
+<!-- START -->
+<div class="ov" id="ovStart">
+  <div class="ov-glow"></div>
+  <div class="ov-icon">🐍</div>
+  <div class="ov-title" style="background:linear-gradient(90deg,var(--c3),var(--c0));-webkit-background-clip:text;-webkit-text-fill-color:transparent">SNAKE & LADDERS</div>
+  <div class="ov-sub">Race from square 1 to 100! Roll the dice, climb glowing ladders, avoid neon snakes. Land on power-up tiles for special effects. First to reach 100 wins!</div>
+  <div class="feat-row">
+    <div class="feat">🐍 8 Snakes</div><div class="feat">🪜 8 Ladders</div>
+    <div class="feat">⚡ Power-ups</div><div class="feat">🎲 Dice Roll</div>
+    <div class="feat">🎯 Exact Landing</div><div class="feat">✨ Neon Board</div>
+  </div>
+  <div class="pu-legend">
+    <div class="pu-item">⚡ <span style="color:var(--c4)">Speed</span> — Roll again!</div>
+    <div class="pu-item">🛡️ <span style="color:var(--c0)">Shield</span> — Block next snake</div>
+    <div class="pu-item">🔀 <span style="color:var(--c1)">Swap</span> — Swap positions!</div>
+    <div class="pu-item">⏪ <span style="color:var(--c2)">Curse</span> — Move back 6</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">🎲 Start Game!</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<!-- WIN -->
+<div class="ov hide" id="ovWin">
+  <div class="ov-glow" style="background:radial-gradient(circle,rgba(255,230,0,.08),transparent 70%)"></div>
+  <div class="ov-icon" id="winIcon">🏆</div>
+  <div class="ov-title" id="winTitle" style="color:var(--c4)">WINNER!</div>
+  <div class="res-box" id="resBox"></div>
+  <div class="btn-row">
+    <button class="btn btn-go" onclick="G.start()">🔄 Play Again</button>
+    <a href="../index.html" class="btn btn-sec">← Back</a>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SNAKE & LADDERS — neon edition
+   10×10 board (squares 1–100), bottom-left = 1, serpentine
+   8 snakes, 8 ladders, 6 power-up tiles
+   P1 = cyan, P2 = magenta
+═══════════════════════════════════════════════════════════ */
+
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const area = document.querySelector('.game-area');
+
+// Board layout
+const SNAKES = {
+  97:78, 95:56, 88:24, 76:38, 74:53, 64:15, 54:36, 43:18
+};
+const LADDERS = {
+  4:25, 13:46, 28:75, 33:49, 42:63, 50:69, 62:81, 85:93
+};
+const POWERUPS = {
+  10: {type:'speed',  icon:'⚡', col:'#ffe600'},
+  22: {type:'shield', icon:'🛡️', col:'#00f5ff'},
+  35: {type:'swap',   icon:'🔀', col:'#bf00ff'},
+  47: {type:'speed',  icon:'⚡', col:'#ffe600'},
+  68: {type:'curse',  icon:'⏪', col:'#ff006e'},
+  80: {type:'shield', icon:'🛡️', col:'#00f5ff'},
+};
+
+const P_COL  = ['#00f5ff', '#ff006e'];
+const P_COL2 = ['rgba(0,245,255,.18)', 'rgba(255,0,110,.18)'];
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+let CELL, BOARD_SIZE, OX, OY;
+
+function resize() {
+  const maxW = area.clientWidth - 8;
+  const maxH = area.clientHeight - 8;
+  const sz = Math.min(maxW, maxH);
+  CELL = Math.floor(sz / 10);
+  BOARD_SIZE = CELL * 10;
+  canvas.width  = BOARD_SIZE;
+  canvas.height = BOARD_SIZE;
+  canvas.style.width  = BOARD_SIZE + 'px';
+  canvas.style.height = BOARD_SIZE + 'px';
+  OX = 0; OY = 0;
+  if (G.running) G.draw();
+}
+window.addEventListener('resize', resize);
+
+// Square → pixel centre
+function sqToXY(sq) {
+  const idx = sq - 1; // 0-based
+  const row = Math.floor(idx / 10); // 0 = bottom
+  const col = idx % 10;
+  const screenRow = 9 - row; // flip: row0=bottom → screenRow9
+  // Serpentine: even rows left→right, odd rows right→left
+  const screenCol = (row % 2 === 0) ? col : (9 - col);
+  return {
+    x: OX + screenCol * CELL + CELL / 2,
+    y: OY + screenRow * CELL + CELL / 2
+  };
+}
+
+function sqLabel(sq) {
+  const idx = sq - 1;
+  const row = Math.floor(idx / 10);
+  const col = idx % 10;
+  const screenRow = 9 - row;
+  const screenCol = row % 2 === 0 ? col : 9 - col;
+  return { x: OX + screenCol * CELL, y: OY + screenRow * CELL };
+}
+
+// ── GAME STATE ──
+const G = {
+  running: false,
+  pos: [1, 1],
+  turn: 0,
+  shield: [false, false],
+  animating: false,
+  particles: [],
+  frameId: null,
+  rolls: [0, 0],
+  snakeHits: [0, 0],
+  ladderClimbs: [0, 0],
+
+  start() {
+    document.querySelectorAll('.ov').forEach(o => o.classList.add('hide'));
+    this.pos = [1, 1];
+    this.turn = 0;
+    this.shield = [false, false];
+    this.animating = false;
+    this.particles = [];
+    this.rolls = [0, 0];
+    this.snakeHits = [0, 0];
+    this.ladderClimbs = [0, 0];
+    this.running = true;
+    resize();
+    this.updateHUD();
+    this.updateTurn();
+    this.setLog('🎮 Game started! P1 rolls first.');
+    if (this.frameId) cancelAnimationFrame(this.frameId);
+    this.loop();
+  },
+
+  roll() {
+    if (this.animating) return;
+    const btn = document.getElementById('rollBtn');
+    btn.disabled = true;
+    document.getElementById('bonusTag').style.opacity = '0';
+
+    const val = Math.floor(Math.random() * 6) + 1;
+    this.rolls[this.turn]++;
+    this.animateDice(val, () => this.applyMove(val));
+  },
+
+  animateDice(val, cb) {
+    const dEl = document.getElementById('diceEl');
+    dEl.classList.add('rolling');
+    let t = 0;
+    const iv = setInterval(() => {
+      dEl.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+      t++;
+      if (t >= 8) {
+        clearInterval(iv);
+        dEl.textContent = DICE_FACES[val - 1];
+        dEl.style.color = P_COL[this.turn];
+        dEl.style.borderColor = P_COL[this.turn] + '88';
+        dEl.classList.remove('rolling');
+        setTimeout(cb, 200);
+      }
+    }, 60);
+  },
+
+  applyMove(val) {
+    const p = this.turn;
+    let newPos = this.pos[p] + val;
+
+    // Exact landing rule — bounce back if overshoots 100
+    if (newPos > 100) {
+      newPos = 100 - (newPos - 100);
+      this.setLog(`🎯 P${p+1} overshoots! Bounces to ${newPos}`);
+    } else {
+      this.setLog(`🎲 P${p+1} rolled ${val} → square ${newPos}`);
+    }
+
+    this.animateMove(p, this.pos[p], newPos, () => {
+      this.pos[p] = newPos;
+      this.checkSpecial(p, newPos, val);
+    });
+  },
+
+  animateMove(p, from, to, cb) {
+    this.animating = true;
+    const steps = [];
+    // Build step sequence
+    for (let s = from + 1; s <= to; s++) steps.push(s);
+    if (steps.length === 0) { this.animating = false; cb(); return; }
+
+    let i = 0;
+    const iv = setInterval(() => {
+      this.pos[p] = steps[i];
+      this.spawnTrail(p);
+      this.updateHUD();
+      i++;
+      if (i >= steps.length) {
+        clearInterval(iv);
+        this.animating = false;
+        cb();
+      }
+    }, 90);
+  },
+
+  checkSpecial(p, sq, diceVal) {
+    // Win check
+    if (sq === 100) { this.win(p); return; }
+
+    // Snake
+    if (SNAKES[sq] !== undefined) {
+      if (this.shield[p]) {
+        this.shield[p] = false;
+        this.setLog(`🛡️ P${p+1}'s shield blocked the snake on ${sq}!`);
+        this.spawnParticles(sq, '#00f5ff', 14);
+        this.endTurn(false);
+      } else {
+        const dest = SNAKES[sq];
+        this.snakeHits[p]++;
+        this.setLog(`🐍 P${p+1} hit a snake! ${sq} → ${dest}`);
+        this.spawnParticles(sq, '#ff006e', 14);
+        setTimeout(() => {
+          this.animateMove(p, sq, dest, () => {
+            this.pos[p] = dest;
+            this.updateHUD();
+            this.endTurn(false);
+          });
+        }, 400);
+      }
+      return;
+    }
+
+    // Ladder
+    if (LADDERS[sq] !== undefined) {
+      const dest = LADDERS[sq];
+      this.ladderClimbs[p]++;
+      this.setLog(`🪜 P${p+1} climbs a ladder! ${sq} → ${dest}`);
+      this.spawnParticles(sq, '#00ff88', 14);
+      setTimeout(() => {
+        this.animateMove(p, sq, dest, () => {
+          this.pos[p] = dest;
+          this.updateHUD();
+          if (dest === 100) { this.win(p); return; }
+          this.endTurn(false);
+        });
+      }, 400);
+      return;
+    }
+
+    // Power-up
+    if (POWERUPS[sq]) {
+      const pu = POWERUPS[sq];
+      this.spawnParticles(sq, pu.col, 16);
+      switch (pu.type) {
+        case 'speed':
+          this.setLog(`⚡ P${p+1} got SPEED BOOST — roll again!`);
+          document.getElementById('bonusTag').style.opacity = '1';
+          setTimeout(() => {
+            document.getElementById('rollBtn').disabled = false;
+          }, 500);
+          return;
+        case 'shield':
+          this.shield[p] = true;
+          this.setLog(`🛡️ P${p+1} got SHIELD — next snake blocked!`);
+          this.endTurn(false);
+          return;
+        case 'swap':
+          this.setLog(`🔀 POSITION SWAP! P1↔P2 swapped!`);
+          const tmp = this.pos[0];
+          this.pos[0] = this.pos[1];
+          this.pos[1] = tmp;
+          this.updateHUD();
+          this.endTurn(false);
+          return;
+        case 'curse':
+          const cursed = Math.max(1, this.pos[p] - 6);
+          this.setLog(`⏪ P${p+1} cursed! Back to ${cursed}`);
+          setTimeout(() => {
+            this.animateMove(p, this.pos[p], cursed, () => {
+              this.pos[p] = cursed;
+              this.updateHUD();
+              this.endTurn(false);
+            });
+          }, 300);
+          return;
+      }
+    }
+
+    // Rolled a 6 → bonus roll
+    if (diceVal === 6) {
+      this.setLog(`🎯 P${p+1} rolled 6 — bonus roll!`);
+      document.getElementById('bonusTag').style.opacity = '1';
+      setTimeout(() => {
+        document.getElementById('rollBtn').disabled = false;
+      }, 400);
+      return;
+    }
+
+    this.endTurn(false);
+  },
+
+  endTurn(samePlayer) {
+    if (!samePlayer) this.turn = 1 - this.turn;
+    this.updateTurn();
+    this.updateHUD();
+    document.getElementById('rollBtn').disabled = false;
+  },
+
+  win(p) {
+    this.running = false;
+    cancelAnimationFrame(this.frameId);
+    this.spawnParticles(100, P_COL[p], 30);
+    this.draw();
+
+    document.getElementById('winIcon').textContent = p === 0 ? '🔵' : '🔴';
+    document.getElementById('winTitle').textContent = `P${p+1} WINS!`;
+    document.getElementById('winTitle').style.color = P_COL[p];
+    document.getElementById('resBox').innerHTML = `
+      <div class="res-row"><span class="res-l">Winner</span><span class="res-v" style="color:${P_COL[p]}">Player ${p+1}</span></div>
+      <div class="res-row"><span class="res-l">P1 Rolls</span><span class="res-v" style="color:var(--c0)">${this.rolls[0]}</span></div>
+      <div class="res-row"><span class="res-l">P2 Rolls</span><span class="res-v" style="color:var(--c2)">${this.rolls[1]}</span></div>
+      <div class="res-row"><span class="res-l">Snakes Hit</span><span class="res-v" style="color:var(--c2)">${this.snakeHits[0]} / ${this.snakeHits[1]}</span></div>
+      <div class="res-row"><span class="res-l">Ladders Climbed</span><span class="res-v" style="color:var(--c3)">${this.ladderClimbs[0]} / ${this.ladderClimbs[1]}</span></div>
+    `;
+    setTimeout(() => document.getElementById('ovWin').classList.remove('hide'), 800);
+  },
+
+  updateHUD() {
+    document.getElementById('pos1').textContent = this.pos[0];
+    document.getElementById('pos2').textContent = this.pos[1];
+    // Shield indicator
+    document.getElementById('av1').textContent = this.shield[0] ? '🛡️' : '🔵';
+    document.getElementById('av2').textContent = this.shield[1] ? '🛡️' : '🔴';
+  },
+
+  updateTurn() {
+    const pill = document.getElementById('turnPill');
+    pill.textContent = `P${this.turn + 1} TURN`;
+    pill.style.color = P_COL[this.turn];
+    pill.style.borderColor = P_COL[this.turn] + '66';
+    pill.style.background = P_COL2[this.turn];
+
+    const btn = document.getElementById('rollBtn');
+    btn.style.color = P_COL[this.turn];
+    btn.style.borderColor = P_COL[this.turn] + '66';
+    btn.style.background = `rgba(${this.turn===0?'0,245,255':'255,0,110'},.12)`;
+  },
+
+  setLog(msg) {
+    const el = document.getElementById('logEl');
+    el.textContent = msg;
+    el.classList.remove('hide');
+    clearTimeout(this._logTimer);
+    this._logTimer = setTimeout(() => el.classList.add('hide'), 3000);
+  },
+
+  spawnTrail(p) {
+    const sq = this.pos[p];
+    const {x, y} = sqToXY(sq);
+    for (let i = 0; i < 2; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 0.5 + Math.random() * 1.5;
+      this.particles.push({
+        x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+        col: P_COL[p], life: 1, sz: 2+Math.random()*2, decay: 0.08
+      });
+    }
+  },
+
+  spawnParticles(sq, col, n) {
+    const {x, y} = sqToXY(sq);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1.5 + Math.random() * 4;
+      this.particles.push({
+        x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 1,
+        col, life: 1, sz: 3+Math.random()*4, decay: 0.04
+      });
+    }
+  },
+
+  draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const T = Date.now() * 0.001;
+
+    // BG
+    ctx.fillStyle = '#020010';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw board squares
+    for (let sq = 1; sq <= 100; sq++) {
+      const {x: lx, y: ly} = sqLabel(sq);
+      const row = Math.floor((sq-1)/10);
+      const col = (sq-1)%10;
+      // Checkerboard-style subtle colour
+      const even = (row+col)%2===0;
+      ctx.fillStyle = even ? 'rgba(255,255,255,.025)' : 'rgba(255,255,255,.01)';
+      ctx.fillRect(lx, ly, CELL, CELL);
+
+      // Border
+      ctx.strokeStyle = 'rgba(255,255,255,.06)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(lx, ly, CELL, CELL);
+
+      // Square number
+      ctx.fillStyle = 'rgba(255,255,255,.18)';
+      ctx.font = `bold ${Math.max(7, CELL*0.18)}px Orbitron, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(sq, lx + CELL/2, ly + 2);
+
+      // Power-up highlight
+      if (POWERUPS[sq]) {
+        const pu = POWERUPS[sq];
+        const pulse = 0.5 + Math.sin(T*3 + sq*0.4)*0.3;
+        ctx.fillStyle = pu.col + Math.round(pulse*0x22).toString(16).padStart(2,'0');
+        ctx.fillRect(lx+1, ly+1, CELL-2, CELL-2);
+        ctx.font = `${Math.max(12, CELL*0.38)}px sans-serif`;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pu.icon, lx+CELL/2, ly+CELL*0.62);
+      }
+    }
+
+    // Draw snakes (curved red neon lines)
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const [from, to] of Object.entries(SNAKES)) {
+      const a = sqToXY(parseInt(from));
+      const b = sqToXY(parseInt(to));
+      const pulse = 0.6 + Math.sin(T*2 + parseInt(from)*0.3)*0.4;
+      // Body
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      const mx = (a.x+b.x)/2 + (b.y-a.y)*0.3;
+      const my = (a.y+b.y)/2 - (b.x-a.x)*0.3;
+      ctx.quadraticCurveTo(mx, my, b.x, b.y);
+      ctx.strokeStyle = `rgba(255,0,110,${pulse*0.85})`;
+      ctx.lineWidth = Math.max(3, CELL*0.1);
+      ctx.shadowColor = '#ff006e';
+      ctx.shadowBlur = 8*pulse;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      // Head emoji
+      ctx.font = `${Math.max(12, CELL*0.3)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐍', a.x, a.y);
+    }
+
+    // Draw ladders (double-line cyan neon)
+    for (const [from, to] of Object.entries(LADDERS)) {
+      const a = sqToXY(parseInt(from));
+      const b = sqToXY(parseInt(to));
+      const pulse = 0.6 + Math.sin(T*2.5 + parseInt(from)*0.2)*0.4;
+      const dx = b.x-a.x, dy = b.y-a.y;
+      const len = Math.sqrt(dx*dx+dy*dy);
+      const nx = -dy/len*CELL*0.08, ny = dx/len*CELL*0.08;
+
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 6*pulse;
+      ctx.strokeStyle = `rgba(0,255,136,${pulse*0.85})`;
+      ctx.lineWidth = Math.max(2, CELL*0.06);
+
+      // Left rail
+      ctx.beginPath();
+      ctx.moveTo(a.x+nx, a.y+ny);
+      ctx.lineTo(b.x+nx, b.y+ny);
+      ctx.stroke();
+      // Right rail
+      ctx.beginPath();
+      ctx.moveTo(a.x-nx, a.y-ny);
+      ctx.lineTo(b.x-nx, b.y-ny);
+      ctx.stroke();
+      // Rungs
+      const steps = Math.max(2, Math.floor(len/(CELL*0.6)));
+      for (let i=1; i<steps; i++) {
+        const t2 = i/steps;
+        const rx = a.x+dx*t2, ry = a.y+dy*t2;
+        ctx.beginPath();
+        ctx.moveTo(rx+nx*1.2, ry+ny*1.2);
+        ctx.lineTo(rx-nx*1.2, ry-ny*1.2);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // Bottom icon
+      ctx.font = `${Math.max(12, CELL*0.3)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🪜', a.x, a.y);
+    }
+
+    // Draw players
+    for (let p = 0; p < 2; p++) {
+      const sq = this.pos[p];
+      let {x, y} = sqToXY(sq);
+      // Offset so both players visible on same square
+      if (this.pos[0] === this.pos[1]) x += p === 0 ? -CELL*0.16 : CELL*0.16;
+
+      const pulse = 0.7 + Math.sin(T*4 + p)*0.3;
+      const isActive = this.turn === p && this.running;
+
+      ctx.save();
+      ctx.shadowColor = P_COL[p];
+      ctx.shadowBlur = isActive ? 18*pulse : 8;
+      ctx.fillStyle = P_COL[p];
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(6, CELL*0.22), 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(4, CELL*0.14), 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = P_COL[p];
+      ctx.font = `bold ${Math.max(7, CELL*0.15)}px Orbitron, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`P${p+1}`, x, y);
+
+      // Active glow ring
+      if (isActive) {
+        ctx.strokeStyle = P_COL[p];
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = pulse;
+        ctx.beginPath();
+        ctx.arc(x, y, CELL*0.32, 0, Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // Particles
+    this.particles = this.particles.filter(p2 => {
+      p2.x += p2.vx; p2.y += p2.vy;
+      p2.vx *= 0.94; p2.vy *= 0.94; p2.vy += 0.1;
+      p2.life -= p2.decay; p2.sz *= 0.97;
+      if (p2.life <= 0) return false;
+      ctx.save();
+      ctx.globalAlpha = p2.life;
+      ctx.shadowColor = p2.col; ctx.shadowBlur = 6;
+      ctx.fillStyle = p2.col;
+      ctx.beginPath();
+      ctx.arc(p2.x, p2.y, p2.sz, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      return true;
+    });
+  },
+
+  loop() {
+    this.frameId = requestAnimationFrame(() => this.loop());
+    this.draw();
+  }
+};
+
+window.G = G;
+</script>
+</body>
+</html>
