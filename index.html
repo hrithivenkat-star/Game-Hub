@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Game Hub — Neon Arcade</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GameHub">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="description" content="40+ neon arcade games — mini games, timed challenges, multiplayer arena and 2-player local mode.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -249,14 +256,14 @@ footer a{color:var(--c0);text-decoration:none}
 <!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-inner">
-    <span class="ti">🎮 <strong>25+ GAMES</strong> · 4 modes · Neon arcade</span>
-    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 7 online games · Global leaderboard</span>
-    <span class="ti">👥 <strong>2 PLAYER MODE NEW!</strong> · Same device · vs AI · Chess · Pong · Snake</span>
-    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 10 games</span>
-    <span class="ti">🎮 <strong>25+ GAMES</strong> · 4 modes · Neon arcade</span>
-    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 7 online games · Global leaderboard</span>
-    <span class="ti">👥 <strong>2 PLAYER MODE NEW!</strong> · Same device · vs AI · Chess · Pong · Snake</span>
-    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 10 games</span>
+    <span class="ti">🎮 <strong>40+ GAMES</strong> · 4 modes · Neon arcade</span>
+    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 4 online games · Global leaderboard</span>
+    <span class="ti">👥 <strong>2 PLAYER MODE</strong> · 13 games · Chess · Neon Duel · Sea Battle · Flame &amp; Flood</span>
+    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 9 games</span>
+    <span class="ti">🎮 <strong>40+ GAMES</strong> · 4 modes · Neon arcade</span>
+    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 4 online games · Global leaderboard</span>
+    <span class="ti">👥 <strong>2 PLAYER MODE</strong> · 13 games · Chess · Neon Duel · Sea Battle · Flame &amp; Flood</span>
+    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 9 games</span>
   </div>
 </div>
 
@@ -424,14 +431,17 @@ footer a{color:var(--c0);text-decoration:none}
   <a href="2player/index.html" class="strip strip-2p">
     <span class="strip-icon">👥</span>
     <div class="strip-body">
-      <div class="strip-title">✨ NEW — 2 Player Mode</div>
-      <div class="strip-sub">Battle a friend on the same device, or challenge the AI. 8 games, 3 AI difficulty levels.</div>
+      <div class="strip-title">✨ 2 Player Mode — 13 Games</div>
+      <div class="strip-sub">Battle a friend on the same device, or challenge the AI. 3 difficulty levels.</div>
       <div class="tp-games">
-        <span class="tp-g">♟️ Chess vs AI</span>
-        <span class="tp-g">🏓 Pong Battle</span>
-        <span class="tp-g">🐍 Snake 2P</span>
-        <span class="tp-g">❌ Tic Tac Toe</span>
-        <span class="tp-g">🤖 Easy/Med/Hard AI</span>
+        <span class="tp-g">♟️ Chess</span>
+        <span class="tp-g">⚔️ Neon Duel</span>
+        <span class="tp-g">🚢 Sea Battle</span>
+        <span class="tp-g">🔥 Flame &amp; Flood</span>
+        <span class="tp-g">🌀 Shadow Sync</span>
+        <span class="tp-g">🎨 Pixel Canvas</span>
+        <span class="tp-g">🔲 Dots &amp; Boxes</span>
+        <span class="tp-g">🎱 Carrom</span>
       </div>
     </div>
     <span class="strip-cta">Play Now →</span>
@@ -499,6 +509,15 @@ const allKeys=['snake_best','tetris_best','pong_best','breakout_best','2048_best
 const set=allKeys.filter(k=>localStorage.getItem(k)).length;
 document.getElementById('scores-set').textContent=set;
 document.getElementById('lb-set').textContent=set;
+</script>
+<script src="/shared/utils.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(function(err) { console.warn('SW registration failed:', err); });
+  });
+}
 </script>
 </body>
 </html>
