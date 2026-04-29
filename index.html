@@ -2,1235 +2,522 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GAME HUB</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Game Hub — Neon Arcade</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GameHub">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="description" content="40+ neon arcade games — mini games, timed challenges, multiplayer arena and 2-player local mode.">
 <style>
-  :root {
-    --neon-cyan: #00f5ff;
-    --neon-pink: #ff006e;
-    --neon-green: #39ff14;
-    --neon-yellow: #ffe600;
-    --neon-purple: #bf00ff;
-    --neon-orange: #ff6a00;
-    --bg-dark: #050510;
-    --bg-card: #0a0a1a;
-    --bg-card2: #080818;
-    --text-dim: #5a5a8a;
-    --border-dim: #1a1a3a;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--c0:#00f5ff;--c1:#bf00ff;--c2:#ff006e;--c3:#00ff88;--c4:#ffe600;--c5:#ff6b00;--bg:#03030f;--card:#080818;--dim:#5566aa}
+html{scroll-behavior:smooth}
+html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* BG */
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 90% 60% at 15% -5%,rgba(0,245,255,.06),transparent),
+  radial-gradient(ellipse 70% 50% at 85% 105%,rgba(191,0,255,.05),transparent),
+  radial-gradient(ellipse 50% 40% at 50% 50%,rgba(0,255,136,.025),transparent);
+  pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,245,255,.018)1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,245,255,.018)1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0}
 
-  /* ── LOADING SCREEN ── */
-  #loading-screen {
-    position: fixed; inset: 0; z-index: 9999;
-    background: #000;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 30px;
-  }
-  .load-logo {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(2.5rem, 8vw, 6rem);
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    color: #fff;
-    text-shadow:
-      0 0 20px var(--neon-cyan),
-      0 0 60px var(--neon-cyan),
-      0 0 120px var(--neon-cyan);
-    animation: loadPulse 1.2s ease-in-out infinite;
-    white-space: nowrap;
-  }
-  @keyframes loadPulse {
-    0%,100% { opacity: 1; text-shadow: 0 0 20px var(--neon-cyan),0 0 60px var(--neon-cyan),0 0 120px var(--neon-cyan); }
-    50% { opacity: 0.7; text-shadow: 0 0 10px var(--neon-pink),0 0 40px var(--neon-pink),0 0 80px var(--neon-pink); }
-  }
-  .load-bar-wrap {
-    width: min(400px, 80vw);
-    height: 6px;
-    background: #111;
-    border-radius: 3px;
-    overflow: hidden;
-    border: 1px solid #222;
-  }
-  .load-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
-    border-radius: 3px;
-    transition: width 0.1s linear;
-    box-shadow: 0 0 10px var(--neon-cyan);
-  }
-  .load-text {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--neon-cyan);
-    font-size: 0.9rem;
-    letter-spacing: 0.2em;
-  }
-  .load-percent {
-    font-family: 'Orbitron', monospace;
-    color: var(--neon-pink);
-    font-size: 2rem;
-    font-weight: 700;
-  }
-  #loading-screen.fade-out {
-    animation: fadeOut 0.8s ease forwards;
-  }
-  @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes shimmer{0%{background-position:-200%}100%{background-position:200%}}
+@keyframes ping{0%{transform:scale(1);opacity:.8}100%{transform:scale(2);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes orbit{from{transform:rotate(0deg) translateX(90px) rotate(0deg)}to{transform:rotate(360deg) translateX(90px) rotate(-360deg)}}
 
-  /* ── SCANLINES OVERLAY ── */
-  body {
-    background: var(--bg-dark);
-    color: #fff;
-    font-family: 'Exo 2', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 1000; pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px, transparent 3px,
-      rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px
-    );
-  }
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,.038),transparent);animation:scanline 10s linear infinite;pointer-events:none;z-index:1}
+.container{position:relative;z-index:2;max-width:1280px;margin:0 auto;padding:0 18px}
 
-  /* ── GRID BG ── */
-  .grid-bg {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image:
-      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
+/* ══ NAV ══ */
+nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,245,255,.07);padding:12px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--c0);text-decoration:none;text-shadow:0 0 18px rgba(0,245,255,.5);letter-spacing:2px;flex-shrink:0}
+.logo em{color:var(--c1);font-style:normal}
+.nav-links{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+.nl{color:var(--dim);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 11px;border-radius:6px;border:1px solid transparent;transition:all .2s;white-space:nowrap}
+.nl:hover{color:var(--c0);border-color:rgba(0,245,255,.2);background:rgba(0,245,255,.04)}
+.nl-new{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25)!important;color:var(--c3)!important}
+.nav-cta{background:linear-gradient(135deg,rgba(255,0,110,.15),rgba(191,0,255,.1));border:1px solid rgba(255,0,110,.35);color:var(--c2);padding:7px 15px;border-radius:18px;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;transition:all .2s;font-family:'Orbitron',monospace;white-space:nowrap}
+.nav-cta:hover{box-shadow:0 0 18px rgba(255,0,110,.3);transform:translateY(-1px)}
+.nick-pill{display:none;align-items:center;gap:5px;background:rgba(0,255,136,.09);border:1px solid rgba(0,255,136,.26);color:var(--c3);padding:6px 14px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Orbitron',monospace;flex-shrink:0}
+.nick-pill:hover{background:rgba(0,255,136,.17)}
+.ndot{width:6px;height:6px;border-radius:50%;background:var(--c3);box-shadow:0 0 6px var(--c3);animation:glow 1.5s ease-in-out infinite}
+/* Hide nav links on small screens */
+@media(max-width:768px){
+  .nl:not(.nav-cta):not(.nl-new){display:none}
+  .logo{font-size:16px}
+}
 
-  /* ── MAIN WRAPPER ── */
-  #main-app {
-    position: relative; z-index: 1;
-    display: none;
-  }
-  #main-app.visible { display: block; }
+/* ══ TICKER ══ */
+.ticker-wrap{background:rgba(0,245,255,.04);border-bottom:1px solid rgba(0,245,255,.07);padding:8px 0;overflow:hidden;white-space:nowrap;position:relative;z-index:2}
+.ticker-inner{display:inline-flex;animation:ticker 38s linear infinite}
+.ti{font-size:12px;color:var(--c0);padding:0 44px;font-weight:600;letter-spacing:.4px;opacity:.7}
+.ti strong{color:#fff;opacity:1}
 
-  /* ── NAV ── */
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(5,5,16,0.92);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0,245,255,0.15);
-    padding: 0 40px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 70px;
-  }
-  .nav-logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.8rem;
-    font-weight: 900;
-    letter-spacing: 0.25em;
-    white-space: nowrap;
-    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: none;
-    filter: drop-shadow(0 0 12px rgba(0,245,255,0.5));
-  }
-  .nav-links {
-    display: flex; gap: 8px; align-items: center;
-  }
-  .nav-links a {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    color: var(--text-dim);
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-  .nav-links a:hover, .nav-links a.active {
-    color: var(--neon-cyan);
-    border-color: rgba(0,245,255,0.3);
-    background: rgba(0,245,255,0.05);
-    text-shadow: 0 0 10px var(--neon-cyan);
-  }
-  .nav-badge {
-    background: var(--neon-pink);
-    color: #000;
-    font-size: 0.5rem;
-    font-weight: 700;
-    padding: 2px 5px;
-    border-radius: 3px;
-    vertical-align: super;
-    margin-left: 2px;
-  }
+/* ══ HERO ══ */
+.hero{padding:64px 0 50px;display:grid;grid-template-columns:1fr 280px;gap:40px;align-items:center}
+@media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center;padding:44px 0 36px}}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,245,255,.07);border:1px solid rgba(0,245,255,.2);border-radius:20px;padding:5px 16px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c0);margin-bottom:20px}
+.hero-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--c3);box-shadow:0 0 7px var(--c3);position:relative;flex-shrink:0}
+.hero-badge-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(0,255,136,.4);animation:ping 1.5s ease-out infinite}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(32px,6.5vw,72px);font-weight:900;line-height:1.04;color:#fff;margin-bottom:14px}
+.hero h1 .w1{display:block;color:var(--c0);text-shadow:0 0 28px rgba(0,245,255,.7),0 0 55px rgba(0,245,255,.35)}
+.hero h1 .w2{display:block;color:var(--c1);text-shadow:0 0 28px rgba(191,0,255,.7),0 0 55px rgba(191,0,255,.35)}
+.hero-sub{font-size:16px;color:var(--dim);max-width:500px;line-height:1.75;margin-bottom:32px}
+.hero-sub strong{color:#dde6ff}
+@media(max-width:860px){.hero-sub{margin:0 auto 28px;max-width:420px}}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:860px){.hero-btns{justify-content:center}}
+.hbtn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px 24px;border-radius:8px;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:none;white-space:nowrap}
+.hbtn-c{background:rgba(0,245,255,.1);color:var(--c0);border:1px solid rgba(0,245,255,.35);box-shadow:0 0 16px rgba(0,245,255,.1)}
+.hbtn-c:hover{background:rgba(0,245,255,.2);box-shadow:0 0 30px rgba(0,245,255,.35);transform:translateY(-2px)}
+.hbtn-d{background:transparent;color:#aabbdd;border:1px solid rgba(255,255,255,.14)}
+.hbtn-d:hover{border-color:rgba(255,255,255,.38);color:#fff;transform:translateY(-2px)}
+.hbtn-p{background:rgba(255,0,110,.1);color:var(--c2);border:1px solid rgba(255,0,110,.38)}
+.hbtn-p:hover{background:rgba(255,0,110,.2);box-shadow:0 0 26px rgba(255,0,110,.32);transform:translateY(-2px)}
+.hbtn-g{background:rgba(0,255,136,.09);color:var(--c3);border:1px solid rgba(0,255,136,.32)}
+.hbtn-g:hover{background:rgba(0,255,136,.18);box-shadow:0 0 26px rgba(0,255,136,.28);transform:translateY(-2px)}
 
-  /* ── HERO ── */
-  .hero {
-    text-align: center;
-    padding: 80px 20px 60px;
-    position: relative;
-  }
-  .hero-title {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(3rem, 10vw, 8rem);
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    line-height: 1;
-    white-space: nowrap;
-    background: linear-gradient(180deg, #fff 0%, var(--neon-cyan) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 30px rgba(0,245,255,0.6));
-    animation: heroGlow 3s ease-in-out infinite;
-  }
-  @keyframes heroGlow {
-    0%,100% { filter: drop-shadow(0 0 30px rgba(0,245,255,0.6)); }
-    50% { filter: drop-shadow(0 0 60px rgba(255,0,110,0.6)); }
-  }
-  .hero-sub {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--text-dim);
-    font-size: 0.9rem;
-    letter-spacing: 0.3em;
-    margin-top: 16px;
-  }
-  .hero-stats {
-    display: flex; justify-content: center; gap: 40px;
-    margin-top: 40px; flex-wrap: wrap;
-  }
-  .stat-block {
-    text-align: center;
-  }
-  .stat-num {
-    font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: var(--neon-cyan);
-    text-shadow: 0 0 20px var(--neon-cyan);
-  }
-  .stat-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    font-family: 'Share Tech Mono', monospace;
-    text-transform: uppercase;
-  }
+/* HERO VISUAL */
+.hero-visual{position:relative;height:240px;display:flex;align-items:center;justify-content:center}
+.hero-orb{width:200px;height:200px;border-radius:50%;background:conic-gradient(from 0deg,rgba(0,245,255,.22),rgba(191,0,255,.22),rgba(255,0,110,.22),rgba(0,255,136,.22),rgba(255,230,0,.22),rgba(0,245,255,.22));animation:float 4s ease-in-out infinite;position:relative;box-shadow:0 0 50px rgba(0,245,255,.08)}
+.hero-orb::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--bg)}
+.hero-orb-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:70px}
+.orb-dot{position:absolute;width:10px;height:10px;border-radius:50%;top:50%;left:50%;margin:-5px;animation:orbit 4s linear infinite}
+.orb-d1{background:var(--c0);box-shadow:0 0 10px var(--c0);animation-duration:3s}
+.orb-d2{background:var(--c2);box-shadow:0 0 10px var(--c2);animation-duration:5s;animation-direction:reverse}
+.orb-d3{background:var(--c3);box-shadow:0 0 10px var(--c3);animation-duration:4s;animation-delay:-1s}
+@media(max-width:860px){.hero-visual{display:none}}
 
-  /* ── MODE TABS ── */
-  .mode-section {
-    padding: 40px 40px 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  .section-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-  .mode-tabs {
-    display: flex; gap: 10px; flex-wrap: wrap;
-  }
-  .mode-tab {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 12px 24px;
-    border-radius: 6px;
-    border: 1px solid var(--border-dim);
-    background: var(--bg-card);
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.25s;
-    display: flex; align-items: center; gap: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-  .mode-tab::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 100%);
-    pointer-events: none;
-  }
-  .mode-tab.active[data-mode="solo"] {
-    border-color: var(--neon-cyan);
-    color: var(--neon-cyan);
-    background: rgba(0,245,255,0.08);
-    box-shadow: 0 0 20px rgba(0,245,255,0.2), inset 0 0 20px rgba(0,245,255,0.05);
-  }
-  .mode-tab.active[data-mode="timed"] {
-    border-color: var(--neon-yellow);
-    color: var(--neon-yellow);
-    background: rgba(255,230,0,0.08);
-    box-shadow: 0 0 20px rgba(255,230,0,0.2), inset 0 0 20px rgba(255,230,0,0.05);
-  }
-  .mode-tab.active[data-mode="2player"] {
-    border-color: var(--neon-green);
-    color: var(--neon-green);
-    background: rgba(57,255,20,0.08);
-    box-shadow: 0 0 20px rgba(57,255,20,0.2), inset 0 0 20px rgba(57,255,20,0.05);
-  }
-  .mode-tab.active[data-mode="multiplayer"] {
-    border-color: var(--neon-pink);
-    color: var(--neon-pink);
-    background: rgba(255,0,110,0.08);
-    box-shadow: 0 0 20px rgba(255,0,110,0.2), inset 0 0 20px rgba(255,0,110,0.05);
-  }
-  .mode-tab:hover:not(.active) {
-    border-color: #333;
-    color: #aaa;
-    background: rgba(255,255,255,0.03);
-  }
-  .tab-icon { font-size: 1rem; }
+/* ══ STATS ══ */
+.stats-bar{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:700px;margin:0 auto 72px;background:rgba(255,255,255,.018)}
+@media(max-width:600px){.stats-bar{grid-template-columns:repeat(3,1fr)}}
+.stat{padding:18px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.05)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;display:block;text-shadow:0 0 10px currentColor;animation:fadeUp .5s ease both}
+.stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+@media(max-width:600px){.stat:nth-child(4),.stat:nth-child(5){display:none}}
 
-  /* ── SEARCH + FILTER BAR ── */
-  .toolbar {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px 40px;
-    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
-  }
-  .search-wrap {
-    flex: 1; min-width: 200px;
-    position: relative;
-  }
-  .search-wrap input {
-    width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    color: #fff;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.9rem;
-    padding: 12px 16px 12px 44px;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .search-wrap input:focus { border-color: var(--neon-cyan); }
-  .search-wrap::before {
-    content: '⌕'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: var(--text-dim); font-size: 1.2rem; pointer-events: none;
-  }
-  .genre-select {
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    color: #aaa;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    padding: 12px 16px;
-    border-radius: 6px;
-    outline: none;
-    cursor: pointer;
-  }
-  .genre-select:focus { border-color: var(--neon-cyan); }
-  .game-count-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-  .game-count-label span {
-    color: var(--neon-cyan);
-    font-weight: 700;
-  }
+/* ══ SECTION HDR ══ */
+.sec-hdr{text-align:center;margin-bottom:36px}
+.sec-ey{font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,34px);font-weight:900;color:#fff}
 
-  /* ── GAME GRID ── */
-  .games-section {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 40px 60px;
-  }
-  .category-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin: 40px 0 16px;
-    display: flex; align-items: center; gap: 16px;
-  }
-  .category-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--border-dim), transparent);
-  }
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-  }
+/* ══ MODES GRID ══ */
+.modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:80px}
+@media(max-width:720px){.modes-grid{grid-template-columns:1fr}}
+.mc{position:relative;overflow:hidden;background:var(--card);border-radius:16px;border:1px solid rgba(255,255,255,.05);text-decoration:none;color:inherit;transition:all .3s;display:flex;flex-direction:column;animation:fadeUp .4s ease both;cursor:pointer}
+.mc:hover{transform:translateY(-5px)}
+.mc-bar{height:4px;position:relative;overflow:hidden}
+.mc-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);background-size:200%;animation:shimmer 2.5s linear infinite}
+.mc-mini .mc-bar{background:linear-gradient(90deg,var(--c0),var(--c1));box-shadow:0 0 12px rgba(0,245,255,.5)}
+.mc-time .mc-bar{background:linear-gradient(90deg,var(--c1),var(--c2));box-shadow:0 0 12px rgba(191,0,255,.5)}
+.mc-multi .mc-bar{background:linear-gradient(90deg,var(--c2),var(--c5));box-shadow:0 0 12px rgba(255,0,110,.5)}
+.mc-2p .mc-bar{background:linear-gradient(90deg,var(--c3),var(--c4));box-shadow:0 0 12px rgba(0,255,136,.5)}
+.mc-mini:hover{box-shadow:0 20px 60px rgba(0,245,255,.1),0 0 0 1px rgba(0,245,255,.16)}
+.mc-time:hover{box-shadow:0 20px 60px rgba(191,0,255,.1),0 0 0 1px rgba(191,0,255,.16)}
+.mc-multi:hover{box-shadow:0 20px 60px rgba(255,0,110,.1),0 0 0 1px rgba(255,0,110,.16)}
+.mc-2p:hover{box-shadow:0 20px 60px rgba(0,255,136,.1),0 0 0 1px rgba(0,255,136,.16)}
+.mc-body{padding:26px 22px 18px;flex:1;display:flex;gap:18px}
+.mc-icon{width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;animation:float 3.5s ease-in-out infinite}
+.mc-mini .mc-icon{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.24)}
+.mc-time .mc-icon{background:rgba(191,0,255,.1);border:1px solid rgba(191,0,255,.24)}
+.mc-multi .mc-icon{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.24)}
+.mc-2p .mc-icon{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.24)}
+.mc-text{flex:1;min-width:0}
+.mc-ey{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.mc-mini .mc-ey{color:var(--c0)}.mc-time .mc-ey{color:var(--c1)}.mc-multi .mc-ey{color:var(--c2)}.mc-2p .mc-ey{color:var(--c3)}
+.mc-title{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;color:#fff;margin-bottom:8px}
+.mc-desc{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:13px}
+.mc-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pill{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.mc-mini .pill{background:rgba(0,245,255,.08);color:var(--c0);border:1px solid rgba(0,245,255,.18)}
+.mc-time .pill{background:rgba(191,0,255,.08);color:var(--c1);border:1px solid rgba(191,0,255,.18)}
+.mc-multi .pill{background:rgba(255,0,110,.08);color:var(--c2);border:1px solid rgba(255,0,110,.18)}
+.mc-2p .pill{background:rgba(0,255,136,.08);color:var(--c3);border:1px solid rgba(0,255,136,.18)}
+.mc-score-row{display:flex;gap:12px;flex-wrap:wrap}
+.mc-score{font-size:11px;color:var(--dim)}
+.mc-score span{font-family:'Orbitron',monospace;font-size:12px;font-weight:700}
+.mc-mini .mc-score span{color:var(--c0)}.mc-time .mc-score span{color:var(--c1)}
+.mc-multi .mc-score span{color:var(--c2)}.mc-2p .mc-score span{color:var(--c3)}
+.mc-footer{padding:13px 22px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.01)}
+.mc-count{font-size:11px;color:var(--dim)}
+.mc-go{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;padding:8px 17px;border-radius:7px;transition:all .2s;display:inline-block;text-decoration:none}
+.mc-mini .mc-go{background:rgba(0,245,255,.09);color:var(--c0);border:1px solid rgba(0,245,255,.22)}
+.mc-time .mc-go{background:rgba(191,0,255,.09);color:var(--c1);border:1px solid rgba(191,0,255,.22)}
+.mc-multi .mc-go{background:rgba(255,0,110,.09);color:var(--c2);border:1px solid rgba(255,0,110,.22)}
+.mc-2p .mc-go{background:rgba(0,255,136,.09);color:var(--c3);border:1px solid rgba(0,255,136,.22)}
+.mc:hover .mc-go{filter:brightness(1.22);transform:scale(1.04)}
+.badge-live{position:absolute;top:16px;right:15px;background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.3);color:var(--c2);font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:9px;display:flex;align-items:center;gap:4px}
+.bdot{width:5px;height:5px;border-radius:50%;background:var(--c2);animation:glow 1s ease-in-out infinite}
+.badge-new{position:absolute;top:16px;right:15px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.28);color:var(--c3);font-size:9px;font-weight:700;padding:3px 9px;border-radius:9px}
 
-  /* ── GAME CARD ── */
-  .game-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.25s;
-    position: relative;
-    display: flex; flex-direction: column;
-  }
-  .game-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--card-color, var(--neon-cyan));
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 20px var(--card-glow, rgba(0,245,255,0.2));
-  }
-  .card-thumb {
-    height: 130px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 3.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .card-thumb::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: var(--card-bg, radial-gradient(circle at 50% 50%, rgba(0,245,255,0.15) 0%, transparent 70%));
-  }
-  .card-thumb .emoji {
-    position: relative; z-index: 1;
-    filter: drop-shadow(0 0 12px var(--card-color, var(--neon-cyan)));
-    animation: floatEmoji 3s ease-in-out infinite;
-  }
-  @keyframes floatEmoji {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  .card-body { padding: 14px; flex: 1; }
-  .card-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #fff;
-    margin-bottom: 6px;
-    line-height: 1.3;
-  }
-  .card-desc {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    line-height: 1.5;
-    font-family: 'Share Tech Mono', monospace;
-  }
-  .card-footer {
-    padding: 10px 14px;
-    border-top: 1px solid var(--border-dim);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 6px;
-  }
-  .card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
-  .card-tag {
-    font-size: 0.55rem;
-    font-family: 'Share Tech Mono', monospace;
-    padding: 2px 7px;
-    border-radius: 3px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .tag-solo { background: rgba(0,245,255,0.12); color: var(--neon-cyan); border: 1px solid rgba(0,245,255,0.2); }
-  .tag-timed { background: rgba(255,230,0,0.12); color: var(--neon-yellow); border: 1px solid rgba(255,230,0,0.2); }
-  .tag-2p { background: rgba(57,255,20,0.12); color: var(--neon-green); border: 1px solid rgba(57,255,20,0.2); }
-  .tag-mp { background: rgba(255,0,110,0.12); color: var(--neon-pink); border: 1px solid rgba(255,0,110,0.2); }
-  .play-btn {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: 1px solid var(--card-color, var(--neon-cyan));
-    color: var(--card-color, var(--neon-cyan));
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-  .play-btn:hover {
-    background: var(--card-color, var(--neon-cyan));
-    color: #000;
-  }
-  .card-badge {
-    position: absolute; top: 10px; right: 10px;
-    font-size: 0.55rem;
-    font-family: 'Orbitron', monospace;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    padding: 3px 8px;
-    border-radius: 3px;
-    z-index: 2;
-  }
-  .badge-hot { background: var(--neon-pink); color: #000; }
-  .badge-new { background: var(--neon-green); color: #000; }
-  .badge-soon { background: #333; color: #888; border: 1px solid #444; }
-  .badge-featured { background: var(--neon-yellow); color: #000; }
+/* ══ FEATURED ══ */
+.featured-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:80px}
+@media(max-width:900px){.featured-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.featured-grid{grid-template-columns:repeat(2,1fr)}}
+.fc{background:var(--card);border-radius:11px;border:1px solid rgba(255,255,255,.05);padding:16px 12px 12px;text-decoration:none;color:inherit;display:block;transition:all .25s;text-align:center;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.fc::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.fc:hover::before{transform:scaleX(1)}
+.fc:hover{transform:translateY(-4px)}
+.fc0::before,.fc0:hover{box-shadow:0 8px 25px rgba(0,245,255,.1)}.fc0::before{background:var(--c0);box-shadow:none}
+.fc1::before,.fc1:hover{box-shadow:0 8px 25px rgba(191,0,255,.1)}.fc1::before{background:var(--c1);box-shadow:none}
+.fc2::before,.fc2:hover{box-shadow:0 8px 25px rgba(255,0,110,.1)}.fc2::before{background:var(--c2);box-shadow:none}
+.fc3::before,.fc3:hover{box-shadow:0 8px 25px rgba(0,255,136,.1)}.fc3::before{background:var(--c3);box-shadow:none}
+.fc4::before,.fc4:hover{box-shadow:0 8px 25px rgba(255,230,0,.1)}.fc4::before{background:var(--c4);box-shadow:none}
+.fc-icon{font-size:28px;margin-bottom:8px;display:block}
+.fc-name{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#fff;margin-bottom:4px}
+.fc-score{font-size:10px;color:var(--dim)}
+.fc-score span{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;animation:glow 2.5s ease-in-out infinite}
+.fc0 .fc-score span{color:var(--c0)}.fc1 .fc-score span{color:var(--c1)}.fc2 .fc-score span{color:var(--c2)}.fc3 .fc-score span{color:var(--c3)}.fc4 .fc-score span{color:var(--c4)}
 
-  /* ── COMING SOON OVERLAY ── */
-  .game-card.coming-soon {
-    pointer-events: auto;
-  }
-  .game-card.coming-soon .card-thumb { filter: brightness(0.4) grayscale(0.5); }
-  .game-card.coming-soon .card-body { opacity: 0.5; }
-  .coming-soon-banner {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 8px;
-    background: rgba(0,0,0,0.5);
-    z-index: 3;
-    border-radius: 10px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .game-card.coming-soon:hover .coming-soon-banner { opacity: 1; }
-  .cs-text {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    color: var(--neon-yellow);
-    text-shadow: 0 0 20px var(--neon-yellow);
-  }
-  .cs-date {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: #888;
-  }
+/* ══ STRIPS ══ */
+.strip{border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap;text-decoration:none;color:inherit;transition:all .3s}
+.strip-lb{background:linear-gradient(135deg,rgba(255,230,0,.04),rgba(255,107,0,.02));border:1px solid rgba(255,230,0,.14)}
+.strip-lb:hover{box-shadow:0 12px 40px rgba(255,230,0,.08)}
+.strip-2p{background:linear-gradient(135deg,rgba(0,255,136,.05),rgba(0,245,255,.03));border:1px solid rgba(0,255,136,.16);cursor:pointer}
+.strip-2p:hover{transform:translateY(-3px);box-shadow:0 16px 50px rgba(0,255,136,.1)}
+.strip-icon{font-size:36px;animation:float 2.5s ease-in-out infinite;flex-shrink:0}
+.strip-body{flex:1;min-width:0}
+.strip-title{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;margin-bottom:4px}
+.strip-lb .strip-title{color:var(--c4);text-shadow:0 0 10px rgba(255,230,0,.4)}
+.strip-2p .strip-title{color:var(--c3);text-shadow:0 0 10px rgba(0,255,136,.4)}
+.strip-sub{font-size:13px;color:var(--dim)}
+.strip-chips{display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.chip{background:rgba(255,230,0,.07);border:1px solid rgba(255,230,0,.14);border-radius:8px;padding:7px 14px;text-align:center}
+.chip-n{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--c4);display:block}
+.chip-l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.strip-cta{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 20px;border-radius:7px;text-decoration:none;transition:all .2s;white-space:nowrap;display:inline-block;flex-shrink:0}
+.strip-lb .strip-cta{background:rgba(255,230,0,.11);border:1px solid rgba(255,230,0,.28);color:var(--c4)}
+.strip-lb .strip-cta:hover{background:rgba(255,230,0,.2);box-shadow:0 0 14px rgba(255,230,0,.3)}
+.strip-2p .strip-cta{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.28);color:var(--c3)}
+.strip-2p .strip-cta:hover{background:rgba(0,255,136,.18);box-shadow:0 0 14px rgba(0,255,136,.3)}
+.tp-games{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.tp-g{font-size:11px;padding:3px 10px;border-radius:9px;font-weight:600;background:rgba(0,255,136,.08);color:var(--c3);border:1px solid rgba(0,255,136,.18)}
 
-  /* ── COMING SOON PAGE ── */
-  #coming-soon-page {
-    display: none;
-    min-height: 80vh;
-    align-items: center; justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    padding: 80px 40px;
-    gap: 30px;
-  }
-  #coming-soon-page.active { display: flex; }
-  .cs-big-title {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(2rem, 6vw, 5rem);
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    color: var(--neon-yellow);
-    text-shadow: 0 0 40px var(--neon-yellow), 0 0 80px rgba(255,230,0,0.4);
-    animation: csGlow 2s ease-in-out infinite;
-  }
-  @keyframes csGlow {
-    0%,100% { text-shadow: 0 0 40px var(--neon-yellow), 0 0 80px rgba(255,230,0,0.4); }
-    50% { text-shadow: 0 0 20px var(--neon-yellow), 0 0 40px rgba(255,230,0,0.2); }
-  }
-  .cs-subtitle {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1rem;
-    color: var(--text-dim);
-    letter-spacing: 0.3em;
-    max-width: 600px;
-  }
-  .cs-games-preview {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-    max-width: 900px;
-    width: 100%;
-  }
-  .cs-game-pill {
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 8px;
-    padding: 14px;
-    text-align: center;
-    transition: border-color 0.2s;
-  }
-  .cs-game-pill:hover { border-color: var(--neon-yellow); }
-  .cs-pill-emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
-  .cs-pill-name {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: #ccc;
-    letter-spacing: 0.08em;
-  }
-  .cs-pill-eta {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--neon-yellow);
-    margin-top: 4px;
-  }
-  .cs-countdown {
-    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
-  }
-  .cs-count-block {
-    text-align: center;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 8px;
-    padding: 20px 30px;
-  }
-  .cs-count-num {
-    font-family: 'Orbitron', monospace;
-    font-size: 3rem;
-    font-weight: 900;
-    color: var(--neon-cyan);
-    text-shadow: 0 0 20px var(--neon-cyan);
-    display: block;
-  }
-  .cs-count-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
+/* ══ FOOTER ══ */
+footer{border-top:1px solid rgba(255,255,255,.05);padding:30px 0;text-align:center;margin-top:30px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--c0);margin-bottom:9px;text-shadow:0 0 12px rgba(0,245,255,.4)}
+.footer-logo em{color:var(--c1);font-style:normal}
+footer p{font-size:13px;color:var(--dim)}
+footer a{color:var(--c0);text-decoration:none}
 
-  /* ── MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0; z-index: 500;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(10px);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: var(--bg-card);
-    border: 1px solid rgba(0,245,255,0.2);
-    border-radius: 16px;
-    width: min(500px, 100%);
-    padding: 40px;
-    position: relative;
-    box-shadow: 0 0 80px rgba(0,245,255,0.1);
-  }
-  .modal-close {
-    position: absolute; top: 16px; right: 16px;
-    font-size: 1.5rem; color: var(--text-dim);
-    cursor: pointer; background: none; border: none; line-height: 1;
-    transition: color 0.2s;
-  }
-  .modal-close:hover { color: var(--neon-pink); }
-  .modal-emoji { font-size: 4rem; display: block; text-align: center; margin-bottom: 16px; }
-  .modal-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.2rem;
-    font-weight: 900;
-    text-align: center;
-    letter-spacing: 0.15em;
-    color: var(--neon-cyan);
-    text-shadow: 0 0 20px var(--neon-cyan);
-    margin-bottom: 10px;
-  }
-  .modal-desc {
-    font-size: 0.85rem;
-    color: #999;
-    text-align: center;
-    line-height: 1.6;
-    margin-bottom: 24px;
-    font-family: 'Share Tech Mono', monospace;
-  }
-  .modal-modes {
-    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
-    margin-bottom: 24px;
-  }
-  .modal-mode-btn {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    padding: 10px 18px;
-    border-radius: 6px;
-    border: 1px solid;
-    cursor: pointer;
-    background: transparent;
-    transition: all 0.2s;
-  }
-  .modal-mode-btn.solo { border-color: var(--neon-cyan); color: var(--neon-cyan); }
-  .modal-mode-btn.timed { border-color: var(--neon-yellow); color: var(--neon-yellow); }
-  .modal-mode-btn.two { border-color: var(--neon-green); color: var(--neon-green); }
-  .modal-mode-btn.multi { border-color: var(--neon-pink); color: var(--neon-pink); }
-  .modal-mode-btn:hover { filter: brightness(1.3); transform: scale(1.05); }
-  .modal-play-btn {
-    display: block; width: 100%;
-    font-family: 'Orbitron', monospace;
-    font-size: 0.9rem;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    padding: 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
-    color: #000;
-    transition: all 0.2s;
-    box-shadow: 0 0 30px rgba(0,245,255,0.3);
-  }
-  .modal-play-btn:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 50px rgba(0,245,255,0.5);
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    border-top: 1px solid var(--border-dim);
-    padding: 40px;
-    text-align: center;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  .footer-logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px;
-  }
-  .footer-text {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-  }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed; bottom: 30px; right: 30px; z-index: 9000;
-    background: var(--bg-card);
-    border: 1px solid var(--neon-cyan);
-    color: var(--neon-cyan);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    padding: 14px 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0,245,255,0.3);
-    transform: translateX(200%);
-    transition: transform 0.3s ease;
-    max-width: 300px;
-  }
-  .toast.show { transform: translateX(0); }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    nav { padding: 0 20px; }
-    .nav-links a { font-size: 0.6rem; padding: 6px 10px; }
-    .hero { padding: 50px 20px 40px; }
-    .mode-section, .toolbar, .games-section { padding-left: 20px; padding-right: 20px; }
-    .games-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  }
-
-  /* ── PARTICLES ── */
-  .particle {
-    position: fixed;
-    pointer-events: none;
-    border-radius: 50%;
-    animation: drift linear infinite;
-    z-index: 0;
-  }
-  @keyframes drift {
-    from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    to { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-  }
+/* ══ NICKNAME MODAL ══ */
+.modal-bg{position:fixed;inset:0;background:rgba(2,2,12,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .3s ease}
+.modal-bg.hidden{display:none}
+.modal{background:#0a0a1a;border:1px solid rgba(0,245,255,.2);border-radius:18px;padding:32px;width:100%;max-width:440px;text-align:center;box-shadow:0 0 70px rgba(0,245,255,.07)}
+.modal-icon{font-size:50px;display:block;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.modal-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--c0);margin-bottom:7px}
+.modal-sub{font-size:14px;color:var(--dim);margin-bottom:20px;line-height:1.6}
+.nick-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(0,245,255,.2);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:16px;font-weight:700;padding:13px 18px;border-radius:9px;margin-bottom:6px;text-align:center;letter-spacing:2px;outline:none;transition:all .2s}
+.nick-in:focus{border-color:rgba(0,245,255,.5);box-shadow:0 0 16px rgba(0,245,255,.09)}
+.nick-in::placeholder{color:rgba(85,102,170,.4);font-size:13px;letter-spacing:1px}
+.nick-hint{font-size:11px;color:var(--dim);margin-bottom:18px}
+.modal-btns{display:flex;gap:9px;justify-content:center}
+.mbtn{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.28);color:var(--c0);padding:12px 26px;border-radius:8px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.mbtn:hover{background:rgba(0,245,255,.2);box-shadow:0 0 16px rgba(0,245,255,.28);transform:translateY(-1px)}
+.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.mbtn-skip:hover{color:#fff}
 </style>
 </head>
 <body>
+<div class="scanline"></div>
 
-<!-- LOADING SCREEN -->
-<div id="loading-screen">
-  <div class="load-logo">GAME HUB</div>
-  <div class="load-percent" id="load-pct">0%</div>
-  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
-  <div class="load-text" id="load-msg">INITIALIZING SYSTEMS...</div>
+<!-- NICKNAME MODAL -->
+<div class="modal-bg" id="nick-modal">
+  <div class="modal">
+    <span class="modal-icon">🎮</span>
+    <div class="modal-title">Welcome to Game Hub</div>
+    <div class="modal-sub">Set a nickname to track scores and compete on live leaderboards!</div>
+    <input class="nick-in" id="nick-in" maxlength="16" placeholder="Your nickname..." autocomplete="off" autocorrect="off" autocapitalize="off"/>
+    <div class="nick-hint">Max 16 chars · Shows on all leaderboards</div>
+    <div class="modal-btns">
+      <button class="mbtn" id="nick-save">Enter Hub →</button>
+      <button class="mbtn-skip" id="nick-skip">Skip</button>
+    </div>
+  </div>
 </div>
 
-<!-- GRID BACKGROUND -->
-<div class="grid-bg"></div>
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <span class="ti">🎮 <strong>40+ GAMES</strong> · 4 modes · Neon arcade</span>
+    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 4 online games · Global leaderboard</span>
+    <span class="ti">👥 <strong>2 PLAYER MODE</strong> · 13 games · Chess · Neon Duel · Sea Battle · Flame &amp; Flood</span>
+    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 9 games</span>
+    <span class="ti">🎮 <strong>40+ GAMES</strong> · 4 modes · Neon arcade</span>
+    <span class="ti">🌐 <strong>LIVE MULTIPLAYER</strong> · 4 online games · Global leaderboard</span>
+    <span class="ti">👥 <strong>2 PLAYER MODE</strong> · 13 games · Chess · Neon Duel · Sea Battle · Flame &amp; Flood</span>
+    <span class="ti">⏱ <strong>TIMED CHALLENGES</strong> · Bullet Hell · Gravity Flip · Beat Tap · 9 games</span>
+  </div>
+</div>
 
-<!-- MAIN APP -->
-<div id="main-app">
-
-  <!-- NAV -->
+<div class="container">
   <nav>
-    <div class="nav-logo">GAME HUB</div>
-    <div class="nav-links">
-      <a class="active" onclick="showPage('home')">HOME</a>
-      <a onclick="showPage('home'); filterMode('solo')">SOLO</a>
-      <a onclick="showPage('home'); filterMode('timed')">TIMED</a>
-      <a onclick="showPage('home'); filterMode('2player')">2P LOCAL</a>
-      <a onclick="showPage('home'); filterMode('multiplayer')">ONLINE <span class="nav-badge">HOT</span></a>
-      <a onclick="showPage('coming-soon')">COMING SOON</a>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">GAME<em>HUB</em></a>
+      <div class="nav-links">
+        <div class="nick-pill" id="nick-pill"><div class="ndot"></div><span id="nick-name">Player</span></div>
+        <a href="minigames/index.html" class="nl">🎮 Mini Games</a>
+        <a href="timed-challenge/index.html" class="nl">⏱ Timed</a>
+        <a href="multiplayer/index.html" class="nl">🌐 Arena</a>
+        <a href="2player/index.html" class="nl nl-new">✨ 2 Player</a>
+        <a href="leaderboard/index.html" class="nl">🏆</a>
+        <a href="multiplayer/index.html" class="nav-cta">Play Live →</a>
+      </div>
     </div>
   </nav>
 
-  <!-- HOME PAGE -->
-  <div id="home-page">
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-title">GAME HUB</div>
-      <div class="hero-sub">// 50 NEON ARCADE GAMES · 4 PLAY MODES · ONLINE MULTIPLAYER //</div>
-      <div class="hero-stats">
-        <div class="stat-block">
-          <div class="stat-num" id="counter-games">0</div>
-          <div class="stat-label">GAMES</div>
-        </div>
-        <div class="stat-block">
-          <div class="stat-num">4</div>
-          <div class="stat-label">MODES</div>
-        </div>
-        <div class="stat-block">
-          <div class="stat-num" id="counter-players">0</div>
-          <div class="stat-label">PLAYERS ONLINE</div>
-        </div>
-        <div class="stat-block">
-          <div class="stat-num">∞</div>
-          <div class="stat-label">FUN</div>
-        </div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-badge"><div class="hero-badge-dot"></div>Neon Arcade · 4 Modes · Live Now</div>
+      <h1>
+        <span class="w1">GAME</span>
+        <span class="w2">HUB</span>
+      </h1>
+      <p class="hero-sub">25+ neon arcade games across 4 modes — Classic mini games, timed challenges, <strong>live online multiplayer</strong> with global leaderboards, and brand new <strong>2-player local battles</strong>.</p>
+      <div class="hero-btns">
+        <a href="minigames/index.html" class="hbtn hbtn-c">🎮 Mini Games</a>
+        <a href="timed-challenge/index.html" class="hbtn hbtn-d">⏱ Timed</a>
+        <a href="multiplayer/index.html" class="hbtn hbtn-p">🌐 Multiplayer</a>
+        <a href="2player/index.html" class="hbtn hbtn-g">👥 2 Player</a>
       </div>
     </div>
-
-    <!-- MODES -->
-    <div class="mode-section">
-      <div class="section-label">// SELECT GAME MODE</div>
-      <div class="mode-tabs">
-        <div class="mode-tab active" data-mode="all" onclick="filterMode('all')">
-          <span class="tab-icon">🎮</span> ALL GAMES
-        </div>
-        <div class="mode-tab" data-mode="solo" onclick="filterMode('solo')">
-          <span class="tab-icon">⚡</span> SOLO OFFLINE
-        </div>
-        <div class="mode-tab" data-mode="timed" onclick="filterMode('timed')">
-          <span class="tab-icon">⏱</span> TIMED CHALLENGE
-        </div>
-        <div class="mode-tab" data-mode="2player" onclick="filterMode('2player')">
-          <span class="tab-icon">🎮</span> 2 PLAYER LOCAL
-        </div>
-        <div class="mode-tab" data-mode="multiplayer" onclick="filterMode('multiplayer')">
-          <span class="tab-icon">🌐</span> ONLINE MULTIPLAYER
-        </div>
+    <div class="hero-visual">
+      <div class="hero-orb">
+        <div class="orb-dot orb-d1"></div>
+        <div class="orb-dot orb-d2"></div>
+        <div class="orb-dot orb-d3"></div>
+        <div class="hero-orb-txt">🕹️</div>
       </div>
     </div>
+  </section>
 
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="search-wrap">
-        <input type="text" id="search-input" placeholder="SEARCH GAMES..." oninput="doSearch(this.value)">
-      </div>
-      <select class="genre-select" onchange="filterGenre(this.value)">
-        <option value="">ALL GENRES</option>
-        <option value="arcade">ARCADE</option>
-        <option value="puzzle">PUZZLE</option>
-        <option value="action">ACTION</option>
-        <option value="sports">SPORTS</option>
-        <option value="strategy">STRATEGY</option>
-        <option value="word">WORD</option>
-        <option value="racing">RACING</option>
-        <option value="shooter">SHOOTER</option>
-      </select>
-      <div class="game-count-label">SHOWING <span id="game-count">50</span> GAMES</div>
-    </div>
-
-    <!-- GAMES GRID -->
-    <div class="games-section" id="games-container"></div>
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-n" style="color:var(--c0)">25+</span><div class="stat-l">Games</div></div>
+    <div class="stat"><span class="stat-n" style="color:var(--c2)">4</span><div class="stat-l">Modes</div></div>
+    <div class="stat"><span class="stat-n" style="color:var(--c3)" id="scores-set">0</span><div class="stat-l">Your Scores</div></div>
+    <div class="stat"><span class="stat-n" style="color:var(--c4)">7</span><div class="stat-l">Live Games</div></div>
+    <div class="stat"><span class="stat-n" style="color:var(--c1)">∞</span><div class="stat-l">Replay</div></div>
   </div>
 
-  <!-- COMING SOON PAGE -->
-  <div id="coming-soon-page">
-    <div class="cs-big-title">⚡ COMING SOON ⚡</div>
-    <div class="cs-subtitle">// THE NEXT WAVE OF ARCADE LEGENDS IS LOADING. STAY IN THE LOOP. //</div>
-    <div class="cs-countdown">
-      <div class="cs-count-block">
-        <span class="cs-count-num" id="cnt-days">00</span>
-        <span class="cs-count-label">DAYS</span>
+  <!-- MODES -->
+  <div class="sec-hdr">
+    <div class="sec-ey" style="color:var(--c0)">Choose Your Mode</div>
+    <div class="sec-title">4 Ways to Play</div>
+  </div>
+  <div class="modes-grid">
+
+    <a href="minigames/index.html" class="mc mc-mini" style="animation-delay:.0s">
+      <div class="mc-bar"></div>
+      <div class="mc-body">
+        <div class="mc-icon">🎮</div>
+        <div class="mc-text">
+          <div class="mc-ey">Classic Arcade</div>
+          <div class="mc-title">Mini Games</div>
+          <div class="mc-desc">15 neon arcade classics. Snake, Tetris, Pac-Man, Space Invaders, Flappy Bird, 2048 and more. Beat your high score.</div>
+          <div class="mc-pills"><span class="pill">Snake</span><span class="pill">Tetris</span><span class="pill">Pac-Man</span><span class="pill">+12</span></div>
+          <div class="mc-score-row">
+            <div class="mc-score">Snake: <span id="f-snake">--</span></div>
+            <div class="mc-score">Tetris: <span id="f-tetris">--</span></div>
+            <div class="mc-score">Flappy: <span id="f-flappy">--</span></div>
+          </div>
+        </div>
       </div>
-      <div class="cs-count-block">
-        <span class="cs-count-num" id="cnt-hrs">00</span>
-        <span class="cs-count-label">HOURS</span>
+      <div class="mc-footer"><span class="mc-count">15 games · All skill levels</span><span class="mc-go">Play →</span></div>
+    </a>
+
+    <a href="timed-challenge/index.html" class="mc mc-time" style="animation-delay:.08s">
+      <div class="mc-bar"></div>
+      <div class="mc-body">
+        <div class="mc-icon">⏱</div>
+        <div class="mc-text">
+          <div class="mc-ey">Infinite Challenge</div>
+          <div class="mc-title">Timed Mode</div>
+          <div class="mc-desc">10 unique infinite challenges. Bullet Hell, Gravity Flip, Beat Tap, Color Clash and more. Gets harder forever.</div>
+          <div class="mc-pills"><span class="pill">Bullet Hell</span><span class="pill">Gravity Flip</span><span class="pill">Beat Tap</span><span class="pill">+7</span></div>
+          <div class="mc-score-row">
+            <div class="mc-score">Reaction: <span id="f-rr">--</span></div>
+            <div class="mc-score">Color: <span id="f-cc">--</span></div>
+          </div>
+        </div>
       </div>
-      <div class="cs-count-block">
-        <span class="cs-count-num" id="cnt-min">00</span>
-        <span class="cs-count-label">MINS</span>
+      <div class="mc-footer"><span class="mc-count">10 games · Infinite difficulty</span><span class="mc-go">Play →</span></div>
+    </a>
+
+    <a href="multiplayer/index.html" class="mc mc-multi" style="animation-delay:.16s">
+      <div class="mc-bar"></div>
+      <div class="badge-live"><div class="bdot"></div>LIVE</div>
+      <div class="mc-body">
+        <div class="mc-icon">🌐</div>
+        <div class="mc-text">
+          <div class="mc-ey">Online PvP</div>
+          <div class="mc-title">Multiplayer Arena</div>
+          <div class="mc-desc">7 competitive online games. GridShot, Color War, Type Duel, Speed Clash. Your score on the global leaderboard — seen by everyone.</div>
+          <div class="mc-pills"><span class="pill">GridShot</span><span class="pill">Color War</span><span class="pill">Type Duel</span><span class="pill">+4</span></div>
+          <div class="mc-score-row">
+            <div class="mc-score">GridShot: <span id="f-gs">--</span></div>
+            <div class="mc-score">Survival: <span id="f-sr">--</span></div>
+          </div>
+        </div>
       </div>
-      <div class="cs-count-block">
-        <span class="cs-count-num" id="cnt-sec">00</span>
-        <span class="cs-count-label">SECS</span>
+      <div class="mc-footer"><span class="mc-count">7 games · Firebase leaderboard</span><span class="mc-go">Enter Arena →</span></div>
+    </a>
+
+    <a href="2player/index.html" class="mc mc-2p" style="animation-delay:.24s">
+      <div class="mc-bar"></div>
+      <div class="badge-new">✨ NEW</div>
+      <div class="mc-body">
+        <div class="mc-icon">👥</div>
+        <div class="mc-text">
+          <div class="mc-ey">Same Device · vs AI</div>
+          <div class="mc-title">2 Player Mode</div>
+          <div class="mc-desc">Battle a friend on the same device — or challenge the AI with 3 difficulty levels. Chess, Pong, Snake, Tic Tac Toe and more.</div>
+          <div class="mc-pills"><span class="pill">Chess</span><span class="pill">Pong</span><span class="pill">Snake</span><span class="pill">vs AI</span><span class="pill">+4</span></div>
+          <div class="mc-score-row">
+            <div class="mc-score" style="color:var(--c3);font-size:12px">Play with a friend or challenge AI!</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="cs-games-preview" id="cs-games-grid"></div>
+      <div class="mc-footer"><span class="mc-count">8 games · Easy / Medium / Hard AI</span><span class="mc-go">Play Together →</span></div>
+    </a>
+
   </div>
 
-  <footer>
-    <div class="footer-logo">GAME HUB</div>
-    <div class="footer-text">// BUILT FOR ARCADE LEGENDS · PLAY SOLO OR DOMINATE ONLINE //</div>
-    <div class="footer-text" style="margin-top:8px;font-size:0.65rem;">© 2025 GAME HUB · ALL RIGHTS RESERVED</div>
-  </footer>
+  <!-- FEATURED -->
+  <div class="sec-hdr">
+    <div class="sec-ey" style="color:var(--c1)">Jump Right In</div>
+    <div class="sec-title">Popular Games</div>
+  </div>
+  <div class="featured-grid">
+    <a href="minigames/snake/index.html" class="fc fc0" style="animation-delay:.04s"><span class="fc-icon">🐍</span><div class="fc-name">Snake</div><div class="fc-score">Best: <span id="fs-snake">--</span></div></a>
+    <a href="minigames/tetris/index.html" class="fc fc1" style="animation-delay:.08s"><span class="fc-icon">🟦</span><div class="fc-name">Tetris</div><div class="fc-score">Best: <span id="fs-tetris">--</span></div></a>
+    <a href="multiplayer/gridshot/index.html" class="fc fc2" style="animation-delay:.12s"><span class="fc-icon">🎯</span><div class="fc-name">GridShot</div><div class="fc-score">Best: <span id="fs-gs">--</span></div></a>
+    <a href="multiplayer/color-war/index.html" class="fc fc3" style="animation-delay:.16s"><span class="fc-icon">🎨</span><div class="fc-name">Color War</div><div class="fc-score">Best: <span id="fs-cw">--</span></div></a>
+    <a href="2player/index.html" class="fc fc4" style="animation-delay:.2s"><span class="fc-icon">👥</span><div class="fc-name">2 Player</div><div class="fc-score" style="color:var(--c3);font-size:11px;font-weight:700">NEW!</div></a>
+  </div>
+
+  <!-- STRIPS -->
+  <div class="strip strip-lb">
+    <span class="strip-icon">🏆</span>
+    <div class="strip-body">
+      <div class="strip-title">Global Leaderboard</div>
+      <div class="strip-sub">Real scores from real players across all 7 arena games — live via Firebase.</div>
+    </div>
+    <div class="strip-chips">
+      <div class="chip"><span class="chip-n" id="lb-scores">0</span><div class="chip-l">Scores</div></div>
+      <div class="chip"><span class="chip-n" id="lb-set">0</span><div class="chip-l">Your Bests</div></div>
+    </div>
+    <a href="leaderboard/index.html" class="strip-cta">View All →</a>
+  </div>
+
+  <a href="2player/index.html" class="strip strip-2p">
+    <span class="strip-icon">👥</span>
+    <div class="strip-body">
+      <div class="strip-title">✨ 2 Player Mode — 13 Games</div>
+      <div class="strip-sub">Battle a friend on the same device, or challenge the AI. 3 difficulty levels.</div>
+      <div class="tp-games">
+        <span class="tp-g">♟️ Chess</span>
+        <span class="tp-g">⚔️ Neon Duel</span>
+        <span class="tp-g">🚢 Sea Battle</span>
+        <span class="tp-g">🔥 Flame &amp; Flood</span>
+        <span class="tp-g">🌀 Shadow Sync</span>
+        <span class="tp-g">🎨 Pixel Canvas</span>
+        <span class="tp-g">🔲 Dots &amp; Boxes</span>
+        <span class="tp-g">🎱 Carrom</span>
+      </div>
+    </div>
+    <span class="strip-cta">Play Now →</span>
+  </a>
 
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="game-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <span class="modal-emoji" id="modal-emoji">🎮</span>
-    <div class="modal-title" id="modal-title">GAME TITLE</div>
-    <div class="modal-desc" id="modal-desc">Game description goes here.</div>
-    <div class="modal-modes" id="modal-modes"></div>
-    <button class="modal-play-btn" onclick="launchGame()">▶ LAUNCH GAME</button>
+<footer>
+  <div class="container">
+    <div class="footer-logo">GAME<em>HUB</em></div>
+    <p>Built by hrithivenkat-star &nbsp;|&nbsp;
+      <a href="minigames/index.html">Mini Games</a> ·
+      <a href="timed-challenge/index.html">Timed</a> ·
+      <a href="multiplayer/index.html">Multiplayer</a> ·
+      <a href="2player/index.html">2 Player</a> ·
+      <a href="leaderboard/index.html">Leaderboard</a>
+    </p>
   </div>
-</div>
+</footer>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+try{
+  const app=initializeApp({apiKey:"AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",authDomain:"gamehub234.firebaseapp.com",databaseURL:"https://gamehub234-default-rtdb.firebaseio.com",projectId:"gamehub234",storageBucket:"gamehub234.firebasestorage.app",messagingSenderId:"902315908438",appId:"1:902315908438:web:7ff2c34487b24c71998af7"});
+  const db=getDatabase(app);
+  onValue(ref(db,'stats'),snap=>{const v=snap.val()||{};document.getElementById('lb-scores').textContent=v.scores||0;});
+}catch(e){}
+</script>
 
 <script>
-// ── GAME DATA: 50 NEON ARCADE GAMES ──
-const GAMES = [
-  // ARCADE
-  { id:1, name:'NEON SNAKE', emoji:'🐍', genre:'arcade', desc:'Classic snake with neon trails. Eat, grow, survive.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','timed','2player'], badge:'hot' },
-  { id:2, name:'PIXEL BREAKER', emoji:'🧱', genre:'arcade', desc:'Break bricks with a neon ball. Powerups galore.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed'], badge:'featured' },
-  { id:3, name:'ASTEROID STORM', emoji:'☄️', genre:'arcade', desc:'Blast asteroids in deep space before they hit you.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'] },
-  { id:4, name:'FROGGER NEON', emoji:'🐸', genre:'arcade', desc:'Cross lanes of traffic and rivers. Reflex required.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','2player'], badge:'new' },
-  { id:5, name:'PAC DASH', emoji:'🟡', genre:'arcade', desc:'Eat dots, dodge ghosts in neon maze labyrinth.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','timed','2player'], badge:'hot' },
-  { id:6, name:'GALAGA RETRO', emoji:'👾', genre:'arcade', desc:'Defend Earth from waves of alien invaders.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:7, name:'PINBALL BLITZ', emoji:'🔵', genre:'arcade', desc:'Precision pinball with electric bumpers.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','2player'] },
-  { id:8, name:'WHACK-A-MOLE X', emoji:'🔨', genre:'arcade', desc:'Supercharged mole whacking with power modes.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','timed','2player'], badge:'new' },
-  { id:9, name:'BUBBLE BURST', emoji:'🫧', genre:'arcade', desc:'Pop matching colored bubbles before they reach you.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:10, name:'RETRO PONG+', emoji:'🏓', genre:'arcade', desc:'Classic pong evolved. Power shots, walls, obstacles.', color:'#fff', glow:'rgba(255,255,255,0.15)', bg:'radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%)', modes:['2player','multiplayer'], badge:'hot' },
+// Nickname
+let nick=localStorage.getItem('player_nick')||'';
+(function init(){
+  if(!nick){document.getElementById('nick-modal').classList.remove('hidden');setTimeout(()=>document.getElementById('nick-in').focus(),300);}
+  else showPill(nick);
+})();
+function showPill(n){document.getElementById('nick-name').textContent=n;document.getElementById('nick-pill').style.display='flex';}
+document.getElementById('nick-save').onclick=()=>{
+  const v=document.getElementById('nick-in').value.trim();
+  if(!v){document.getElementById('nick-in').style.borderColor='rgba(255,0,60,.5)';return;}
+  nick=v;localStorage.setItem('player_nick',v);
+  document.getElementById('nick-modal').classList.add('hidden');showPill(v);
+};
+document.getElementById('nick-skip').onclick=()=>document.getElementById('nick-modal').classList.add('hidden');
+document.getElementById('nick-in').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nick-save').click();});
+document.getElementById('nick-pill').onclick=()=>{
+  document.getElementById('nick-in').value=nick;
+  document.getElementById('nick-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('nick-in').focus(),80);
+};
 
-  // PUZZLE
-  { id:11, name:'MIND GRID', emoji:'🧩', genre:'puzzle', desc:'Solve logic puzzles that bend your brain.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:12, name:'CUBE SHIFT', emoji:'🎲', genre:'puzzle', desc:'Slide and rotate 3D cubes to match the pattern.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','timed'], badge:'new' },
-  { id:13, name:'MIRROR MAZE', emoji:'🪞', genre:'puzzle', desc:'Redirect laser beams using mirrors to hit targets.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo'] },
-  { id:14, name:'NUMBER RUSH', emoji:'🔢', genre:'puzzle', desc:'Fill a Sudoku board faster than the clock.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:15, name:'COLOR LOCK', emoji:'🎨', genre:'puzzle', desc:'Match the color sequence before time expires.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','timed','2player'] },
-  { id:16, name:'PIPE DREAM', emoji:'🔧', genre:'puzzle', desc:'Connect water pipes before the liquid escapes.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:17, name:'TOWER FLIP', emoji:'🗼', genre:'puzzle', desc:'Stack tiles to build the highest tower possible.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','multiplayer'], badge:'new' },
-  { id:18, name:'LIGHT BRIDGE', emoji:'💡', genre:'puzzle', desc:'Connect circuits to illuminate all nodes.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo'] },
-  { id:19, name:'MEMORY MATRIX', emoji:'🧠', genre:'puzzle', desc:'Memorize and replicate flashing light patterns.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed','2player'] },
-  { id:20, name:'WORD WARP', emoji:'📖', genre:'word', desc:'Unscramble letters against the clock.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','timed'], badge:'hot' },
-
-  // ACTION
-  { id:21, name:'CYBER RUN', emoji:'🏃', genre:'action', desc:'Endless runner through neon cyberpunk streets.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'], badge:'hot' },
-  { id:22, name:'NEON NINJA', emoji:'🥷', genre:'action', desc:'Slice enemies in this precision slasher.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','2player'], badge:'featured' },
-  { id:23, name:'TURBO PUNCH', emoji:'🥊', genre:'action', desc:'Beat-em-up brawler with flashy combos.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-  { id:24, name:'DODGE STORM', emoji:'💨', genre:'action', desc:'Weave through chaos. One touch and you're done.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:25, name:'PIXEL WARRIOR', emoji:'⚔️', genre:'action', desc:'8-bit swordplay with pixel-perfect parries.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-  { id:26, name:'GRID FIGHTER', emoji:'🤺', genre:'action', desc:'1v1 arena combat on an electrified grid.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['2player','multiplayer'], badge:'hot' },
-  { id:27, name:'ZOMBIE WAVE', emoji:'🧟', genre:'action', desc:'Survive endless waves of pixel zombies.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'], badge:'new' },
-  { id:28, name:'THUNDER BALL', emoji:'⚡', genre:'action', desc:'Launch electric balls to destroy enemy defenses.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:29, name:'BLADE DASH', emoji:'🗡️', genre:'action', desc:'Teleport-slash your way through neon dungeon floors.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','2player'] },
-  { id:30, name:'MECH RAMPAGE', emoji:'🤖', genre:'action', desc:'Control a giant mech. Stomp everything.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','multiplayer'], badge:'new' },
-
-  // SHOOTER
-  { id:31, name:'LASER GRID', emoji:'🔫', genre:'shooter', desc:'Top-down twin-stick shooter. 360° destruction.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'], badge:'featured' },
-  { id:32, name:'SPACE GUNNER', emoji:'🚀', genre:'shooter', desc:'Side-scrolling space shooter with boss fights.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','2player'] },
-  { id:33, name:'PLASMA BURST', emoji:'💥', genre:'shooter', desc:'Charge your plasma cannon and unleash mayhem.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','timed'] },
-  { id:34, name:'HOMING HERO', emoji:'🎯', genre:'shooter', desc:'Lock-on missiles, precision shots, combo kills.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','multiplayer'] },
-  { id:35, name:'NEON TANK', emoji:'🛡️', genre:'shooter', desc:'Command a neon tank in arena PvP battles.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'], badge:'hot' },
-
-  // RACING
-  { id:36, name:'TURBO DRIFT', emoji:'🏎️', genre:'racing', desc:'Drift through neon circuits at insane speeds.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','timed','2player','multiplayer'], badge:'featured' },
-  { id:37, name:'SKY RACER', emoji:'✈️', genre:'racing', desc:'Aerial racing through holographic hoops in the sky.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','multiplayer'] },
-  { id:38, name:'MOTO BLITZ', emoji:'🏍️', genre:'racing', desc:'High-speed bike racing with traffic and ramps.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'], badge:'new' },
-  { id:39, name:'HOVER RACE', emoji:'🛸', genre:'racing', desc:'Hovercraft racing on magnetic suspension tracks.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-  { id:40, name:'GRID SPEEDWAY', emoji:'🏁', genre:'racing', desc:'Top-down racing on 8 neon oval tracks.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-
-  // SPORTS
-  { id:41, name:'CYBER FOOTBALL', emoji:'⚽', genre:'sports', desc:'5v5 football in a glass arena. Physics mayhem.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'], badge:'hot' },
-  { id:42, name:'DUNK STORM', emoji:'🏀', genre:'sports', desc:'Street basketball with trick shots and slams.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-  { id:43, name:'VOLT TENNIS', emoji:'🎾', genre:'sports', desc:'Electrified tennis. Serve. Smash. Dominate.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'], badge:'new' },
-  { id:44, name:'PIXEL GOLF', emoji:'⛳', genre:'sports', desc:'Mini golf with trick holes and portals.', color:'#39ff14', glow:'rgba(57,255,20,0.2)', bg:'radial-gradient(circle,rgba(57,255,20,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'] },
-  { id:45, name:'HYPER BOWL', emoji:'🎳', genre:'sports', desc:'Bowling with physics-breaking power balls.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','2player'] },
-
-  // STRATEGY + WORD
-  { id:46, name:'NEO CHESS', emoji:'♟️', genre:'strategy', desc:'Classic chess with neon pieces and AI challenge.', color:'#bf00ff', glow:'rgba(191,0,255,0.2)', bg:'radial-gradient(circle,rgba(191,0,255,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-  { id:47, name:'TOWER SIEGE', emoji:'🏰', genre:'strategy', desc:'Place towers to defend your base from endless waves.', color:'#ff006e', glow:'rgba(255,0,110,0.2)', bg:'radial-gradient(circle,rgba(255,0,110,0.15) 0%,transparent 70%)', modes:['solo','timed'], badge:'featured' },
-  { id:48, name:'WORD BLITZ', emoji:'💬', genre:'word', desc:'Type words fast to shoot neon lasers at enemies.', color:'#00f5ff', glow:'rgba(0,245,255,0.2)', bg:'radial-gradient(circle,rgba(0,245,255,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'], badge:'new' },
-  { id:49, name:'TRIVIA BLAZE', emoji:'❓', genre:'strategy', desc:'Lightning-fast trivia. Wrong answers cost lives.', color:'#ffe600', glow:'rgba(255,230,0,0.2)', bg:'radial-gradient(circle,rgba(255,230,0,0.15) 0%,transparent 70%)', modes:['solo','timed','multiplayer'], badge:'hot' },
-  { id:50, name:'BATTLE BLOCKS', emoji:'🟦', genre:'strategy', desc:'Place and detonate blocks to trap opponents.', color:'#ff6a00', glow:'rgba(255,106,0,0.2)', bg:'radial-gradient(circle,rgba(255,106,0,0.15) 0%,transparent 70%)', modes:['solo','2player','multiplayer'] },
-];
-
-// COMING SOON games
-const COMING_SOON = [
-  { name:'QUANTUM DRIFT', emoji:'🌀', eta:'JUNE 2025' },
-  { name:'SHADOW BLADE', emoji:'🌑', eta:'JULY 2025' },
-  { name:'STELLAR WARS', emoji:'🌟', eta:'AUG 2025' },
-  { name:'VOID RACER', emoji:'🕳️', eta:'SEPT 2025' },
-  { name:'CYBER SIEGE', emoji:'🏙️', eta:'OCT 2025' },
-  { name:'PLASMA RUSH', emoji:'⚡', eta:'NOV 2025' },
-  { name:'DREAM DUEL', emoji:'💭', eta:'DEC 2025' },
-  { name:'NEON ROYALE', emoji:'👑', eta:'JAN 2026' },
-];
-
-// STATE
-let currentMode = 'all';
-let currentGenre = '';
-let currentSearch = '';
-let selectedGame = null;
-
-// ── LOADING SCREEN ──
-const loadMsgs = [
-  'INITIALIZING SYSTEMS...',
-  'LOADING NEON GRID...',
-  'SYNCING GAME DATA...',
-  'CONNECTING SERVERS...',
-  'CALIBRATING ARCADE...',
-  'LAUNCHING GAME HUB...',
-];
-
-function runLoader() {
-  const bar = document.getElementById('load-bar');
-  const pct = document.getElementById('load-pct');
-  const msg = document.getElementById('load-msg');
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += Math.random() * 8 + 2;
-    if (progress >= 100) { progress = 100; clearInterval(interval); finishLoad(); }
-    bar.style.width = progress + '%';
-    pct.textContent = Math.floor(progress) + '%';
-    msg.textContent = loadMsgs[Math.floor(progress / 18)] || 'LAUNCHING GAME HUB...';
-  }, 100);
+// Local scores display
+const localMap={
+  'f-snake':'snake_best','f-tetris':'tetris_best','f-flappy':'flappy_best',
+  'f-rr':'rr_best','f-cc':'cc_best','f-gs':'gs_best','f-sr':'sr_best',
+  'fs-snake':'snake_best','fs-tetris':'tetris_best','fs-gs':'gs_best','fs-cw':'cw_best',
+};
+for(const[id,key] of Object.entries(localMap)){
+  const v=localStorage.getItem(key),el=document.getElementById(id);
+  if(el&&v)el.textContent=Number(v).toLocaleString();
 }
-
-function finishLoad() {
-  setTimeout(() => {
-    document.getElementById('loading-screen').classList.add('fade-out');
-    document.getElementById('main-app').classList.add('visible');
-    initApp();
-    setTimeout(() => document.getElementById('loading-screen').remove(), 900);
-  }, 300);
-}
-
-// ── INIT ──
-function initApp() {
-  renderGames();
-  renderCSGames();
-  animateCounters();
-  spawnParticles();
-  startCountdown();
-}
-
-// ── COUNTERS ──
-function animateCounters() {
-  animCounter('counter-games', 50, 1500);
-  animCounter('counter-players', Math.floor(Math.random()*800+200), 2000);
-}
-function animCounter(id, target, duration) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  let start = 0;
-  const step = target / (duration / 16);
-  const t = setInterval(() => {
-    start += step;
-    if (start >= target) { el.textContent = target; clearInterval(t); }
-    else el.textContent = Math.floor(start);
-  }, 16);
-}
-
-// ── PARTICLES ──
-function spawnParticles() {
-  const colors = ['#00f5ff','#ff006e','#39ff14','#ffe600','#bf00ff'];
-  for (let i = 0; i < 25; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 3 + 1;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}vw;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      animation-duration:${Math.random()*20+10}s;
-      animation-delay:-${Math.random()*20}s;
-      opacity:0.6;
-      box-shadow: 0 0 6px currentColor;
-    `;
-    document.body.appendChild(p);
-  }
-}
-
-// ── RENDER GAMES ──
-function getFilteredGames() {
-  return GAMES.filter(g => {
-    const modeOk = currentMode === 'all' || g.modes.includes(currentMode);
-    const genreOk = !currentGenre || g.genre === currentGenre;
-    const searchOk = !currentSearch || g.name.toLowerCase().includes(currentSearch.toLowerCase()) || g.desc.toLowerCase().includes(currentSearch.toLowerCase());
-    return modeOk && genreOk && searchOk;
+// Count personal bests
+const allKeys=['snake_best','tetris_best','pong_best','breakout_best','2048_best','flappy_best','space_best','pacman_best','runner_best','rr_best','cc_best','nb_best','gs_best','sc_best','cw_best','sr_best','td_best','mb_best','rz_best'];
+const set=allKeys.filter(k=>localStorage.getItem(k)).length;
+document.getElementById('scores-set').textContent=set;
+document.getElementById('lb-set').textContent=set;
+</script>
+<script src="/shared/utils.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(function(err) { console.warn('SW registration failed:', err); });
   });
 }
-
-function renderGames() {
-  const filtered = getFilteredGames();
-  document.getElementById('game-count').textContent = filtered.length;
-  const container = document.getElementById('games-container');
-  container.innerHTML = '';
-
-  // Group by genre
-  const genres = [...new Set(filtered.map(g => g.genre))];
-  if (filtered.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:80px 20px;font-family:'Share Tech Mono',monospace;color:var(--text-dim);letter-spacing:0.2em;">NO GAMES FOUND. TRY A DIFFERENT FILTER.</div>`;
-    return;
-  }
-
-  const genreNames = { arcade:'🕹 ARCADE', puzzle:'🧩 PUZZLE', action:'⚡ ACTION', sports:'🏆 SPORTS', strategy:'♟ STRATEGY', word:'💬 WORD', racing:'🏎 RACING', shooter:'🔫 SHOOTER' };
-
-  genres.forEach(genre => {
-    const genreGames = filtered.filter(g => g.genre === genre);
-    const label = document.createElement('div');
-    label.className = 'category-label';
-    label.style.color = genreGames[0].color;
-    label.textContent = genreNames[genre] || genre.toUpperCase();
-    container.appendChild(label);
-
-    const grid = document.createElement('div');
-    grid.className = 'games-grid';
-    genreGames.forEach(g => {
-      grid.innerHTML += buildCard(g);
-    });
-    container.appendChild(grid);
-  });
-}
-
-function buildCard(g) {
-  const tagHTML = g.modes.map(m => {
-    const map = { solo:'tag-solo', timed:'tag-timed', '2player':'tag-2p', multiplayer:'tag-mp' };
-    const lbl = { solo:'SOLO', timed:'⏱TIMED', '2player':'2P', multiplayer:'🌐ONLINE' };
-    return `<span class="card-tag ${map[m]}">${lbl[m]}</span>`;
-  }).join('');
-  const badgeHTML = g.badge ? `<div class="card-badge badge-${g.badge}">${g.badge.toUpperCase()}</div>` : '';
-  return `
-    <div class="game-card" style="--card-color:${g.color};--card-glow:${g.glow};" onclick="openModal(${g.id})">
-      ${badgeHTML}
-      <div class="card-thumb" style="background:${g.bg};">
-        <span class="emoji">${g.emoji}</span>
-      </div>
-      <div class="card-body">
-        <div class="card-title">${g.name}</div>
-        <div class="card-desc">${g.desc}</div>
-      </div>
-      <div class="card-footer">
-        <div class="card-tags">${tagHTML}</div>
-        <button class="play-btn" style="--card-color:${g.color}">PLAY</button>
-      </div>
-    </div>
-  `;
-}
-
-// ── FILTERS ──
-function filterMode(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.mode-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.mode === mode || (mode === 'all' && t.dataset.mode === 'all'));
-  });
-  renderGames();
-}
-
-function filterGenre(genre) {
-  currentGenre = genre;
-  renderGames();
-}
-
-function doSearch(val) {
-  currentSearch = val;
-  renderGames();
-}
-
-// ── PAGES ──
-function showPage(page) {
-  document.getElementById('home-page').style.display = page === 'home' ? 'block' : 'none';
-  document.getElementById('coming-soon-page').classList.toggle('active', page === 'coming-soon');
-  document.querySelectorAll('.nav-links a').forEach((a,i) => a.classList.remove('active'));
-}
-
-// ── MODAL ──
-function openModal(id) {
-  const g = GAMES.find(x => x.id === id);
-  if (!g) return;
-  selectedGame = g;
-  document.getElementById('modal-emoji').textContent = g.emoji;
-  document.getElementById('modal-title').textContent = g.name;
-  document.getElementById('modal-title').style.color = g.color;
-  document.getElementById('modal-title').style.textShadow = `0 0 20px ${g.color}`;
-  document.getElementById('modal-desc').textContent = g.desc;
-  const modeMap = { solo:'SOLO OFFLINE', timed:'TIMED', '2player':'2 PLAYER LOCAL', multiplayer:'ONLINE MULTI' };
-  const clsMap = { solo:'solo', timed:'timed', '2player':'two', multiplayer:'multi' };
-  document.getElementById('modal-modes').innerHTML = g.modes.map(m =>
-    `<button class="modal-mode-btn ${clsMap[m]}" onclick="launchWithMode('${m}')">${modeMap[m]}</button>`
-  ).join('');
-  document.getElementById('game-modal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('game-modal').classList.remove('open');
-}
-
-function launchGame() {
-  launchWithMode(selectedGame.modes[0]);
-}
-
-function launchWithMode(mode) {
-  closeModal();
-  const modeLabels = { solo:'SOLO MODE', timed:'TIMED CHALLENGE', '2player':'2 PLAYER LOCAL', multiplayer:'ONLINE MULTIPLAYER' };
-  showToast(`🎮 LAUNCHING ${selectedGame.name} — ${modeLabels[mode]}`);
-}
-
-// ── COMING SOON ──
-function renderCSGames() {
-  const grid = document.getElementById('cs-games-grid');
-  if (!grid) return;
-  grid.innerHTML = COMING_SOON.map(g => `
-    <div class="cs-game-pill">
-      <span class="cs-pill-emoji">${g.emoji}</span>
-      <div class="cs-pill-name">${g.name}</div>
-      <div class="cs-pill-eta">${g.eta}</div>
-    </div>
-  `).join('');
-}
-
-// ── COUNTDOWN ──
-function startCountdown() {
-  const target = new Date('2025-06-01T00:00:00');
-  function update() {
-    const now = new Date();
-    const diff = Math.max(0, target - now);
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    const fmt = n => String(n).padStart(2,'0');
-    const days = document.getElementById('cnt-days');
-    const hrs = document.getElementById('cnt-hrs');
-    const min = document.getElementById('cnt-min');
-    const sec = document.getElementById('cnt-sec');
-    if (days) days.textContent = fmt(d);
-    if (hrs) hrs.textContent = fmt(h);
-    if (min) min.textContent = fmt(m);
-    if (sec) sec.textContent = fmt(s);
-  }
-  update();
-  setInterval(update, 1000);
-}
-
-// ── TOAST ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-// ── START ──
-runLoader();
 </script>
 </body>
 </html>
