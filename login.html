@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game Hub — Login</title>
+  <style>
+    /* paste your existing neon CSS variables here */
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>🎮 GAME HUB</h1>
+    <p>Sign in to track scores & compete</p>
+
+    <!-- Tab buttons -->
+    <div class="tabs">
+      <button onclick="showTab('login')">Login</button>
+      <button onclick="showTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="login-tab">
+      <input type="email" id="login-email" placeholder="Email" />
+      <input type="password" id="login-pass" placeholder="Password" />
+      <button onclick="loginUser()">Login →</button>
+    </div>
+
+    <!-- Signup form -->
+    <div id="signup-tab" style="display:none">
+      <input type="text" id="signup-name" placeholder="Display Name (shown on leaderboard)" />
+      <input type="email" id="signup-email" placeholder="Email" />
+      <input type="password" id="signup-pass" placeholder="Password (min 6 chars)" />
+      <button onclick="signupUser()">Create Account →</button>
+    </div>
+
+    <!-- Google login -->
+    <button onclick="googleLogin()">🔵 Continue with Google</button>
+
+    <p id="error-msg" style="color:red"></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+             GoogleAuthProvider, signInWithPopup, updateProfile }
+      from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js";
+
+    const app = initializeApp(/* your firebaseConfig */);
+    const auth = getAuth(app);
+
+    window.loginUser = async () => {
+      const email = document.getElementById('login-email').value;
+      const pass  = document.getElementById('login-pass').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        window.location.href = 'index.html'; // redirect after login
+      } catch(e) {
+        document.getElementById('error-msg').textContent = e.message;
+      }
+    };
+
+    window.signupUser = async () => {
+      const name  = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const pass  = document.getElementById('signup-pass').value;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(cred.user, { displayName: name }); // saves their name
+        window.location.href = 'index.html';
+      } catch(e) {
+        document.getElementById('error-msg').textContent = e.message;
+      }
+    };
+
+    window.googleLogin = async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        window.location.href = 'index.html';
+      } catch(e) {
+        document.getElementById('error-msg').textContent = e.message;
+      }
+    };
+  </script>
+</body>
+</html>
