@@ -54,15 +54,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .nl-new{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25)!important;color:var(--c3)!important}
 .nav-cta{background:linear-gradient(135deg,rgba(255,0,110,.15),rgba(191,0,255,.1));border:1px solid rgba(255,0,110,.35);color:var(--c2);padding:7px 15px;border-radius:18px;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;transition:all .2s;font-family:'Orbitron',monospace;white-space:nowrap}
 .nav-cta:hover{box-shadow:0 0 18px rgba(255,0,110,.3);transform:translateY(-1px)}
-
-/* Player pill — shown when logged in */
-.nick-pill{display:none;align-items:center;gap:5px;background:rgba(0,255,136,.09);border:1px solid rgba(0,255,136,.26);color:var(--c3);padding:6px 14px;border-radius:18px;font-size:11px;font-weight:700;transition:all .2s;font-family:'Orbitron',monospace;flex-shrink:0}
+.nick-pill{display:none;align-items:center;gap:5px;background:rgba(0,255,136,.09);border:1px solid rgba(0,255,136,.26);color:var(--c3);padding:6px 14px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Orbitron',monospace;flex-shrink:0}
+.nick-pill:hover{background:rgba(0,255,136,.17)}
 .ndot{width:6px;height:6px;border-radius:50%;background:var(--c3);box-shadow:0 0 6px var(--c3);animation:glow 1.5s ease-in-out infinite}
-
-/* Logout button */
-.logout-btn{background:rgba(255,0,110,.08);border:1px solid rgba(255,0,110,.22);color:var(--c2);padding:6px 13px;border-radius:18px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;font-family:'Orbitron',monospace;white-space:nowrap;display:none}
-.logout-btn:hover{background:rgba(255,0,110,.18);box-shadow:0 0 12px rgba(255,0,110,.25)}
-
+/* Hide nav links on small screens */
 @media(max-width:768px){
   .nl:not(.nav-cta):not(.nl-new){display:none}
   .logo{font-size:16px}
@@ -221,10 +216,42 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:30px 0;text-align:cent
 .footer-logo em{color:var(--c1);font-style:normal}
 footer p{font-size:13px;color:var(--dim)}
 footer a{color:var(--c0);text-decoration:none}
+
+/* ══ NICKNAME MODAL ══ */
+.modal-bg{position:fixed;inset:0;background:rgba(2,2,12,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .3s ease}
+.modal-bg.hidden{display:none}
+.modal{background:#0a0a1a;border:1px solid rgba(0,245,255,.2);border-radius:18px;padding:32px;width:100%;max-width:440px;text-align:center;box-shadow:0 0 70px rgba(0,245,255,.07)}
+.modal-icon{font-size:50px;display:block;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
+.modal-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--c0);margin-bottom:7px}
+.modal-sub{font-size:14px;color:var(--dim);margin-bottom:20px;line-height:1.6}
+.nick-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(0,245,255,.2);color:#e0e8ff;font-family:'Orbitron',monospace;font-size:16px;font-weight:700;padding:13px 18px;border-radius:9px;margin-bottom:6px;text-align:center;letter-spacing:2px;outline:none;transition:all .2s}
+.nick-in:focus{border-color:rgba(0,245,255,.5);box-shadow:0 0 16px rgba(0,245,255,.09)}
+.nick-in::placeholder{color:rgba(85,102,170,.4);font-size:13px;letter-spacing:1px}
+.nick-hint{font-size:11px;color:var(--dim);margin-bottom:18px}
+.modal-btns{display:flex;gap:9px;justify-content:center}
+.mbtn{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.28);color:var(--c0);padding:12px 26px;border-radius:8px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.mbtn:hover{background:rgba(0,245,255,.2);box-shadow:0 0 16px rgba(0,245,255,.28);transform:translateY(-1px)}
+.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.mbtn-skip:hover{color:#fff}
 </style>
 </head>
 <body>
 <div class="scanline"></div>
+
+<!-- NICKNAME MODAL -->
+<div class="modal-bg" id="nick-modal">
+  <div class="modal">
+    <span class="modal-icon">🎮</span>
+    <div class="modal-title">Welcome to Game Hub</div>
+    <div class="modal-sub">Set a nickname to track scores and compete on live leaderboards!</div>
+    <input class="nick-in" id="nick-in" maxlength="16" placeholder="Your nickname..." autocomplete="off" autocorrect="off" autocapitalize="off"/>
+    <div class="nick-hint">Max 16 chars · Shows on all leaderboards</div>
+    <div class="modal-btns">
+      <button class="mbtn" id="nick-save">Enter Hub →</button>
+      <button class="mbtn-skip" id="nick-skip">Skip</button>
+    </div>
+  </div>
+</div>
 
 <!-- TICKER -->
 <div class="ticker-wrap">
@@ -245,13 +272,7 @@ footer a{color:var(--c0);text-decoration:none}
     <div class="nav-inner">
       <a href="index.html" class="logo">GAME<em>HUB</em></a>
       <div class="nav-links">
-        <!-- Shown when logged in -->
-        <div class="nick-pill" id="nick-pill">
-          <div class="ndot"></div>
-          <span id="player-name">Player</span>
-        </div>
-        <button class="logout-btn" id="logout-btn">Sign Out</button>
-
+        <div class="nick-pill" id="nick-pill"><div class="ndot"></div><span id="nick-name">Player</span></div>
         <a href="minigames/index.html" class="nl">🎮 Mini Games</a>
         <a href="timed-challenge/index.html" class="nl">⏱ Timed</a>
         <a href="multiplayer/index.html" class="nl">🌐 Arena</a>
@@ -441,91 +462,62 @@ footer a{color:var(--c0);text-decoration:none}
   </div>
 </footer>
 
-<!-- ══ FIREBASE ══ -->
 <script type="module">
-  import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getAuth, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  // ── Firebase config ──────────────────────────────────────────────────────
-  const app = initializeApp({
-    apiKey:            "AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",
-    authDomain:        "gamehub234.firebaseapp.com",
-    databaseURL:       "https://gamehub234-default-rtdb.firebaseio.com",
-    projectId:         "gamehub234",
-    storageBucket:     "gamehub234.firebasestorage.app",
-    messagingSenderId: "902315908438",
-    appId:             "1:902315908438:web:7ff2c34487b24c71998af7"
-  });
-
-  // ── Realtime DB: live score count ────────────────────────────────────────
-  try {
-    const db = getDatabase(app);
-    onValue(ref(db, 'stats'), snap => {
-      const v = snap.val() || {};
-      document.getElementById('lb-scores').textContent = v.scores || 0;
-    });
-  } catch(e) {}
-
-  // ── Auth: gate the whole page ────────────────────────────────────────────
-  const auth = getAuth(app);
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // ✅ Logged in — show player name and logout button
-      const name = user.displayName || user.email || 'Player';
-      document.getElementById('player-name').textContent = name;
-      document.getElementById('nick-pill').style.display  = 'flex';
-      document.getElementById('logout-btn').style.display = 'inline-flex';
-    } else {
-      // 🔒 Not logged in — redirect to login page
-      window.location.href = 'login.html';
-    }
-  });
-
-  // ── Logout ───────────────────────────────────────────────────────────────
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    signOut(auth).then(() => {
-      window.location.href = 'login.html';
-    });
-  });
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+try{
+  const app=initializeApp({apiKey:"AIzaSyArIpjo9Rye5S7IQRXu1std4srOcAD7I_Y",authDomain:"gamehub234.firebaseapp.com",databaseURL:"https://gamehub234-default-rtdb.firebaseio.com",projectId:"gamehub234",storageBucket:"gamehub234.firebasestorage.app",messagingSenderId:"902315908438",appId:"1:902315908438:web:7ff2c34487b24c71998af7"});
+  const db=getDatabase(app);
+  onValue(ref(db,'stats'),snap=>{const v=snap.val()||{};document.getElementById('lb-scores').textContent=v.scores||0;});
+}catch(e){}
 </script>
 
-<!-- ══ LOCAL SCORES ══ -->
 <script>
-  const localMap = {
-    'f-snake':'snake_best', 'f-tetris':'tetris_best', 'f-flappy':'flappy_best',
-    'f-rr':'rr_best',       'f-cc':'cc_best',         'f-gs':'gs_best',
-    'f-sr':'sr_best',       'fs-snake':'snake_best',  'fs-tetris':'tetris_best',
-    'fs-gs':'gs_best',      'fs-cw':'cw_best',
-  };
-  for (const [id, key] of Object.entries(localMap)) {
-    const v  = localStorage.getItem(key);
-    const el = document.getElementById(id);
-    if (el && v) el.textContent = Number(v).toLocaleString();
-  }
+// Nickname
+let nick=localStorage.getItem('player_nick')||'';
+(function init(){
+  if(!nick){document.getElementById('nick-modal').classList.remove('hidden');setTimeout(()=>document.getElementById('nick-in').focus(),300);}
+  else showPill(nick);
+})();
+function showPill(n){document.getElementById('nick-name').textContent=n;document.getElementById('nick-pill').style.display='flex';}
+document.getElementById('nick-save').onclick=()=>{
+  const v=document.getElementById('nick-in').value.trim();
+  if(!v){document.getElementById('nick-in').style.borderColor='rgba(255,0,60,.5)';return;}
+  nick=v;localStorage.setItem('player_nick',v);
+  document.getElementById('nick-modal').classList.add('hidden');showPill(v);
+};
+document.getElementById('nick-skip').onclick=()=>document.getElementById('nick-modal').classList.add('hidden');
+document.getElementById('nick-in').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nick-save').click();});
+document.getElementById('nick-pill').onclick=()=>{
+  document.getElementById('nick-in').value=nick;
+  document.getElementById('nick-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('nick-in').focus(),80);
+};
 
-  // Count personal bests
-  const allKeys = [
-    'snake_best','tetris_best','pong_best','breakout_best','2048_best',
-    'flappy_best','space_best','pacman_best','runner_best','rr_best',
-    'cc_best','nb_best','gs_best','sc_best','cw_best','sr_best',
-    'td_best','mb_best','rz_best'
-  ];
-  const set = allKeys.filter(k => localStorage.getItem(k)).length;
-  document.getElementById('scores-set').textContent = set;
-  document.getElementById('lb-set').textContent     = set;
+// Local scores display
+const localMap={
+  'f-snake':'snake_best','f-tetris':'tetris_best','f-flappy':'flappy_best',
+  'f-rr':'rr_best','f-cc':'cc_best','f-gs':'gs_best','f-sr':'sr_best',
+  'fs-snake':'snake_best','fs-tetris':'tetris_best','fs-gs':'gs_best','fs-cw':'cw_best',
+};
+for(const[id,key] of Object.entries(localMap)){
+  const v=localStorage.getItem(key),el=document.getElementById(id);
+  if(el&&v)el.textContent=Number(v).toLocaleString();
+}
+// Count personal bests
+const allKeys=['snake_best','tetris_best','pong_best','breakout_best','2048_best','flappy_best','space_best','pacman_best','runner_best','rr_best','cc_best','nb_best','gs_best','sc_best','cw_best','sr_best','td_best','mb_best','rz_best'];
+const set=allKeys.filter(k=>localStorage.getItem(k)).length;
+document.getElementById('scores-set').textContent=set;
+document.getElementById('lb-set').textContent=set;
 </script>
-
 <script src="/shared/utils.js"></script>
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .catch(err => console.warn('SW registration failed:', err));
-    });
-  }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(function(err) { console.warn('SW registration failed:', err); });
+  });
+}
 </script>
 </body>
 </html>
