@@ -18,7 +18,6 @@
 html{scroll-behavior:smooth}
 html,body{min-height:100vh;background:var(--bg);color:#e0e8ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
 
-/* BG */
 body::before{content:'';position:fixed;inset:0;background:
   radial-gradient(ellipse 90% 60% at 15% -5%,rgba(0,245,255,.06),transparent),
   radial-gradient(ellipse 70% 50% at 85% 105%,rgba(191,0,255,.05),transparent),
@@ -43,7 +42,6 @@ body::after{content:'';position:fixed;inset:0;
 .scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,255,.038),transparent);animation:scanline 10s linear infinite;pointer-events:none;z-index:1}
 .container{position:relative;z-index:2;max-width:1280px;margin:0 auto;padding:0 18px}
 
-/* ══ NAV ══ */
 nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,245,255,.07);padding:12px 0}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--c0);text-decoration:none;text-shadow:0 0 18px rgba(0,245,255,.5);letter-spacing:2px;flex-shrink:0}
@@ -57,19 +55,16 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .nick-pill{display:none;align-items:center;gap:5px;background:rgba(0,255,136,.09);border:1px solid rgba(0,255,136,.26);color:var(--c3);padding:6px 14px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Orbitron',monospace;flex-shrink:0}
 .nick-pill:hover{background:rgba(0,255,136,.17)}
 .ndot{width:6px;height:6px;border-radius:50%;background:var(--c3);box-shadow:0 0 6px var(--c3);animation:glow 1.5s ease-in-out infinite}
-/* Hide nav links on small screens */
 @media(max-width:768px){
   .nl:not(.nav-cta):not(.nl-new){display:none}
   .logo{font-size:16px}
 }
 
-/* ══ TICKER ══ */
 .ticker-wrap{background:rgba(0,245,255,.04);border-bottom:1px solid rgba(0,245,255,.07);padding:8px 0;overflow:hidden;white-space:nowrap;position:relative;z-index:2}
 .ticker-inner{display:inline-flex;animation:ticker 38s linear infinite}
 .ti{font-size:12px;color:var(--c0);padding:0 44px;font-weight:600;letter-spacing:.4px;opacity:.7}
 .ti strong{color:#fff;opacity:1}
 
-/* ══ HERO ══ */
 .hero{padding:64px 0 50px;display:grid;grid-template-columns:1fr 280px;gap:40px;align-items:center}
 @media(max-width:860px){.hero{grid-template-columns:1fr;text-align:center;padding:44px 0 36px}}
 .hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,245,255,.07);border:1px solid rgba(0,245,255,.2);border-radius:20px;padding:5px 16px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--c0);margin-bottom:20px}
@@ -93,7 +88,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .hbtn-g{background:rgba(0,255,136,.09);color:var(--c3);border:1px solid rgba(0,255,136,.32)}
 .hbtn-g:hover{background:rgba(0,255,136,.18);box-shadow:0 0 26px rgba(0,255,136,.28);transform:translateY(-2px)}
 
-/* HERO VISUAL */
 .hero-visual{position:relative;height:240px;display:flex;align-items:center;justify-content:center}
 .hero-orb{width:200px;height:200px;border-radius:50%;background:conic-gradient(from 0deg,rgba(0,245,255,.22),rgba(191,0,255,.22),rgba(255,0,110,.22),rgba(0,255,136,.22),rgba(255,230,0,.22),rgba(0,245,255,.22));animation:float 4s ease-in-out infinite;position:relative;box-shadow:0 0 50px rgba(0,245,255,.08)}
 .hero-orb::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--bg)}
@@ -104,7 +98,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .orb-d3{background:var(--c3);box-shadow:0 0 10px var(--c3);animation-duration:4s;animation-delay:-1s}
 @media(max-width:860px){.hero-visual{display:none}}
 
-/* ══ STATS ══ */
 .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:700px;margin:0 auto 72px;background:rgba(255,255,255,.018)}
 @media(max-width:600px){.stats-bar{grid-template-columns:repeat(3,1fr)}}
 .stat{padding:18px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.05)}
@@ -113,12 +106,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .stat-l{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
 @media(max-width:600px){.stat:nth-child(4),.stat:nth-child(5){display:none}}
 
-/* ══ SECTION HDR ══ */
 .sec-hdr{text-align:center;margin-bottom:36px}
 .sec-ey{font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
 .sec-title{font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,34px);font-weight:900;color:#fff}
 
-/* ══ MODES GRID ══ */
 .modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:80px}
 @media(max-width:720px){.modes-grid{grid-template-columns:1fr}}
 .mc{position:relative;overflow:hidden;background:var(--card);border-radius:16px;border:1px solid rgba(255,255,255,.05);text-decoration:none;color:inherit;transition:all .3s;display:flex;flex-direction:column;animation:fadeUp .4s ease both;cursor:pointer}
@@ -167,7 +158,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .bdot{width:5px;height:5px;border-radius:50%;background:var(--c2);animation:glow 1s ease-in-out infinite}
 .badge-new{position:absolute;top:16px;right:15px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.28);color:var(--c3);font-size:9px;font-weight:700;padding:3px 9px;border-radius:9px}
 
-/* ══ FEATURED ══ */
 .featured-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:80px}
 @media(max-width:900px){.featured-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:500px){.featured-grid{grid-template-columns:repeat(2,1fr)}}
@@ -186,7 +176,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .fc-score span{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;animation:glow 2.5s ease-in-out infinite}
 .fc0 .fc-score span{color:var(--c0)}.fc1 .fc-score span{color:var(--c1)}.fc2 .fc-score span{color:var(--c2)}.fc3 .fc-score span{color:var(--c3)}.fc4 .fc-score span{color:var(--c4)}
 
-/* ══ STRIPS ══ */
 .strip{border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap;text-decoration:none;color:inherit;transition:all .3s}
 .strip-lb{background:linear-gradient(135deg,rgba(255,230,0,.04),rgba(255,107,0,.02));border:1px solid rgba(255,230,0,.14)}
 .strip-lb:hover{box-shadow:0 12px 40px rgba(255,230,0,.08)}
@@ -210,14 +199,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(3,3,15,.92);backdrop-filte
 .tp-games{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .tp-g{font-size:11px;padding:3px 10px;border-radius:9px;font-weight:600;background:rgba(0,255,136,.08);color:var(--c3);border:1px solid rgba(0,255,136,.18)}
 
-/* ══ FOOTER ══ */
 footer{border-top:1px solid rgba(255,255,255,.05);padding:30px 0;text-align:center;margin-top:30px}
 .footer-logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--c0);margin-bottom:9px;text-shadow:0 0 12px rgba(0,245,255,.4)}
 .footer-logo em{color:var(--c1);font-style:normal}
 footer p{font-size:13px;color:var(--dim)}
 footer a{color:var(--c0);text-decoration:none}
 
-/* ══ NICKNAME MODAL ══ */
 .modal-bg{position:fixed;inset:0;background:rgba(2,2,12,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .3s ease}
 .modal-bg.hidden{display:none}
 .modal{background:#0a0a1a;border:1px solid rgba(0,245,255,.2);border-radius:18px;padding:32px;width:100%;max-width:440px;text-align:center;box-shadow:0 0 70px rgba(0,245,255,.07)}
@@ -233,12 +220,51 @@ footer a{color:var(--c0);text-decoration:none}
 .mbtn:hover{background:rgba(0,245,255,.2);box-shadow:0 0 16px rgba(0,245,255,.28);transform:translateY(-1px)}
 .mbtn-skip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--dim);padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
 .mbtn-skip:hover{color:#fff}
+
+/* ══ UNDERGROUND PORTAL STRIP ══ */
+@keyframes undergroundFlicker{
+  0%,100%{opacity:1} 8%{opacity:.7} 10%{opacity:1}
+  40%{opacity:.85} 42%{opacity:1}
+}
+@keyframes emberRise{
+  0%{transform:translateY(0) scale(1);opacity:0}
+  10%{opacity:.5}
+  100%{transform:translateY(-60px) scale(.3);opacity:0}
+}
+.strip-underground{
+  background:linear-gradient(135deg,rgba(163,34,26,.08),rgba(10,7,5,.5));
+  border:1px solid rgba(232,163,65,.2);
+  position:relative;overflow:hidden;cursor:pointer;
+}
+.strip-underground::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 100% at 0% 50%,rgba(163,34,26,.14),transparent 70%);
+  pointer-events:none;
+}
+.strip-underground .ember{
+  position:absolute;bottom:0;width:3px;height:3px;border-radius:50%;
+  background:#e8a341;box-shadow:0 0 6px #e8a341;
+  animation:emberRise 3s ease-in infinite;pointer-events:none;
+}
+.strip-underground:hover{
+  box-shadow:0 16px 50px rgba(163,34,26,.2);
+  transform:translateY(-3px) scale(1.005);
+  border-color:rgba(232,163,65,.4);
+}
+.strip-underground .strip-icon{animation:undergroundFlicker 4s infinite,float 2.5s ease-in-out infinite}
+.strip-underground .strip-title{color:#e8a341;text-shadow:0 0 12px rgba(232,163,65,.45);font-family:'Orbitron',monospace}
+.strip-underground .strip-cta{background:rgba(232,163,65,.1);border:1px solid rgba(232,163,65,.32);color:#e8a341}
+.strip-underground .strip-cta:hover{background:rgba(232,163,65,.2);box-shadow:0 0 14px rgba(232,163,65,.32)}
+.strip-underground-badge{
+  background:rgba(163,34,26,.18);border:1px solid rgba(163,34,26,.4);
+  color:#e8a341;font-size:9px;font-weight:700;letter-spacing:1px;
+  padding:3px 9px;border-radius:9px;margin-left:8px;vertical-align:middle;
+}
 </style>
 </head>
 <body>
 <div class="scanline"></div>
 
-<!-- NICKNAME MODAL -->
 <div class="modal-bg" id="nick-modal">
   <div class="modal">
     <span class="modal-icon">🎮</span>
@@ -253,7 +279,6 @@ footer a{color:var(--c0);text-decoration:none}
   </div>
 </div>
 
-<!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-inner">
     <span class="ti">🎮 <strong>40+ GAMES</strong> · 4 modes · Neon arcade</span>
@@ -283,7 +308,6 @@ footer a{color:var(--c0);text-decoration:none}
     </div>
   </nav>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-left">
       <div class="hero-badge"><div class="hero-badge-dot"></div>Neon Arcade · 4 Modes · Live Now</div>
@@ -309,7 +333,6 @@ footer a{color:var(--c0);text-decoration:none}
     </div>
   </section>
 
-  <!-- STATS -->
   <div class="stats-bar">
     <div class="stat"><span class="stat-n" style="color:var(--c0)">25+</span><div class="stat-l">Games</div></div>
     <div class="stat"><span class="stat-n" style="color:var(--c2)">4</span><div class="stat-l">Modes</div></div>
@@ -318,7 +341,6 @@ footer a{color:var(--c0);text-decoration:none}
     <div class="stat"><span class="stat-n" style="color:var(--c1)">∞</span><div class="stat-l">Replay</div></div>
   </div>
 
-  <!-- MODES -->
   <div class="sec-hdr">
     <div class="sec-ey" style="color:var(--c0)">Choose Your Mode</div>
     <div class="sec-title">4 Ways to Play</div>
@@ -401,7 +423,6 @@ footer a{color:var(--c0);text-decoration:none}
 
   </div>
 
-  <!-- FEATURED -->
   <div class="sec-hdr">
     <div class="sec-ey" style="color:var(--c1)">Jump Right In</div>
     <div class="sec-title">Popular Games</div>
@@ -414,7 +435,6 @@ footer a{color:var(--c0);text-decoration:none}
     <a href="2player/index.html" class="fc fc4" style="animation-delay:.2s"><span class="fc-icon">👥</span><div class="fc-name">2 Player</div><div class="fc-score" style="color:var(--c3);font-size:11px;font-weight:700">NEW!</div></a>
   </div>
 
-  <!-- STRIPS -->
   <div class="strip strip-lb">
     <span class="strip-icon">🏆</span>
     <div class="strip-body">
@@ -447,6 +467,20 @@ footer a{color:var(--c0);text-decoration:none}
     <span class="strip-cta">Play Now →</span>
   </a>
 
+  <a href="underground/index.html" class="strip strip-underground" id="undergroundStrip">
+    <span class="ember" style="left:8%;animation-delay:.2s"></span>
+    <span class="ember" style="left:22%;animation-delay:1.1s"></span>
+    <span class="ember" style="left:38%;animation-delay:.6s"></span>
+    <span class="ember" style="left:55%;animation-delay:1.8s"></span>
+    <span class="ember" style="left:70%;animation-delay:.9s"></span>
+    <span class="strip-icon">🐀</span>
+    <div class="strip-body">
+      <div class="strip-title">THE UNDERGROUND<span class="strip-underground-badge">NEW</span></div>
+      <div class="strip-sub">Something darker lives beneath the arcade. 8 hidden subdivisions. No respawns for the careless.</div>
+    </div>
+    <span class="strip-cta">Descend →</span>
+  </a>
+
 </div>
 
 <footer>
@@ -473,7 +507,6 @@ try{
 </script>
 
 <script>
-// Nickname
 let nick=localStorage.getItem('player_nick')||'';
 (function init(){
   if(!nick){document.getElementById('nick-modal').classList.remove('hidden');setTimeout(()=>document.getElementById('nick-in').focus(),300);}
@@ -494,7 +527,6 @@ document.getElementById('nick-pill').onclick=()=>{
   setTimeout(()=>document.getElementById('nick-in').focus(),80);
 };
 
-// Local scores display
 const localMap={
   'f-snake':'snake_best','f-tetris':'tetris_best','f-flappy':'flappy_best',
   'f-rr':'rr_best','f-cc':'cc_best','f-gs':'gs_best','f-sr':'sr_best',
@@ -504,7 +536,6 @@ for(const[id,key] of Object.entries(localMap)){
   const v=localStorage.getItem(key),el=document.getElementById(id);
   if(el&&v)el.textContent=Number(v).toLocaleString();
 }
-// Count personal bests
 const allKeys=['snake_best','tetris_best','pong_best','breakout_best','2048_best','flappy_best','space_best','pacman_best','runner_best','rr_best','cc_best','nb_best','gs_best','sc_best','cw_best','sr_best','td_best','mb_best','rz_best'];
 const set=allKeys.filter(k=>localStorage.getItem(k)).length;
 document.getElementById('scores-set').textContent=set;
