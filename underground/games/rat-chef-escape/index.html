@@ -2,39 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Rat Chef Escape</title>
-<style>* { margin: 0; padding: 0; box-sizing: border-box; }
+<style>
+:root {
+  --void: #1c130e;
+  --wall-top: #4a3524;
+  --wall-bottom: #241a12;
+  --gold: #ffc94d;
+  --gold-soft: rgba(255,201,77,0.55);
+  --copper: #b5652f;
+  --copper-deep: #7a4322;
+  --cream: #f3e6d1;
+  --danger: #ff5c5c;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
 
 body {
-  background: radial-gradient(ellipse at center, #241a14 0%, #100b08 100%);
+  background:
+    radial-gradient(ellipse at 50% 30%, #3a2818 0%, var(--void) 60%, #0c0806 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   font-family: 'Courier New', monospace;
-  color: #f0e6d2;
+  color: var(--cream);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 10px;
 }
 
 #title {
-  font-size: 26px;
-  margin-bottom: 10px;
+  font-size: clamp(18px, 5vw, 26px);
+  margin-bottom: 8px;
   letter-spacing: 2px;
-  text-shadow: 2px 2px 0 #000, 0 0 20px rgba(255,215,94,0.3);
+  text-shadow: 2px 2px 0 #000, 0 0 24px rgba(255,201,77,0.35);
+  text-align: center;
 }
-#title span { color: #ffd75e; }
+#title span { color: var(--gold); }
 
 #gameWrap {
   position: relative;
-  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 12px 34px rgba(0,0,0,0.65));
+  width: min(94vw, 760px);
+  flex-shrink: 0;
 }
 
 canvas {
-  background: #3d2f24;
-  border: 4px solid #6b4a32;
-  border-radius: 8px;
+  background: #34281e;
+  border: 4px solid var(--copper);
+  border-radius: 10px;
   display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
 }
 
 #hud {
@@ -42,72 +72,133 @@ canvas {
   top: 10px;
   left: 10px;
   pointer-events: none;
+  background: rgba(20,13,9,0.45);
+  border: 1px solid var(--gold-soft);
+  border-radius: 8px;
+  padding: 6px 12px;
+  backdrop-filter: blur(2px);
 }
 #scoreDisplay {
-  font-size: 20px;
+  font-size: clamp(15px, 3.4vw, 20px);
   font-weight: bold;
   text-shadow: 2px 2px 0 #000;
+  color: var(--cream);
 }
 #highScoreDisplay {
-  font-size: 13px;
-  color: #ffd75e;
+  font-size: clamp(10px, 2.4vw, 13px);
+  color: var(--gold);
   text-shadow: 1px 1px 0 #000;
   margin-top: 2px;
 }
 
 #combo {
   position: absolute;
-  top: 55px;
-  left: 10px;
-  font-size: 14px;
-  color: #ffd75e;
+  top: 10px;
+  right: 10px;
+  font-size: clamp(12px, 3vw, 15px);
+  color: var(--gold);
   text-shadow: 2px 2px 0 #000;
   pointer-events: none;
   transition: transform 0.1s;
+  background: rgba(20,13,9,0.45);
+  border: 1px solid var(--gold-soft);
+  border-radius: 8px;
+  padding: 5px 10px;
 }
 
 #overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(10,7,5,0.86);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  border-radius: 4px;
+  border-radius: 6px;
   gap: 10px;
+  padding: 20px;
 }
-#overlay h1 { font-size: 32px; margin-bottom: 4px; color: #ff6b6b; text-shadow: 0 0 20px rgba(255,107,107,0.5); }
-#overlay p { font-size: 15px; margin-bottom: 10px; line-height: 1.5; color: #d8cbb5; }
+#overlay h1 {
+  font-size: clamp(22px, 6vw, 32px);
+  margin-bottom: 4px;
+  color: var(--danger);
+  text-shadow: 0 0 20px rgba(255,92,92,0.5);
+}
+#overlay p {
+  font-size: clamp(12px, 3.2vw, 15px);
+  margin-bottom: 6px;
+  line-height: 1.5;
+  color: #d8cbb5;
+}
 
 #overlay button {
-  background: #ffd75e;
+  background: var(--gold);
   border: none;
-  padding: 12px 28px;
+  padding: 14px 30px;
   font-size: 16px;
   font-family: inherit;
   font-weight: bold;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   color: #1a1512;
   transition: transform 0.1s, background 0.2s;
+  touch-action: manipulation;
 }
-#overlay button:hover { background: #ffe38a; transform: scale(1.05); }
+#overlay button:hover { background: #ffdb7f; transform: scale(1.05); }
 #overlay button:active { transform: scale(0.97); }
 
 #soundToggle {
-  background: #4a3826 !important;
-  color: #f0e6d2 !important;
+  background: var(--copper-deep) !important;
+  color: var(--cream) !important;
   font-size: 13px !important;
-  padding: 8px 18px !important;
+  padding: 9px 18px !important;
+  border: 1px solid var(--gold-soft) !important;
 }
 
 #instructions {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #8a7a6a;
+  margin-top: 12px;
+  font-size: clamp(11px, 2.6vw, 13px);
+  color: #a4907a;
   text-align: center;
+  line-height: 1.5;
+}
+#instructions .touchOnly { display: none; color: var(--gold); }
+
+/* ===== Touch D-pad ===== */
+#touchControls {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: none;
+  grid-template-columns: 54px 54px 54px;
+  grid-template-rows: 54px 54px 54px;
+  gap: 5px;
+  z-index: 10;
+}
+.dbtn {
+  background: rgba(122,67,34,0.6);
+  border: 2px solid var(--gold-soft);
+  border-radius: 12px;
+  color: var(--cream);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.dbtn:active { background: rgba(255,201,77,0.55); }
+.dbtn.up    { grid-column: 2; grid-row: 1; }
+.dbtn.left  { grid-column: 1; grid-row: 2; }
+.dbtn.right { grid-column: 3; grid-row: 2; }
+.dbtn.down  { grid-column: 2; grid-row: 3; }
+
+@media (hover: none) and (pointer: coarse) {
+  #touchControls { display: grid; }
+  #instructions .touchOnly { display: inline; }
+  #instructions .keyOnly { display: none; }
 }
 </style>
 </head>
@@ -124,6 +215,13 @@ canvas {
   </div>
   <div id="combo"></div>
 
+  <div id="touchControls">
+    <button class="dbtn up" data-key="arrowup">▲</button>
+    <button class="dbtn left" data-key="arrowleft">◀</button>
+    <button class="dbtn right" data-key="arrowright">▶</button>
+    <button class="dbtn down" data-key="arrowdown">▼</button>
+  </div>
+
   <div id="overlay">
     <h1>Rat Chef Escape</h1>
     <p>Sneak cheese while the chef isn't looking.<br>Golden cheese = 5pts. He speeds up every minute!</p>
@@ -132,7 +230,10 @@ canvas {
   </div>
 </div>
 
-<div id="instructions">WASD or Arrow Keys to move · Freeze when the chef looks!</div>
+<div id="instructions">
+  <span class="keyOnly">WASD or Arrow Keys to move · Freeze when the chef looks!</span>
+  <span class="touchOnly">Use the D-pad below to move · Freeze when the chef looks!</span>
+</div>
 
 <script>// ============ SETUP ============
 const canvas = document.getElementById('game');
@@ -144,15 +245,39 @@ const comboEl = document.getElementById('combo');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
 const soundToggle = document.getElementById('soundToggle');
+const gameWrap = document.getElementById('gameWrap');
+const titleEl = document.getElementById('title');
+const instructionsEl = document.getElementById('instructions');
 
 let soundOn = true;
 let highScore = 0; // note: localStorage disabled in this environment, use in-memory; works fine on real GitHub Pages
+
+// ============ CRISP / RESPONSIVE CANVAS ============
+function setupCanvasScale() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+setupCanvasScale();
+
+function fitGameWrap() {
+  const reserved = titleEl.offsetHeight + instructionsEl.offsetHeight + 40;
+  const availW = window.innerWidth * 0.94;
+  const availH = Math.max(200, window.innerHeight - reserved);
+  const maxW = Math.min(availW, 760, availH * (W / H));
+  gameWrap.style.width = maxW + 'px';
+}
+window.addEventListener('resize', fitGameWrap);
+window.addEventListener('orientationchange', fitGameWrap);
+fitGameWrap();
 
 // ============ AUDIO (synthesized — no files needed) ============
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let actx = null;
 function getAudioCtx() {
   if (!actx) actx = new AudioCtx();
+  if (actx.state === 'suspended') actx.resume();
   return actx;
 }
 
@@ -238,6 +363,19 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
+// ============ TOUCH D-PAD ============
+document.querySelectorAll('.dbtn').forEach(btn => {
+  const key = btn.dataset.key;
+  const press = e => { e.preventDefault(); keys[key] = true; getAudioCtx(); };
+  const release = e => { e.preventDefault(); keys[key] = false; };
+  btn.addEventListener('pointerdown', press);
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointerleave', release);
+  btn.addEventListener('pointercancel', release);
+});
+// prevent iOS long-press/selection artifacts on controls
+document.getElementById('touchControls').addEventListener('contextmenu', e => e.preventDefault());
+
 const chef = {
   x: W/2, y: 70, size: 34,
   facing: 'away',
@@ -285,7 +423,7 @@ function spawnParticles(x, y, opts={}) {
       life: opts.life || 30,
       maxLife: opts.life || 30,
       size: (opts.size || 3) * (0.6+Math.random()*0.8),
-      color: opts.color || '#ffd75e',
+      color: opts.color || '#ffc94d',
       gravity: opts.gravity !== undefined ? opts.gravity : 0.08
     });
   }
@@ -387,8 +525,8 @@ function resetGame() {
 // ============ DRAWING ============
 function drawKitchenBG() {
   const grad = ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0, '#453527');
-  grad.addColorStop(1, '#332619');
+  grad.addColorStop(0, '#4a3524');
+  grad.addColorStop(1, '#241a12');
   ctx.fillStyle = grad;
   ctx.fillRect(0,0,W,H);
 
@@ -397,7 +535,7 @@ function drawKitchenBG() {
   for (let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for (let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
-  ctx.fillStyle = '#5c4633';
+  ctx.fillStyle = '#6b4a32';
   ctx.fillRect(0, 95, W, 12);
   potShelves.forEach(x=>{
     ctx.fillStyle = '#3a2a1d';
@@ -408,8 +546,8 @@ function drawKitchenBG() {
   flickerT += 0.05;
   const flicker = 0.85 + Math.sin(flickerT)*0.05 + Math.sin(flickerT*3.7)*0.02;
   const vg = ctx.createRadialGradient(W/2, H/2, 100, W/2, H/2, 420);
-  vg.addColorStop(0, `rgba(255,200,120,${0.05*flicker})`);
-  vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  vg.addColorStop(0, `rgba(255,201,77,${0.06*flicker})`);
+  vg.addColorStop(1, 'rgba(0,0,0,0.4)');
   ctx.fillStyle = vg;
   ctx.fillRect(0,0,W,H);
 }
@@ -438,7 +576,7 @@ function drawChef() {
     ctx.beginPath(); ctx.arc(cx+5, cy, 2.5, 0, Math.PI*2); ctx.fill();
     ctx.save();
     ctx.globalAlpha = 0.22;
-    ctx.fillStyle = '#ff3b3b';
+    ctx.fillStyle = '#ff5c5c';
     const dx = rat.x - cx, dy = rat.y - cy;
     const angle = Math.atan2(dy,dx);
     ctx.beginPath();
@@ -448,10 +586,10 @@ function drawChef() {
     ctx.fill();
     ctx.restore();
   } else if (warning) {
-    ctx.fillStyle = '#ffd75e';
+    ctx.fillStyle = '#ffc94d';
     ctx.beginPath(); ctx.arc(cx, cy-20, 4, 0, Math.PI*2); ctx.fill();
     ctx.font = 'bold 16px monospace';
-    ctx.fillStyle = '#ffd75e';
+    ctx.fillStyle = '#ffc94d';
     ctx.fillText('!', cx-3, cy-26);
   } else {
     ctx.fillStyle = '#8a6a4a';
@@ -484,10 +622,10 @@ function drawCheese(c) {
   ctx.save();
   ctx.translate(c.x, c.y + bobY);
   if (c.golden) {
-    ctx.shadowColor = '#ffd75e';
+    ctx.shadowColor = '#ffc94d';
     ctx.shadowBlur = 12;
   }
-  ctx.fillStyle = c.golden ? '#ffd75e' : '#f5c542';
+  ctx.fillStyle = c.golden ? '#ffc94d' : '#f5c542';
   ctx.beginPath();
   ctx.moveTo(-c.size, c.size*0.6);
   ctx.lineTo(c.size, c.size*0.6);
@@ -582,7 +720,7 @@ function updateCheese() {
       comboTimer = 90;
       spawnParticles(c.x, c.y, {
         count: c.golden ? 16 : 8,
-        color: c.golden ? '#ffd75e' : '#f5c542',
+        color: c.golden ? '#ffc94d' : '#f5c542',
         speed: 3, size: c.golden ? 4 : 3, life: 25, upBias: 1.5
       });
       if (c.golden) sfx.golden(); else sfx.cheese();
@@ -648,7 +786,7 @@ function endGame() {
   state = 'gameover';
   sfx.caught();
   triggerShake(10, 20);
-  spawnParticles(rat.x, rat.y, { count: 20, color: '#ff6b6b', speed: 4, size: 3, life: 30 });
+  spawnParticles(rat.x, rat.y, { count: 20, color: '#ff5c5c', speed: 4, size: 3, life: 30 });
   stopAmbiance();
   if (score > highScore) highScore = score;
   overlay.style.display = 'flex';
