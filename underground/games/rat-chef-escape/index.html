@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rat Chef Escape</title>
+<style>* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: radial-gradient(ellipse at center, #241a14 0%, #100b08 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Courier New', monospace;
+  color: #f0e6d2;
+}
+
+#title {
+  font-size: 26px;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 #000, 0 0 20px rgba(255,215,94,0.3);
+}
+#title span { color: #ffd75e; }
+
+#gameWrap {
+  position: relative;
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+}
+
+canvas {
+  background: #3d2f24;
+  border: 4px solid #6b4a32;
+  border-radius: 8px;
+  display: block;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  pointer-events: none;
+}
+#scoreDisplay {
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 2px 2px 0 #000;
+}
+#highScoreDisplay {
+  font-size: 13px;
+  color: #ffd75e;
+  text-shadow: 1px 1px 0 #000;
+  margin-top: 2px;
+}
+
+#combo {
+  position: absolute;
+  top: 55px;
+  left: 10px;
+  font-size: 14px;
+  color: #ffd75e;
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  transition: transform 0.1s;
+}
+
+#overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 4px;
+  gap: 10px;
+}
+#overlay h1 { font-size: 32px; margin-bottom: 4px; color: #ff6b6b; text-shadow: 0 0 20px rgba(255,107,107,0.5); }
+#overlay p { font-size: 15px; margin-bottom: 10px; line-height: 1.5; color: #d8cbb5; }
+
+#overlay button {
+  background: #ffd75e;
+  border: none;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #1a1512;
+  transition: transform 0.1s, background 0.2s;
+}
+#overlay button:hover { background: #ffe38a; transform: scale(1.05); }
+#overlay button:active { transform: scale(0.97); }
+
+#soundToggle {
+  background: #4a3826 !important;
+  color: #f0e6d2 !important;
+  font-size: 13px !important;
+  padding: 8px 18px !important;
+}
+
+#instructions {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8a7a6a;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div id="title">🐀 RAT CHEF <span>ESCAPE</span> 🧀</div>
+
+<div id="gameWrap">
+  <canvas id="game" width="640" height="480"></canvas>
+
+  <div id="hud">
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="highScoreDisplay">Best: 0</div>
+  </div>
+  <div id="combo"></div>
+
+  <div id="overlay">
+    <h1>Rat Chef Escape</h1>
+    <p>Sneak cheese while the chef isn't looking.<br>Golden cheese = 5pts. He speeds up every minute!</p>
+    <button id="soundToggle">🔊 Sound: ON</button>
+    <button id="startBtn">Start Game</button>
+  </div>
+</div>
+
+<div id="instructions">WASD or Arrow Keys to move · Freeze when the chef looks!</div>
+
+<script>// ============ SETUP ============
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const scoreDisplay = document.getElementById('scoreDisplay');
+const highScoreDisplay = document.getElementById('highScoreDisplay');
+const comboEl = document.getElementById('combo');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const soundToggle = document.getElementById('soundToggle');
+
+let soundOn = true;
+let highScore = 0; // note: localStorage disabled in this environment, use in-memory; works fine on real GitHub Pages
+
+// ============ AUDIO (synthesized — no files needed) ============
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+function getAudioCtx() {
+  if (!actx) actx = new AudioCtx();
+  return actx;
+}
+
+function beep({freq=440, duration=0.1, type='sine', volume=0.15, sweep=null, delay=0}) {
+  if (!soundOn) return;
+  const ac = getAudioCtx();
+  const t0 = ac.currentTime + delay;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (sweep) osc.frequency.linearRampToValueAtTime(sweep, t0 + duration);
+  gain.gain.setValueAtTime(volume, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+}
+
+const sfx = {
+  cheese: () => beep({freq: 700, sweep: 1100, duration: 0.12, type: 'triangle', volume: 0.18}),
+  golden: () => {
+    beep({freq: 800, sweep: 1300, duration: 0.15, type: 'triangle', volume: 0.2});
+    beep({freq: 1100, sweep: 1600, duration: 0.15, type: 'sine', volume: 0.15, delay: 0.06});
+  },
+  warning: () => beep({freq: 300, duration: 0.15, type: 'square', volume: 0.1}),
+  danger: () => beep({freq: 150, duration: 0.3, type: 'sawtooth', volume: 0.12}),
+  potWarn: () => beep({freq: 500, duration: 0.06, type: 'square', volume: 0.06}),
+  potCrash: () => {
+    beep({freq: 120, duration: 0.25, type: 'sawtooth', volume: 0.2});
+    beep({freq: 80, duration: 0.3, type: 'square', volume: 0.15, delay: 0.02});
+  },
+  caught: () => {
+    beep({freq: 400, sweep: 100, duration: 0.5, type: 'sawtooth', volume: 0.2});
+  },
+  step: () => beep({freq: 200 + Math.random()*40, duration: 0.03, type: 'square', volume: 0.02})
+};
+
+// low ambient kitchen hum using a slow oscillator + filtered noise
+let ambientNodes = null;
+function startAmbiance() {
+  if (!soundOn) return;
+  const ac = getAudioCtx();
+  if (ambientNodes) return;
+  const hum = ac.createOscillator();
+  hum.type = 'sine';
+  hum.frequency.value = 60;
+  const humGain = ac.createGain();
+  humGain.gain.value = 0.02;
+  hum.connect(humGain).connect(ac.destination);
+  hum.start();
+  ambientNodes = { hum, humGain };
+}
+function stopAmbiance() {
+  if (ambientNodes) {
+    ambientNodes.hum.stop();
+    ambientNodes = null;
+  }
+}
+
+soundToggle.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundToggle.textContent = soundOn ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+  if (soundOn) startAmbiance(); else stopAmbiance();
+});
+
+// ============ STATE ============
+let state = 'menu';
+let score = 0;
+let combo = 0;
+let comboTimer = 0;
+let startTime = 0;
+let elapsed = 0;
+let lastSpeedRamp = 0;
+let stepTimer = 0;
+
+const rat = { x: W/2, y: H-60, size: 18, speed: 2.4, baseSpeed: 2.4 };
+
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+const chef = {
+  x: W/2, y: 70, size: 34,
+  facing: 'away',
+  timer: 0,
+  lookDuration: 90,
+  awayDuration: 150,
+  warningDuration: 35,
+  coneAngle: Math.PI/3
+};
+function resetChefCycle() {
+  chef.facing = 'away';
+  chef.timer = chef.awayDuration + Math.random()*60;
+}
+
+let cheeses = [];
+function spawnCheese() {
+  const golden = Math.random() < 0.15;
+  cheeses.push({
+    x: 40 + Math.random()*(W-80),
+    y: 140 + Math.random()*(H-220),
+    size: golden ? 14 : 11,
+    golden,
+    bob: Math.random()*Math.PI*2
+  });
+}
+
+let pots = [];
+let potShelves = [];
+function initShelves() {
+  potShelves = [];
+  for (let i=0;i<5;i++) potShelves.push(60 + i*(W-120)/4);
+}
+
+// ============ PARTICLES ============
+let particles = [];
+function spawnParticles(x, y, opts={}) {
+  const count = opts.count || 8;
+  for (let i=0;i<count;i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = (opts.speed || 2) * (0.5 + Math.random());
+    particles.push({
+      x, y,
+      vx: Math.cos(angle)*speed,
+      vy: Math.sin(angle)*speed - (opts.upBias || 0),
+      life: opts.life || 30,
+      maxLife: opts.life || 30,
+      size: (opts.size || 3) * (0.6+Math.random()*0.8),
+      color: opts.color || '#ffd75e',
+      gravity: opts.gravity !== undefined ? opts.gravity : 0.08
+    });
+  }
+}
+function updateParticles() {
+  for (let i=particles.length-1;i>=0;i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += p.gravity;
+    p.vx *= 0.98;
+    p.life--;
+    if (p.life <= 0) particles.splice(i,1);
+  }
+}
+function drawParticles() {
+  particles.forEach(p => {
+    const alpha = p.life / p.maxLife;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ============ SCREEN SHAKE ============
+let shake = { intensity: 0, duration: 0 };
+function triggerShake(intensity, duration) {
+  shake.intensity = intensity;
+  shake.duration = duration;
+}
+function updateShake() {
+  if (shake.duration > 0) {
+    shake.duration--;
+    if (shake.duration <= 0) shake.intensity = 0;
+  }
+}
+
+// ============ AMBIANCE VISUALS ============
+let steamPuffs = [];
+function spawnSteam() {
+  steamPuffs.push({
+    x: 140 + Math.random()*360,
+    y: 100,
+    size: 4,
+    life: 120,
+    maxLife: 120,
+    vx: (Math.random()-0.5)*0.3
+  });
+}
+function updateSteam() {
+  if (Math.random() < 0.03) spawnSteam();
+  for (let i=steamPuffs.length-1;i>=0;i--) {
+    const s = steamPuffs[i];
+    s.y -= 0.4;
+    s.x += s.vx;
+    s.size += 0.06;
+    s.life--;
+    if (s.life <= 0) steamPuffs.splice(i,1);
+  }
+}
+function drawSteam() {
+  steamPuffs.forEach(s => {
+    const alpha = (s.life/s.maxLife) * 0.15;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+let flickerT = 0;
+
+// ============ RESET / INIT ============
+function resetGame() {
+  score = 0;
+  combo = 0;
+  comboTimer = 0;
+  rat.x = W/2; rat.y = H-60; rat.speed = rat.baseSpeed;
+  cheeses = [];
+  pots = [];
+  particles = [];
+  steamPuffs = [];
+  chef.lookDuration = 90;
+  chef.awayDuration = 150;
+  initShelves();
+  for (let i=0;i<6;i++) spawnCheese();
+  resetChefCycle();
+  startTime = performance.now();
+  lastSpeedRamp = 0;
+  startAmbiance();
+}
+
+// ============ DRAWING ============
+function drawKitchenBG() {
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, '#453527');
+  grad.addColorStop(1, '#332619');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+  ctx.lineWidth = 1;
+  for (let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  ctx.fillStyle = '#5c4633';
+  ctx.fillRect(0, 95, W, 12);
+  potShelves.forEach(x=>{
+    ctx.fillStyle = '#3a2a1d';
+    ctx.fillRect(x-18, 90, 36, 8);
+  });
+
+  // flickering warm light vignette (ambiance)
+  flickerT += 0.05;
+  const flicker = 0.85 + Math.sin(flickerT)*0.05 + Math.sin(flickerT*3.7)*0.02;
+  const vg = ctx.createRadialGradient(W/2, H/2, 100, W/2, H/2, 420);
+  vg.addColorStop(0, `rgba(255,200,120,${0.05*flicker})`);
+  vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,W,H);
+}
+
+function drawChef() {
+  const cx = chef.x, cy = chef.y;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx-20, cy-10, 40, 45);
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillRect(cx-16, cy-32, 32, 22);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy-32, 16, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  const danger = chef.facing === 'looking';
+  const warning = chef.facing === 'warning';
+
+  ctx.fillStyle = warning ? '#e8b98a' : '#f0c49a';
+  ctx.beginPath();
+  ctx.arc(cx, cy-2, 14, 0, Math.PI*2);
+  ctx.fill();
+
+  if (danger) {
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(cx-5, cy, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+5, cy, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#ff3b3b';
+    const dx = rat.x - cx, dy = rat.y - cy;
+    const angle = Math.atan2(dy,dx);
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy, 400, angle-chef.coneAngle/2, angle+chef.coneAngle/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (warning) {
+    ctx.fillStyle = '#ffd75e';
+    ctx.beginPath(); ctx.arc(cx, cy-20, 4, 0, Math.PI*2); ctx.fill();
+    ctx.font = 'bold 16px monospace';
+    ctx.fillStyle = '#ffd75e';
+    ctx.fillText('!', cx-3, cy-26);
+  } else {
+    ctx.fillStyle = '#8a6a4a';
+    ctx.beginPath(); ctx.arc(cx, cy-4, 3, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawRat() {
+  ctx.save();
+  ctx.translate(rat.x, rat.y);
+  ctx.fillStyle = '#8a7a6a';
+  ctx.beginPath();
+  ctx.ellipse(0,0, rat.size*0.6, rat.size*0.45, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-6,-6,4,0,Math.PI*2);
+  ctx.arc(6,-6,4,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#8a7a6a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, rat.size*0.4);
+  ctx.quadraticCurveTo(10, rat.size*0.8, 4, rat.size*1.3);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCheese(c) {
+  const bobY = Math.sin(performance.now()/300 + c.bob) * 2;
+  ctx.save();
+  ctx.translate(c.x, c.y + bobY);
+  if (c.golden) {
+    ctx.shadowColor = '#ffd75e';
+    ctx.shadowBlur = 12;
+  }
+  ctx.fillStyle = c.golden ? '#ffd75e' : '#f5c542';
+  ctx.beginPath();
+  ctx.moveTo(-c.size, c.size*0.6);
+  ctx.lineTo(c.size, c.size*0.6);
+  ctx.lineTo(0, -c.size*0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  if (c.golden) { ctx.strokeStyle = '#fff2b8'; ctx.lineWidth = 2; ctx.stroke(); }
+  ctx.fillStyle = c.golden ? '#c99b1e' : '#c99120';
+  ctx.beginPath(); ctx.arc(-3,3,1.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4,1,1.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawPot(p) {
+  if (!p.falling) {
+    const alpha = p.warned / p.warnTime;
+    ctx.save();
+    ctx.globalAlpha = 0.15 + alpha*0.35;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.targetY, p.size*0.9, p.size*0.4, 0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#5a5a5a';
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y, p.size*0.7, p.size*0.55, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+// ============ UPDATE LOGIC ============
+function updateRat() {
+  let dx=0, dy=0;
+  if (keys['w'] || keys['arrowup']) dy -= 1;
+  if (keys['s'] || keys['arrowdown']) dy += 1;
+  if (keys['a'] || keys['arrowleft']) dx -= 1;
+  if (keys['d'] || keys['arrowright']) dx += 1;
+  const moving = dx!==0 || dy!==0;
+  if (moving) {
+    const len = Math.hypot(dx,dy);
+    rat.x += (dx/len) * rat.speed;
+    rat.y += (dy/len) * rat.speed;
+    stepTimer--;
+    if (stepTimer <= 0) { sfx.step(); stepTimer = 14; }
+  }
+  rat.x = Math.max(rat.size, Math.min(W-rat.size, rat.x));
+  rat.y = Math.max(115, Math.min(H-rat.size, rat.y));
+  return moving;
+}
+
+function angleDiff(a,b){
+  let d = a-b;
+  while(d>Math.PI) d-=2*Math.PI;
+  while(d<-Math.PI) d+=2*Math.PI;
+  return d;
+}
+
+function updateChef(ratMoving) {
+  chef.timer--;
+  if (chef.facing === 'away' && chef.timer <= 0) {
+    chef.facing = 'warning';
+    chef.timer = chef.warningDuration;
+    sfx.warning();
+  } else if (chef.facing === 'warning' && chef.timer <= 0) {
+    chef.facing = 'looking';
+    chef.timer = chef.lookDuration;
+    sfx.danger();
+  } else if (chef.facing === 'looking') {
+    if (chef.timer <= 0) {
+      chef.facing = 'away';
+      chef.timer = chef.awayDuration + Math.random()*60;
+    }
+    const dist = Math.hypot(rat.x-chef.x, rat.y-chef.y);
+    if (dist < 500 && ratMoving) {
+      endGame();
+    }
+  }
+}
+
+function updateCheese() {
+  for (let i=cheeses.length-1;i>=0;i--) {
+    const c = cheeses[i];
+    const dist = Math.hypot(rat.x-c.x, rat.y-c.y);
+    if (dist < rat.size*0.7 + c.size*0.7) {
+      score += c.golden ? 5 : 1;
+      combo++;
+      comboTimer = 90;
+      spawnParticles(c.x, c.y, {
+        count: c.golden ? 16 : 8,
+        color: c.golden ? '#ffd75e' : '#f5c542',
+        speed: 3, size: c.golden ? 4 : 3, life: 25, upBias: 1.5
+      });
+      if (c.golden) sfx.golden(); else sfx.cheese();
+      cheeses.splice(i,1);
+      spawnCheese();
+    }
+  }
+}
+
+function updatePots() {
+  if (Math.random() < 0.006 + elapsed/600000) {
+    const x = potShelves[Math.floor(Math.random()*potShelves.length)] + (Math.random()*30-15);
+    pots.push({x, y:100, targetY: H-40, size:16, warnTime:45, warned:0, falling:false, vy:0, warnedSound:false});
+  }
+  for (let i=pots.length-1;i>=0;i--) {
+    const p = pots[i];
+    if (!p.falling) {
+      p.warned++;
+      if (p.warned % 10 === 0) sfx.potWarn();
+      if (p.warned >= p.warnTime) {
+        p.falling = true;
+        p.y = 100;
+        p.vy = 2;
+      }
+    } else {
+      p.vy += 0.4;
+      p.y += p.vy;
+      const dist = Math.hypot(rat.x-p.x, rat.y-p.y);
+      if (dist < rat.size*0.6 + p.size*0.6 && p.y > 100) {
+        endGame();
+      }
+      if (p.y >= H-45 && !p.landed) {
+        p.landed = true;
+        sfx.potCrash();
+        triggerShake(6, 12);
+        spawnParticles(p.x, H-45, { count: 12, color: '#6b6b6b', speed: 3, size: 2.5, life: 20, gravity: 0.15 });
+      }
+      if (p.y > H+30) pots.splice(i,1);
+    }
+  }
+}
+
+function updateCombo() {
+  if (comboTimer > 0) {
+    comboTimer--;
+    if (comboTimer === 0) combo = 0;
+  }
+}
+
+function updateSpeedRamp() {
+  elapsed = performance.now() - startTime;
+  const minutesPassed = Math.floor(elapsed/60000);
+  if (minutesPassed > lastSpeedRamp) {
+    lastSpeedRamp = minutesPassed;
+    rat.speed += 0.3;
+    chef.lookDuration = Math.max(50, chef.lookDuration - 5);
+    chef.awayDuration = Math.max(70, chef.awayDuration - 8);
+  }
+}
+
+// ============ GAME OVER / START ============
+function endGame() {
+  state = 'gameover';
+  sfx.caught();
+  triggerShake(10, 20);
+  spawnParticles(rat.x, rat.y, { count: 20, color: '#ff6b6b', speed: 4, size: 3, life: 30 });
+  stopAmbiance();
+  if (score > highScore) highScore = score;
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <h1>🐀 Caught!</h1>
+    <p>Final Score: <strong>${score}</strong><br>Best: <strong>${highScore}</strong></p>
+    <button id="restartBtn">Try Again</button>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    resetGame();
+    state = 'playing';
+    overlay.style.display = 'none';
+  });
+}
+
+startBtn.addEventListener('click', () => {
+  getAudioCtx(); // unlock audio on user gesture
+  resetGame();
+  state = 'playing';
+  overlay.style.display = 'none';
+});
+
+// ============ MAIN LOOP ============
+function loop() {
+  ctx.save();
+  if (shake.intensity > 0) {
+    const dx = (Math.random()-0.5)*shake.intensity;
+    const dy = (Math.random()-0.5)*shake.intensity;
+    ctx.translate(dx, dy);
+  }
+
+  ctx.clearRect(-20,-20,W+40,H+40);
+  drawKitchenBG();
+
+  let ratMoving = false;
+  if (state === 'playing') {
+    ratMoving = updateRat();
+    updateChef(ratMoving);
+    updateCheese();
+    updatePots();
+    updateCombo();
+    updateSpeedRamp();
+    updateSteam();
+  }
+  updateParticles();
+  updateShake();
+
+  drawSteam();
+  cheeses.forEach(drawCheese);
+  pots.forEach(drawPot);
+  drawChef();
+  if (state !== 'menu') drawRat();
+  drawParticles();
+
+  ctx.restore();
+
+  scoreDisplay.textContent = 'Score: ' + score;
+  highScoreDisplay.textContent = 'Best: ' + highScore;
+  comboEl.textContent = combo > 1 ? `Combo x${combo}!` : '';
+  comboEl.style.transform = combo > 1 ? 'scale(1.15)' : 'scale(1)';
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
