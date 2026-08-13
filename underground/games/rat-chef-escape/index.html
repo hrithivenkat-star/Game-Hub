@@ -32,29 +32,34 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: 'Courier New', monospace;
   color: var(--cream);
   overflow: hidden;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  padding: 10px;
+  padding: 6px;
+  padding-top: max(6px, env(safe-area-inset-top));
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
 }
 
 #title {
-  font-size: clamp(18px, 5vw, 26px);
-  margin-bottom: 8px;
+  font-size: clamp(15px, 4.2vw, 26px);
+  margin-bottom: 4px;
   letter-spacing: 2px;
   text-shadow: 2px 2px 0 #000, 0 0 24px rgba(255,201,77,0.35);
   text-align: center;
+  flex-shrink: 0;
 }
 #title span { color: var(--gold); }
 
 #gameWrap {
   position: relative;
   filter: drop-shadow(0 12px 34px rgba(0,0,0,0.65));
-  width: min(94vw, 760px);
+  width: min(94vw, 900px);
   flex-shrink: 0;
+  touch-action: none;
 }
 
 canvas {
@@ -105,6 +110,26 @@ canvas {
   border-radius: 8px;
   padding: 5px 10px;
 }
+
+#fullscreenBtn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(20,13,9,0.55);
+  border: 1px solid var(--gold-soft);
+  border-radius: 8px;
+  color: var(--cream);
+  font-size: 16px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 5;
+}
+#fullscreenBtn:active { background: rgba(255,201,77,0.35); }
 
 #overlay {
   position: absolute;
@@ -157,46 +182,16 @@ canvas {
 }
 
 #instructions {
-  margin-top: 12px;
+  margin-top: 8px;
   font-size: clamp(11px, 2.6vw, 13px);
   color: #a4907a;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 #instructions .touchOnly { display: none; color: var(--gold); }
 
-/* ===== Touch D-pad ===== */
-#touchControls {
-  position: absolute;
-  left: 14px;
-  bottom: 14px;
-  display: none;
-  grid-template-columns: 54px 54px 54px;
-  grid-template-rows: 54px 54px 54px;
-  gap: 5px;
-  z-index: 10;
-}
-.dbtn {
-  background: rgba(122,67,34,0.6);
-  border: 2px solid var(--gold-soft);
-  border-radius: 12px;
-  color: var(--cream);
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-.dbtn:active { background: rgba(255,201,77,0.55); }
-.dbtn.up    { grid-column: 2; grid-row: 1; }
-.dbtn.left  { grid-column: 1; grid-row: 2; }
-.dbtn.right { grid-column: 3; grid-row: 2; }
-.dbtn.down  { grid-column: 2; grid-row: 3; }
-
 @media (hover: none) and (pointer: coarse) {
-  #touchControls { display: grid; }
   #instructions .touchOnly { display: inline; }
   #instructions .keyOnly { display: none; }
 }
@@ -214,13 +209,7 @@ canvas {
     <div id="highScoreDisplay">Best: 0</div>
   </div>
   <div id="combo"></div>
-
-  <div id="touchControls">
-    <button class="dbtn up" data-key="arrowup">▲</button>
-    <button class="dbtn left" data-key="arrowleft">◀</button>
-    <button class="dbtn right" data-key="arrowright">▶</button>
-    <button class="dbtn down" data-key="arrowdown">▼</button>
-  </div>
+  <button id="fullscreenBtn" title="Fullscreen">⛶</button>
 
   <div id="overlay">
     <h1>Rat Chef Escape</h1>
@@ -232,7 +221,7 @@ canvas {
 
 <div id="instructions">
   <span class="keyOnly">WASD or Arrow Keys to move · Freeze when the chef looks!</span>
-  <span class="touchOnly">Use the D-pad below to move · Freeze when the chef looks!</span>
+  <span class="touchOnly">Touch and drag anywhere to move · Freeze when the chef looks!</span>
 </div>
 
 <script>// ============ SETUP ============
@@ -248,6 +237,7 @@ const soundToggle = document.getElementById('soundToggle');
 const gameWrap = document.getElementById('gameWrap');
 const titleEl = document.getElementById('title');
 const instructionsEl = document.getElementById('instructions');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
 
 let soundOn = true;
 let highScore = 0; // note: localStorage disabled in this environment, use in-memory; works fine on real GitHub Pages
@@ -262,15 +252,32 @@ function setupCanvasScale() {
 setupCanvasScale();
 
 function fitGameWrap() {
-  const reserved = titleEl.offsetHeight + instructionsEl.offsetHeight + 40;
-  const availW = window.innerWidth * 0.94;
-  const availH = Math.max(200, window.innerHeight - reserved);
-  const maxW = Math.min(availW, 760, availH * (W / H));
+  const isMobile = window.innerWidth <= 700;
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  const reserved = titleEl.offsetHeight + instructionsEl.offsetHeight + (isMobile ? 20 : 40);
+  const availW = window.innerWidth * (isMobile ? 0.99 : 0.94);
+  const availH = Math.max(200, vh - reserved);
+  const maxW = Math.min(availW, isMobile ? 1000 : 760, availH * (W / H));
   gameWrap.style.width = maxW + 'px';
 }
 window.addEventListener('resize', fitGameWrap);
 window.addEventListener('orientationchange', fitGameWrap);
 fitGameWrap();
+
+// ============ FULLSCREEN (phone-friendly: more play area, hides browser chrome) ============
+fullscreenBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || function(){}).call(document.documentElement);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+  }
+});
+document.addEventListener('fullscreenchange', fitGameWrap);
+
+// ============ HAPTICS (phone-friendly feedback) ============
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
 
 // ============ AUDIO (synthesized — no files needed) ============
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -363,18 +370,79 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-// ============ TOUCH D-PAD ============
-document.querySelectorAll('.dbtn').forEach(btn => {
-  const key = btn.dataset.key;
-  const press = e => { e.preventDefault(); keys[key] = true; getAudioCtx(); };
-  const release = e => { e.preventDefault(); keys[key] = false; };
-  btn.addEventListener('pointerdown', press);
-  btn.addEventListener('pointerup', release);
-  btn.addEventListener('pointerleave', release);
-  btn.addEventListener('pointercancel', release);
-});
-// prevent iOS long-press/selection artifacts on controls
-document.getElementById('touchControls').addEventListener('contextmenu', e => e.preventDefault());
+// ============ TOUCH DRAG CONTROL (finger-driven, like an invisible analog stick) ============
+// Touch down anywhere on the board, drag in any direction — the rat moves that way.
+// No buttons, no fixed zone, and your finger never covers the rat since the
+// stick recenters as you drag, so you always have room to keep pushing.
+const joy = { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
+const JOY_RADIUS = 46;   // logical canvas units the stick can travel before it "slides"
+const JOY_DEADZONE = 6;
+
+function canvasPointFromEvent(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function joyStart(e) {
+  e.preventDefault();
+  getAudioCtx();
+  if (joy.id !== null) return; // already tracking a finger
+  canvas.setPointerCapture(e.pointerId);
+  const p = canvasPointFromEvent(e);
+  joy.active = true;
+  joy.id = e.pointerId;
+  joy.ox = p.x; joy.oy = p.y;
+  joy.dx = 0; joy.dy = 0;
+}
+function joyMove(e) {
+  if (!joy.active || e.pointerId !== joy.id) return;
+  e.preventDefault();
+  const p = canvasPointFromEvent(e);
+  let dx = p.x - joy.ox;
+  let dy = p.y - joy.oy;
+  const dist = Math.hypot(dx, dy);
+  if (dist > JOY_RADIUS) {
+    // slide the stick's origin along so the player can keep dragging
+    // in the same direction without running out of screen
+    const nx = dx / dist, ny = dy / dist;
+    joy.ox = p.x - nx * JOY_RADIUS;
+    joy.oy = p.y - ny * JOY_RADIUS;
+    dx = nx * JOY_RADIUS;
+    dy = ny * JOY_RADIUS;
+  }
+  joy.dx = dx; joy.dy = dy;
+}
+function joyEnd(e) {
+  if (joy.id !== null && e.pointerId !== joy.id) return;
+  joy.active = false;
+  joy.id = null;
+  joy.dx = 0; joy.dy = 0;
+}
+canvas.addEventListener('pointerdown', joyStart);
+canvas.addEventListener('pointermove', joyMove);
+canvas.addEventListener('pointerup', joyEnd);
+canvas.addEventListener('pointercancel', joyEnd);
+canvas.addEventListener('pointerleave', joyEnd);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+function drawJoystick() {
+  if (!joy.active) return;
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = 'rgba(255,201,77,0.55)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(joy.ox, joy.oy, JOY_RADIUS, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.globalAlpha = 0.75;
+  ctx.fillStyle = '#ffc94d';
+  ctx.beginPath();
+  ctx.arc(joy.ox + joy.dx, joy.oy + joy.dy, 15, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
 
 const chef = {
   x: W/2, y: 70, size: 34,
@@ -668,6 +736,18 @@ function updateRat() {
   if (keys['s'] || keys['arrowdown']) dy += 1;
   if (keys['a'] || keys['arrowleft']) dx -= 1;
   if (keys['d'] || keys['arrowright']) dx += 1;
+
+  // finger drag overrides keyboard when active
+  if (joy.active) {
+    const dist = Math.hypot(joy.dx, joy.dy);
+    if (dist > JOY_DEADZONE) {
+      dx = joy.dx;
+      dy = joy.dy;
+    } else {
+      dx = 0; dy = 0;
+    }
+  }
+
   const moving = dx!==0 || dy!==0;
   if (moving) {
     const len = Math.hypot(dx,dy);
@@ -698,6 +778,7 @@ function updateChef(ratMoving) {
     chef.facing = 'looking';
     chef.timer = chef.lookDuration;
     sfx.danger();
+    vibrate(40);
   } else if (chef.facing === 'looking') {
     if (chef.timer <= 0) {
       chef.facing = 'away';
@@ -723,7 +804,7 @@ function updateCheese() {
         color: c.golden ? '#ffc94d' : '#f5c542',
         speed: 3, size: c.golden ? 4 : 3, life: 25, upBias: 1.5
       });
-      if (c.golden) sfx.golden(); else sfx.cheese();
+      if (c.golden) { sfx.golden(); vibrate(15); } else { sfx.cheese(); vibrate(8); }
       cheeses.splice(i,1);
       spawnCheese();
     }
@@ -785,9 +866,11 @@ function updateSpeedRamp() {
 function endGame() {
   state = 'gameover';
   sfx.caught();
+  vibrate([0,80,40,80]);
   triggerShake(10, 20);
   spawnParticles(rat.x, rat.y, { count: 20, color: '#ff5c5c', speed: 4, size: 3, life: 30 });
   stopAmbiance();
+  joyEnd({ pointerId: joy.id });
   if (score > highScore) highScore = score;
   overlay.style.display = 'flex';
   overlay.innerHTML = `
@@ -840,6 +923,7 @@ function loop() {
   drawChef();
   if (state !== 'menu') drawRat();
   drawParticles();
+  if (state === 'playing') drawJoystick();
 
   ctx.restore();
 
