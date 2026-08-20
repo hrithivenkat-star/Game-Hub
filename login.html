@@ -1,86 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Game Hub — Login</title>
-  <style>
-    /* paste your existing neon CSS variables here */
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Game Hub — Sign In</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pink:#ff2f87;--orange:#ff7a3d;--purple:#8b2ff0;--teal:#00e0c6;--yellow:#ffd23f;--red:#ff2e3a;
+  --bg:#0a0714;--panel:#120b21;--line:rgba(255,255,255,.08);--ink:#fbf2ff;--dim:#a696c2;}
+html,body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Barlow Condensed',sans-serif;font-size:17px;overflow-x:hidden}
+h1,.display{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:1px}
+body{display:flex;align-items:center;justify-content:center;padding:20px;position:relative}
+
+/* ===== animated ambient background ===== */
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 40% at 12% 0%,rgba(255,47,135,.14),transparent 60%),
+             radial-gradient(ellipse 55% 45% at 100% 15%,rgba(0,224,198,.12),transparent 60%),
+             radial-gradient(ellipse 60% 40% at 50% 100%,rgba(139,47,240,.12),transparent 60%), var(--bg)}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:42px 42px;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 30%,transparent 75%)}
+.orb{position:fixed;border-radius:50%;filter:blur(60px);z-index:0;pointer-events:none;opacity:.55}
+.orb1{width:280px;height:280px;background:var(--pink);top:-60px;left:-60px;animation:drift1 14s ease-in-out infinite}
+.orb2{width:240px;height:240px;background:var(--teal);bottom:-60px;right:-40px;animation:drift2 17s ease-in-out infinite}
+.orb3{width:180px;height:180px;background:var(--purple);top:55%;left:60%;animation:drift3 20s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-30px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,50px) scale(1.15)}}
+.particle{position:fixed;bottom:-10px;border-radius:50%;background:var(--teal);z-index:0;pointer-events:none;
+  opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:.7}90%{opacity:.4}100%{transform:translateY(-108vh) translateX(var(--drift,20px));opacity:0}}
+@media(prefers-reduced-motion:reduce){.orb,.particle{animation:none!important}}
+
+/* ===== card ===== */
+.card{position:relative;z-index:2;width:100%;max-width:390px;background:rgba(18,11,33,.85);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-radius:14px;padding:34px 28px 26px;
+  box-shadow:0 25px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02) inset;
+  animation:cardIn .5s cubic-bezier(.2,.85,.3,1.2)}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.card h1{font-size:30px;text-align:center;margin-bottom:4px;letter-spacing:1.5px}
+.card h1 em{font-style:normal;background:linear-gradient(90deg,var(--pink),var(--orange),var(--yellow));
+  background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:gradShift 4s linear infinite}
+@keyframes gradShift{to{background-position:200% center}}
+.sub{text-align:center;color:var(--dim);font-size:14px;margin-bottom:22px}
+
+.tabs{display:flex;background:rgba(255,255,255,.04);border-radius:9px;padding:3px;margin-bottom:20px;position:relative}
+.tab-highlight{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:6px;
+  background:linear-gradient(90deg,var(--pink),var(--orange));transition:transform .28s cubic-bezier(.3,.9,.3,1.2);z-index:0}
+.tab{flex:1;text-align:center;padding:9px 0;font-size:13px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;border-radius:6px;cursor:pointer;color:var(--dim);transition:color .2s;position:relative;z-index:1}
+.tab.active{color:#160718}
+
+.pane{display:none;animation:paneIn .3s ease}
+.pane.active{display:block}
+@keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.field{position:relative;margin-bottom:12px}
+input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--ink);
+  padding:13px 14px;border-radius:8px;font-size:15px;font-family:inherit;outline:none;transition:all .2s}
+input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,47,135,.12)}
+input.pw{padding-right:42px}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;
+  color:var(--dim);font-size:16px;user-select:none;transition:color .2s;background:none;border:none;padding:4px}
+.pw-toggle:hover{color:var(--teal)}
+
+.strength{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin:-4px 0 12px;overflow:hidden}
+.strength-bar{height:100%;width:0%;border-radius:2px;transition:width .25s ease,background .25s ease}
+
+.btn{position:relative;overflow:hidden;width:100%;background:linear-gradient(90deg,var(--pink),var(--orange));
+  border:none;color:#160718;padding:13px;border-radius:8px;font-family:'Anton',sans-serif;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:2px}
+.btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,47,135,.3)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);
+  animation:rippleAnim .55s ease-out;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(3.2);opacity:0}}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(22,7,24,.35);border-top-color:#160718;
+  border-radius:50%;animation:spin .6s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.btn-google{width:100%;background:#fff;color:#1f1c2c;border:none;padding:12px;border-radius:8px;
+  font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:10px;margin-top:14px;transition:all .2s}
+.btn-google:hover{transform:translateY(-1px);filter:brightness(.96);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--dim);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.forgot{text-align:center;margin-top:14px}
+.forgot a{color:var(--teal);font-size:13px;text-decoration:none;cursor:pointer}
+.forgot a:hover{text-decoration:underline}
+
+.err{color:var(--red);font-size:13px;text-align:center;margin-top:12px;min-height:16px;transition:all .2s}
+.err.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.ok{color:var(--teal);font-size:13px;text-align:center;margin-top:12px;min-height:16px}
+
+.back{display:block;text-align:center;color:var(--dim);font-size:13px;text-decoration:none;margin-top:18px}
+.back:hover{color:#fff}
+
+.credit{position:relative;z-index:2;text-align:center;margin-top:18px;font-size:12px;color:var(--dim)}
+.credit a{color:var(--dim);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:color .2s}
+.credit a:hover{color:var(--teal)}
+.credit svg{opacity:.8}
+</style>
 </head>
 <body>
-  <div class="login-card">
-    <h1>🎮 GAME HUB</h1>
-    <p>Sign in to track scores & compete</p>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div id="particles"></div>
 
-    <!-- Tab buttons -->
-    <div class="tabs">
-      <button onclick="showTab('login')">Login</button>
-      <button onclick="showTab('signup')">Sign Up</button>
+  <div>
+    <div class="card">
+      <h1>GAME<em>HUB</em></h1>
+      <div class="sub">Sign in to save scores, sync achievements & climb the leaderboard</div>
+
+      <div class="tabs">
+        <div class="tab-highlight" id="tab-highlight"></div>
+        <div class="tab active" id="tab-login">Login</div>
+        <div class="tab" id="tab-signup">Sign Up</div>
+      </div>
+
+      <div class="pane active" id="pane-login">
+        <div class="field"><input type="email" id="login-email" placeholder="Email" autocomplete="email" /></div>
+        <div class="field">
+          <input type="password" id="login-pass" class="pw" placeholder="Password" autocomplete="current-password" />
+          <button type="button" class="pw-toggle" data-target="login-pass">👁</button>
+        </div>
+        <button class="btn" id="btn-login">Log In →</button>
+        <div class="forgot"><a id="forgot-link">Forgot password?</a></div>
+      </div>
+
+      <div class="pane" id="pane-signup">
+        <div class="field"><input type="text" id="signup-name" placeholder="Display name (shown on leaderboards)" maxlength="16" /></div>
+        <div class="field"><input type="email" id="signup-email" placeholder="Email" autocomplete="email" /></div>
+        <div class="field">
+          <input type="password" id="signup-pass" class="pw" placeholder="Password (min 6 chars)" autocomplete="new-password" />
+          <button type="button" class="pw-toggle" data-target="signup-pass">👁</button>
+        </div>
+        <div class="strength"><div class="strength-bar" id="strength-bar"></div></div>
+        <button class="btn" id="btn-signup">Create Account →</button>
+      </div>
+
+      <div class="divider">OR</div>
+      <button class="btn-google" id="btn-google">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.61z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.7A5.4 5.4 0 0 1 3.69 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="err" id="msg"></div>
+      <a href="/index.html" class="back">← Back to Game Hub</a>
     </div>
 
-    <!-- Login form -->
-    <div id="login-tab">
-      <input type="email" id="login-email" placeholder="Email" />
-      <input type="password" id="login-pass" placeholder="Password" />
-      <button onclick="loginUser()">Login →</button>
+    <div class="credit">
+      Built by
+      <a href="https://github.com/hrithivenkat-star" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        hrithivenkat-star
+      </a>
     </div>
-
-    <!-- Signup form -->
-    <div id="signup-tab" style="display:none">
-      <input type="text" id="signup-name" placeholder="Display Name (shown on leaderboard)" />
-      <input type="email" id="signup-email" placeholder="Email" />
-      <input type="password" id="signup-pass" placeholder="Password (min 6 chars)" />
-      <button onclick="signupUser()">Create Account →</button>
-    </div>
-
-    <!-- Google login -->
-    <button onclick="googleLogin()">🔵 Continue with Google</button>
-
-    <p id="error-msg" style="color:red"></p>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-             GoogleAuthProvider, signInWithPopup, updateProfile }
-      from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js";
+    import "/shared/gh-auth.js";
 
-    const app = initializeApp(/* your firebaseConfig */);
-    const auth = getAuth(app);
+    function whenReady(cb) {
+      if (window.GH && window.GH.Auth) cb();
+      else setTimeout(() => whenReady(cb), 30);
+    }
 
-    window.loginUser = async () => {
-      const email = document.getElementById('login-email').value;
-      const pass  = document.getElementById('login-pass').value;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        window.location.href = 'index.html'; // redirect after login
-      } catch(e) {
-        document.getElementById('error-msg').textContent = e.message;
-      }
-    };
+    const params = new URLSearchParams(location.search);
+    const redirectTo = params.get('redirect') || 'index.html';
+    const msg = document.getElementById('msg');
 
-    window.signupUser = async () => {
-      const name  = document.getElementById('signup-name').value;
-      const email = document.getElementById('signup-email').value;
-      const pass  = document.getElementById('signup-pass').value;
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: name }); // saves their name
-        window.location.href = 'index.html';
-      } catch(e) {
-        document.getElementById('error-msg').textContent = e.message;
-      }
-    };
+    // ---- floating particles ----
+    const pWrap = document.getElementById('particles');
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 2 + Math.random() * 3;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+      p.style.animationDuration = (10 + Math.random() * 12) + 's';
+      p.style.animationDelay = (Math.random() * 14) + 's';
+      const colors = ['#00e0c6', '#ff2f87', '#ffd23f', '#8b2ff0'];
+      p.style.background = colors[i % colors.length];
+      pWrap.appendChild(p);
+    }
 
-    window.googleLogin = async () => {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-        window.location.href = 'index.html';
-      } catch(e) {
-        document.getElementById('error-msg').textContent = e.message;
-      }
-    };
+    // ---- tabs with sliding highlight ----
+    const highlight = document.getElementById('tab-highlight');
+    function switchTab(which) {
+      document.getElementById('tab-login').classList.toggle('active', which === 'login');
+      document.getElementById('tab-signup').classList.toggle('active', which === 'signup');
+      document.getElementById('pane-login').classList.toggle('active', which === 'login');
+      document.getElementById('pane-signup').classList.toggle('active', which === 'signup');
+      highlight.style.transform = which === 'signup' ? 'translateX(100%)' : 'translateX(0)';
+      msg.textContent = ''; msg.classList.remove('shake');
+    }
+    document.getElementById('tab-login').onclick = () => switchTab('login');
+    document.getElementById('tab-signup').onclick = () => switchTab('signup');
+
+    // ---- password show/hide ----
+    document.querySelectorAll('.pw-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.textContent = show ? '🙈' : '👁';
+      });
+    });
+
+    // ---- password strength meter (signup only) ----
+    const strengthBar = document.getElementById('strength-bar');
+    document.getElementById('signup-pass').addEventListener('input', (e) => {
+      const v = e.target.value;
+      let score = 0;
+      if (v.length >= 6) score++;
+      if (v.length >= 10) score++;
+      if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+      if (/[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v)) score++;
+      const pct = [0, 25, 50, 75, 100][score];
+      const colors = ['transparent', '#ff2e3a', '#ff7a3d', '#ffd23f', '#00e0c6'];
+      strengthBar.style.width = pct + '%';
+      strengthBar.style.background = colors[score];
+    });
+
+    // ---- ripple effect on buttons ----
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const rect = this.getBoundingClientRect();
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        r.style.left = (e.clientX - rect.left) + 'px';
+        r.style.top = (e.clientY - rect.top) + 'px';
+        this.appendChild(r);
+        setTimeout(() => r.remove(), 600);
+      });
+    });
+
+    function setBusy(btn, busy, label) {
+      btn.disabled = busy;
+      if (busy) { btn.dataset.label = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>' + label; }
+      else if (btn.dataset.label) { btn.innerHTML = btn.dataset.label; }
+    }
+    function showErr(e) {
+      const m = (e && e.code) ? e.code.replace('auth/', '').replace(/-/g, ' ') : (e.message || 'Something went wrong');
+      msg.className = 'err shake';
+      msg.textContent = m.charAt(0).toUpperCase() + m.slice(1);
+      setTimeout(() => msg.classList.remove('shake'), 400);
+    }
+
+    whenReady(() => {
+      document.getElementById('btn-login').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-login');
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-pass').value;
+        if (!email || !pass) return showErr({ message: 'Enter your email and password' });
+        setBusy(btn, true, 'Signing in…');
+        try {
+          await GH.Auth.login(email, pass);
+          location.href = redirectTo;
+        } catch (e) { showErr(e); setBusy(btn, false); }
+      });
+
+      document.getElementById('btn-signup').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-signup');
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const pass = document.getElementById('signup-pass').value;
+        if (!email || pass.length < 6) return showErr({ message: 'Enter a valid email and a 6+ character password' });
+        setBusy(btn, true, 'Creating account…');
+        try {
+          await GH.Auth.signup(email, pass, name || undefined);
+          location.href = redirectTo;
+        } catch (e) { showErr(e); setBusy(btn, false); }
+      });
+
+      document.getElementById('btn-google').addEventListener('click', async () => {
+        try {
+          await GH.Auth.loginGoogle();
+          location.href = redirectTo;
+        } catch (e) { showErr(e); }
+      });
+
+      document.getElementById('forgot-link').addEventListener('click', async () => {
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) return showErr({ message: 'Enter your email above first' });
+        try {
+          await GH.Auth.resetPassword(email);
+          msg.className = 'ok';
+          msg.textContent = 'Password reset email sent — check your inbox.';
+        } catch (e) { showErr(e); }
+      });
+
+      // Already signed in? Skip straight through.
+      GH.Auth.onChange((user) => { if (user) location.href = redirectTo; });
+    });
   </script>
 </body>
 </html>
