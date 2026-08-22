@@ -5,10 +5,13 @@
 //   <script type="module" src="/shared/gh-auth.js"></script>
 //   <script type="module" src="/shared/gh-achievements.js"></script>
 //
-// Zero per-game code changes needed for the generic achievements below —
-// this file wraps GH.saveScore() and GH.recordPlay(), which every game
-// already calls. Games can ALSO fire bespoke ones manually at any time:
-//   GH.unlockAchievement('first_win_2p', 'Turf War');
+// Zero per-game code changes needed for the generic achievements below.
+// Most games still write their own legacy best-score key (e.g. tetris_best)
+// instead of calling GH.saveScore/recordPlay, so this file also scans those
+// keys directly and infers "plays" from the current page's URL. Any game
+// that DOES call GH.saveScore/recordPlay gets the same detection for free.
+// Games can ALSO fire bespoke ones manually at any time:
+//   GH.unlockAchievement('turf_war', 'Turf War');
 // ============================================================================
 
 import { ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -29,11 +32,29 @@ const CATALOG = [
   { id:'explorer',      label:'Explorer',      desc:'Try 5 different games',          icon:'🗺️', type:'games_played', value:5 },
   { id:'completionist', label:'Completionist', desc:'Try 15 different games',         icon:'🏁', type:'games_played', value:15 },
   { id:'city_native',   label:'City Native',   desc:'Try 25 different games',         icon:'🌆', type:'games_played', value:25 },
-  { id:'snake_charmer', label:'Snake Charmer', desc:'Score 500+ in Snake',            icon:'🐍', type:'score', game:'snake',   value:500 },
-  { id:'line_clearer',  label:'Line Clearer',  desc:'Score 10,000+ in Tetris',        icon:'🧱', type:'score', game:'tetris',  value:10000 },
-  { id:'club_2048',     label:'2048 Club',     desc:'Score 2048+ in 2048',            icon:'🔢', type:'score', game:'2048',    value:2048 },
-  { id:'sky_pilot',     label:'Sky Pilot',     desc:'Score 20+ in Flappy Bird',       icon:'🐦', type:'score', game:'flappy',  value:20 },
-  { id:'ghost_hunter',  label:'Ghost Hunter',  desc:'Score 5,000+ in Pac-Man',        icon:'👻', type:'score', game:'pacman',  value:5000 },
+  { id:'snake_charmer', label:'Snake Charmer', desc:'Score 500+ in Snake',            icon:'🐍', type:'score', game:'snake',      value:500 },
+  { id:'line_clearer',  label:'Line Clearer',  desc:'Score 10,000+ in Tetris',        icon:'🧱', type:'score', game:'tetris',     value:10000 },
+  { id:'club_2048',     label:'2048 Club',     desc:'Score 2048+ in 2048',            icon:'🔢', type:'score', game:'2048',       value:2048 },
+  { id:'sky_pilot',     label:'Sky Pilot',     desc:'Score 20+ in Flappy Bird',       icon:'🐦', type:'score', game:'flappy',     value:20 },
+  { id:'ghost_hunter',  label:'Ghost Hunter',  desc:'Score 5,000+ in Pac-Man',        icon:'👻', type:'score', game:'pacman',     value:5000 },
+  { id:'paddle_master', label:'Paddle Master', desc:'Score 10+ in Pong',              icon:'🏓', type:'score', game:'pong',       value:10 },
+  { id:'brick_breaker', label:'Brick Breaker', desc:'Score 500+ in Breakout',         icon:'🧱', type:'score', game:'breakout',   value:500 },
+  { id:'sky_high',      label:'Sky High',      desc:'Score 1,000+ in Doodle Jump',    icon:'🪂', type:'score', game:'doodle',     value:1000 },
+  { id:'mole_whacker',  label:'Mole Whacker',  desc:'Score 200+ in Whack-a-Mole',     icon:'🔨', type:'score', game:'whack',      value:200 },
+  { id:'rock_solid',    label:'Rock Solid',    desc:'Win 10 rounds of Rock Paper Scissors', icon:'✊', type:'score', game:'rps', value:10 },
+  { id:'on_the_beat',   label:'On The Beat',   desc:'Score 300+ in Beat Tap',         icon:'🎵', type:'score', game:'beattap',    value:300 },
+  { id:'bullet_dodger', label:'Bullet Dodger', desc:'Score 60+ in Bullet Hell',       icon:'🎯', type:'score', game:'bullethell', value:60 },
+  { id:'flip_master',   label:'Flip Master',   desc:'Score 300+ in Gravity Flip',     icon:'🔃', type:'score', game:'gravflip',   value:300 },
+  { id:'math_whiz',     label:'Math Whiz',     desc:'Score 200+ in Math Sprint',      icon:'🧮', type:'score', game:'mathsprint', value:200 },
+  { id:'speed_typer',   label:'Speed Typer',   desc:'Score 300+ in Type Blitz',       icon:'⌨️', type:'score', game:'typeblitz',  value:300 },
+  { id:'steady_hands',  label:'Steady Hands',  desc:"Score 100+ in Don't Touch Red",  icon:'🖐️', type:'score', game:'td',         value:100 },
+  { id:'reflexes',      label:'Lightning Reflexes', desc:'Score 50+ in Reaction Rush', icon:'⚡', type:'score', game:'rr',        value:50 },
+  { id:'color_coord',   label:'Color Coordinated', desc:'Score 150+ in Color Clash', icon:'🎨', type:'score', game:'cc',         value:150 },
+  { id:'number_cruncher', label:'Number Cruncher', desc:'Score 150+ in Number Blitz', icon:'🔢', type:'score', game:'nb',        value:150 },
+  { id:'territory_king', label:'Territory King', desc:'Score 20+ in Color War',       icon:'🚩', type:'score', game:'cw',         value:20 },
+  { id:'sharp_shooter', label:'Sharp Shooter', desc:'Score 30+ in Gridshot',          icon:'🔫', type:'score', game:'gs',         value:30 },
+  { id:'quick_draw',    label:'Quick Draw',    desc:'Score 20+ in Speed Clash',       icon:'🃏', type:'score', game:'sc',         value:20 },
+  { id:'last_standing', label:'Last One Standing', desc:'Score 10+ in Survival Race', icon:'🏃', type:'score', game:'sr',         value:10 },
   { id:'night_owl',     label:'Night Owl',     desc:'Play between midnight and 4am',  icon:'🦉', type:'custom' },
   { id:'turf_war',      label:'Turf War',      desc:'Win a 2-Player Turf match',      icon:'⚔️', type:'custom' },
   { id:'gone_under',    label:'Gone Under',    desc:'Enter the Underground district', icon:'🩸', type:'custom' },
@@ -110,7 +131,8 @@ function syncToCloud(id) {
   update(ref(auth._db, `users/${uid}/achievements`), { [id]: Date.now() }).catch(() => {});
 }
 
-// ---- Auto-detection: wrap saveScore / recordPlay, no per-game edits ---
+// ---- Auto-detection: wrap saveScore / recordPlay, IF a game calls them ---
+// (kept for any game that's since been updated to use the shared helpers)
 const _saveScore = GH.saveScore;
 if (typeof _saveScore === 'function') {
   GH.saveScore = function (gameId, score) {
@@ -132,6 +154,64 @@ function checkScoreAchievements(gameId, score) {
   CATALOG.filter(a => a.type === 'score' && a.game === gameId && score >= a.value)
     .forEach(a => GH.unlockAchievement(a.id));
 }
+
+// ---- Passive detection: most games still write their own legacy keys ---
+// (e.g. localStorage.tetris_best) instead of calling GH.saveScore/recordPlay.
+// This scans those keys directly and auto-tracks plays from the URL, so
+// achievements work everywhere with ZERO per-game code changes.
+const LEGACY_SCORE_KEYS = {
+  snake:'snake_best', tetris:'tetris_best', pong:'pong_best', breakout:'breakout_best',
+  '2048':'2048_best', flappy:'flappy_best', space:'space_best', pacman:'pacman_best',
+  runner:'runner_best', doodle:'doodle_best', whack:'whack_best', rps:'rps_wins',
+  beattap:'beattap_best', bullethell:'bullethell_best', cc:'cc_best', td:'dtr_best',
+  gravflip:'gravflip_best', mathsprint:'mathsprint_best', nb:'nb_best', rr:'rr_best',
+  typeblitz:'typeblitz_best', cw:'cw_best', gs:'gs_best', sc:'sc_best', sr:'sr_best'
+};
+
+// URL path fragment -> gameId, used to auto-record a play + scan the right key
+const PATH_GAME_MAP = {
+  '/minigames/snake/':'snake', '/minigames/tetris/':'tetris', '/minigames/pong/':'pong',
+  '/minigames/breakout/':'breakout', '/minigames/2048/':'2048', '/minigames/flappy-bird/':'flappy',
+  '/minigames/space-invaders/':'space', '/minigames/pacman/':'pacman', '/minigames/cyber-runner/':'runner',
+  '/minigames/doodle-jump/':'doodle', '/minigames/whack-a-mole/':'whack', '/minigames/rps/':'rps',
+  '/minigames/memory-match/':'memory', '/minigames/minesweeper/':'minesweeper', '/minigames/tictactoe/':'ttt',
+  '/timed-challenge/beat-tap/':'beattap', '/timed-challenge/bullet-hell/':'bullethell',
+  '/timed-challenge/color-clash/':'cc', '/timed-challenge/dont-touch-red/':'td',
+  '/timed-challenge/gravity-flip/':'gravflip', '/timed-challenge/math-sprint/':'mathsprint',
+  '/timed-challenge/number-blitz/':'nb', '/timed-challenge/reaction-rush/':'rr',
+  '/timed-challenge/type-blitz/':'typeblitz', '/timed-challenge/pattern-lock/':'plock',
+  '/multiplayer/color-war/':'cw', '/multiplayer/gridshot/':'gs', '/multiplayer/speed-clash/':'sc',
+  '/multiplayer/survival-race/':'sr', '/underground/games/rat-chef-escape/':'rz'
+};
+
+GH.Achievements.SCORE_KEYS = LEGACY_SCORE_KEYS;
+
+function scanLegacyScores() {
+  Object.entries(LEGACY_SCORE_KEYS).forEach(([gameId, key]) => {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return;
+    const score = parseInt(raw, 10);
+    if (!isNaN(score)) checkScoreAchievements(gameId, score);
+  });
+}
+
+function autoRecordPlay() {
+  const path = location.pathname;
+  const match = Object.entries(PATH_GAME_MAP).find(([frag]) => path.includes(frag));
+  if (match && typeof GH.recordPlay === 'function') {
+    GH.recordPlay(match[1]);
+  }
+  // Visiting the Underground district at all is its own achievement
+  if (path.includes('/underground/')) GH.unlockAchievement('gone_under');
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  autoRecordPlay();
+} else {
+  document.addEventListener('DOMContentLoaded', autoRecordPlay);
+}
+scanLegacyScores();
+setInterval(scanLegacyScores, 4000); // catch scores set mid-session on the current page
 
 function distinctGamesPlayed() {
   return Object.keys(localStorage).filter(k => k.startsWith('gh_plays_')).length;
