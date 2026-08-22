@@ -142,8 +142,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(10,7,20,.9);backdrop-filte
 .ach{position:relative;background:rgba(18,11,33,.75);border:1px solid var(--line);border-radius:12px;
   padding:16px 10px;text-align:center;transition:all .25s;opacity:0;transform:translateY(10px);animation:achIn .4s ease forwards}
 @keyframes achIn{to{opacity:1;transform:translateY(0)}}
-.ach.locked{opacity:.32!important;filter:grayscale(1)}
-.ach.locked:hover{opacity:.5!important}
+.ach.locked{opacity:.55!important;filter:grayscale(1)}
+.ach.locked:hover{opacity:.75!important}
+.ach-progress{font-size:10px;color:var(--teal);margin-top:5px;font-weight:700;letter-spacing:.3px}
 .ach:not(.locked){border-color:rgba(255,210,63,.4);box-shadow:0 0 18px rgba(255,210,63,.1)}
 .ach:not(.locked):hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 26px rgba(255,210,63,.22)}
 .ach-icon{font-size:30px;margin-bottom:6px;display:inline-block}
@@ -334,8 +335,11 @@ input.name-edit{background:rgba(255,255,255,.06);border:1px solid var(--pink);co
   const GAME_LABELS = {
     snake:'Snake', tetris:'Tetris', pong:'Pong', breakout:'Breakout', '2048':'2048',
     flappy:'Flappy Bird', space:'Space Invaders', pacman:'Pac-Man', runner:'Cyber Runner',
+    doodle:'Doodle Jump', whack:'Whack-a-Mole', rps:'Rock Paper Scissors',
+    beattap:'Beat Tap', bullethell:'Bullet Hell', gravflip:'Gravity Flip',
+    mathsprint:'Math Sprint', typeblitz:'Type Blitz',
     rr:'Reaction Rush', cc:'Color Clash', nb:'Number Blitz', gs:'Gridshot', sc:'Speed Clash',
-    cw:'Color War', sr:'Survival Race', td:"Don't Touch Red", mb:'Math Sprint', rz:'Rat Chef Escape'
+    cw:'Color War', sr:'Survival Race', td:"Don't Touch Red", rz:'Rat Chef Escape'
   };
   const AVATAR_COLORS = ['#00e0c6','#ff2f87','#ff7a3d','#8b2ff0','#ffd23f','#ff2e3a','#4dd0ff','#7bff8f'];
 
@@ -405,14 +409,24 @@ input.name-edit{background:rgba(255,255,255,.06);border:1px solid var(--pink);co
     function renderBestScores() {
       const list = document.getElementById('best-list');
       list.innerHTML = '';
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('gh_best_'));
+      // Two sources: the newer unified gh_best_<id> keys, and the legacy
+      // per-game keys (tetris_best, flappy_best, ...) most games still use.
+      const entries = {};
+      Object.keys(localStorage).filter(k => k.startsWith('gh_best_')).forEach(k => {
+        entries[k.replace('gh_best_', '')] = k;
+      });
+      const scoreKeys = (GH.Achievements && GH.Achievements.SCORE_KEYS) || {};
+      Object.entries(scoreKeys).forEach(([id, legacyKey]) => {
+        if (!(id in entries) && localStorage.getItem(legacyKey) != null) entries[id] = legacyKey;
+      });
+      const keys = Object.values(entries);
       if (!keys.length) {
         list.innerHTML = '<div class="empty-note">No scores yet — go play something!</div>';
         return;
       }
       keys.sort((a, b) => (parseInt(localStorage.getItem(b)) || 0) - (parseInt(localStorage.getItem(a)) || 0));
       keys.forEach(k => {
-        const id = k.replace('gh_best_', '');
+        const id = k.startsWith('gh_best_') ? k.replace('gh_best_', '') : Object.keys(entries).find(gid => entries[gid] === k);
         const score = parseInt(localStorage.getItem(k), 10) || 0;
         if (!score) return;
         const label = GAME_LABELS[id] || (id.charAt(0).toUpperCase() + id.slice(1));
@@ -424,14 +438,35 @@ input.name-edit{background:rgba(255,255,255,.06);border:1px solid var(--pink);co
       if (!list.children.length) list.innerHTML = '<div class="empty-note">No scores yet — go play something!</div>';
     }
 
+    function achievementProgress(a) {
+      if (a.unlocked || a.type === 'custom') return '';
+      if (a.type === 'plays') {
+        const cur = GH.getTotalPlays ? GH.getTotalPlays() : 0;
+        return `${Math.min(cur, a.value)} / ${a.value}`;
+      }
+      if (a.type === 'games_played') {
+        const cur = Object.keys(localStorage).filter(k => k.startsWith('gh_plays_')).length;
+        return `${Math.min(cur, a.value)} / ${a.value}`;
+      }
+      if (a.type === 'score') {
+        const scoreKeys = (GH.Achievements && GH.Achievements.SCORE_KEYS) || {};
+        const key = scoreKeys[a.game] || `gh_best_${a.game}`;
+        const cur = parseInt(localStorage.getItem(key), 10) || 0;
+        return `Best: ${GH.formatScore ? GH.formatScore(cur) : cur} / ${GH.formatScore ? GH.formatScore(a.value) : a.value}`;
+      }
+      return '';
+    }
+
     function renderAchievements(achList) {
       const grid = document.getElementById('ach-grid');
       grid.innerHTML = '';
-      achList.forEach((a, i) => {
+      const sorted = achList.slice().sort((a, b) => (b.unlocked - a.unlocked) || a.label.localeCompare(b.label));
+      sorted.forEach((a, i) => {
         const el = document.createElement('div');
         el.className = 'ach' + (a.unlocked ? '' : ' locked');
         el.style.animationDelay = (i * 0.04) + 's';
-        el.innerHTML = `<div class="ach-icon">${a.icon}</div><div class="ach-label">${a.label}</div><div class="ach-desc">${a.desc}</div>`;
+        const progress = achievementProgress(a);
+        el.innerHTML = `<div class="ach-icon">${a.icon}</div><div class="ach-label">${a.label}</div><div class="ach-desc">${a.desc}</div>${progress ? `<div class="ach-progress">${progress}</div>` : ''}`;
         grid.appendChild(el);
       });
     }
