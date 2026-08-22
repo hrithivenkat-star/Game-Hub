@@ -253,6 +253,7 @@ footer a{color:var(--teal);text-decoration:none}
       <button class="mbtn" id="nick-save">Enter Game Hub →</button>
       <button class="mbtn-skip" id="nick-skip">Skip</button>
     </div>
+    <a href="/login.html" style="display:block;text-align:center;margin-top:14px;color:var(--teal);font-size:12.5px;text-decoration:none;">Have an account? Log in to sync scores &amp; achievements →</a>
   </div>
 </div>
 
@@ -276,13 +277,12 @@ footer a{color:var(--teal);text-decoration:none}
     <div class="nav-inner">
       <a href="index.html" class="logo">GAME<em>HUB</em></a>
       <div class="nav-links">
-        <div class="nick-pill" id="nick-pill"><div class="ndot"></div><span id="nick-name">Player</span></div>
+        <a class="nick-pill" id="nick-pill" href="/login.html"><div class="ndot"></div><span id="nick-name">Player</span></a>
         <a href="minigames/index.html" class="nl">Downtown</a>
         <a href="timed-challenge/index.html" class="nl">Docklands</a>
         <a href="multiplayer/index.html" class="nl">Arena</a>
         <a href="2player/index.html" class="nl nl-new">2P Turf</a>
         <a href="leaderboard/index.html" class="nl">🏆</a>
-       <a href="leaderboard/index.html" class="nl">🏆</a>
        <a href="profile.html" class="nl">👤 Profile</a>
         <a href="#map" class="nav-cta">Open Map</a>
       </div>
@@ -519,25 +519,21 @@ try{
 </script>
 
 <script>
-let nick=localStorage.getItem('player_nick')||'';
+// Guest quick-start modal — only for players who haven't set a nickname OR signed in yet.
+// Real account state (login/profile/avatar) is owned by shared/gh-auth.js below.
+let nick=localStorage.getItem('player_nick')||localStorage.getItem('gh_player')||'';
 (function init(){
   if(!nick){document.getElementById('nick-modal').classList.remove('hidden');setTimeout(()=>document.getElementById('nick-in').focus(),300);}
-  else showPill(nick);
 })();
-function showPill(n){document.getElementById('nick-name').textContent=n;document.getElementById('nick-pill').style.display='flex';}
 document.getElementById('nick-save').onclick=()=>{
   const v=document.getElementById('nick-in').value.trim();
   if(!v){document.getElementById('nick-in').style.borderColor='rgba(255,46,58,.7)';return;}
-  nick=v;localStorage.setItem('player_nick',v);
-  document.getElementById('nick-modal').classList.add('hidden');showPill(v);
+  nick=v;
+  if(window.GH&&GH.setPlayer)GH.setPlayer(v); else localStorage.setItem('player_nick',v);
+  document.getElementById('nick-modal').classList.add('hidden');
 };
 document.getElementById('nick-skip').onclick=()=>document.getElementById('nick-modal').classList.add('hidden');
 document.getElementById('nick-in').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nick-save').click();});
-document.getElementById('nick-pill').onclick=()=>{
-  document.getElementById('nick-in').value=nick;
-  document.getElementById('nick-modal').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('nick-in').focus(),80);
-};
 
 const localMap={
   'fs-snake':'snake_best','fs-tetris':'tetris_best','fs-gs':'gs_best','fs-cw':'cw_best',
@@ -552,6 +548,8 @@ document.getElementById('scores-set').textContent=set;
 document.getElementById('lb-set').textContent=set;
 </script>
 <script src="/shared/utils.js"></script>
+<script type="module" src="/shared/gh-auth.js"></script>
+<script type="module" src="/shared/gh-achievements.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
