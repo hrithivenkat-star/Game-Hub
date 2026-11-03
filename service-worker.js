@@ -4,7 +4,7 @@
  * Individual game pages are cached on first visit (cache-then-network).
  */
 
-const CACHE = 'gamehub-v1';
+const CACHE = 'gamehub-v2';
 
 // Shell: always available offline
 const SHELL = [
@@ -13,6 +13,7 @@ const SHELL = [
   '/404.html',
   '/manifest.json',
   '/shared/utils.js',
+  '/shared/loader.js',
   '/shared/sounds.js',
   '/minigames/index.html',
   '/timed-challenge/index.html',
