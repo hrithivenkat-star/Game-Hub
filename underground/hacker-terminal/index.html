@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Hacker Terminal — The Underground</title><style>
+:root{--a:#e8a341;--b:#a3221a;--d:#8a7a68}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(ellipse at 50% 20%,#241a10,#0a0705 70%);color:#e8dcc8;font-family:'Courier New',monospace;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;user-select:none}
+.back{align-self:flex-start;color:var(--d);text-decoration:none;font-size:13px}.back:hover{color:var(--a)}
+h1{color:var(--b);font-size:clamp(18px,5vw,26px);letter-spacing:3px;text-shadow:0 0 18px rgba(163,34,26,.6)}
+#hud{color:var(--a);font-size:15px;letter-spacing:1px;text-align:center;min-height:22px}
+.wrap{position:relative;width:min(96vw,640px)}
+canvas{width:100%;display:block;border:3px solid #5a3a1c;border-radius:10px;background:#000;touch-action:none}
+.ov{position:absolute;inset:0;background:rgba(8,5,3,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;border-radius:8px;padding:16px;z-index:5}.ov.hide{display:none}
+.ov h2{color:var(--b);font-size:28px;text-shadow:0 0 20px rgba(163,34,26,.6)}.ov p{color:#d8cbb5;font-size:14px;line-height:1.5}
+button{background:rgba(232,163,65,.14);border:1px solid var(--a);color:var(--a);padding:12px 22px;border-radius:8px;font:inherit;cursor:pointer}button:hover{background:rgba(232,163,65,.26)}
+.tip{color:var(--d);font-size:12px;text-align:center;max-width:520px}
+body{user-select:text}.term{background:#070503;border:2px solid #5a3a1c;border-radius:10px;padding:16px;color:var(--a);text-shadow:0 0 6px rgba(232,163,65,.5);min-height:260px;display:flex;flex-direction:column;gap:14px}
+#log{white-space:pre;font-size:13px;color:var(--d);min-height:70px;overflow:hidden}#t{font-size:clamp(16px,4.4vw,24px);letter-spacing:1px;word-break:break-all;padding:12px;background:rgba(232,163,65,.07);border-radius:6px;color:#8a7a68}
+#t .ok{color:#6bdc6b}#t .bad{color:#ff5c5c;text-decoration:underline}.row{display:flex;font-size:20px}
+#in{flex:1;background:none;border:none;outline:none;color:var(--a);font:inherit;caret-color:var(--a);min-width:0}
+.bar{height:8px;background:rgba(232,163,65,.1);border-radius:4px;margin-top:10px;overflow:hidden}#tr{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .1s linear}</style></head><body>
+<a class="back" href="../../index.html">← The Underground</a><h1>HACKER TERMINAL</h1><div id="hud"></div>
+<div class="wrap" style="width:min(96vw,640px)"><div class="term"><div id="log"></div><div id="t"></div><div class="row">&gt;&nbsp;<input id="in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div></div><div class="bar"><i id="tr"></i></div><div id="ov" class="ov"><h2 id="oh">HACKER TERMINAL</h2><p id="ovp">Type each command exactly before the trace reaches 100%. Every clean entry pushes the trace back.</p><button id="rb">Jack in</button></div></div><p class="tip">Case and symbols matter. Chains and hex keys appear as you breach more nodes.</p>
+<script>
+const $=id=>document.getElementById(id);
+const P=['sudo rm -rf /var/log','ssh root@10.0.4.2','nmap -sS 192.168.0.1','cat /etc/shadow','chmod 777 vault.db','curl -X POST /api/login','ping -c 4 mainframe','kill -9 1337','tar -xzf payload.tgz','git push --force origin','netstat -tulpn','iptables -F','openssl enc -d -aes256','grep -r password .','wget http://x.ru/b.sh','echo $ROOT_KEY'];
+const hex=n=>[...Array(n)].map(()=>'0123456789abcdef'[Math.random()*16|0]).join(''),esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+let sc=0,trace=0,tgt='',dead=true,lines=[],best=+localStorage.ug_ht||0,iv;
+function nextCmd(){let s=P[Math.random()*P.length|0];if(sc>=6&&Math.random()<.5)s+=' && '+P[Math.random()*P.length|0];if(sc>=3&&Math.random()<.4)s='0x'+hex(sc>=10?12:8);return s}
+function paint(){const v=$('in').value;$('t').innerHTML=[...tgt].map((ch,i)=>`<span class="${i>=v.length?'':v[i]===ch?'ok':'bad'}">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}
+function log(s){lines.push(s);lines=lines.slice(-4);$('log').textContent=lines.join('\n')}
+function start(){sc=0;trace=0;dead=false;lines=[];log('[boot] link established');tgt=nextCmd();$('in').value='';paint();$('ov').classList.add('hide');$('in').focus();clearInterval(iv);iv=setInterval(tick,100)}
+function tick(){if(dead)return;trace+=.4+sc*.05;$('tr').style.width=Math.min(100,trace)+'%';$('hud').textContent='Nodes breached: '+sc+'   Best: '+best+'   Trace: '+Math.min(100,trace|0)+'%';
+  if(trace>=100){dead=true;clearInterval(iv);if(sc>best){best=sc;localStorage.ug_ht=best}$('oh').textContent='TRACE COMPLETE';$('ovp').textContent='Connection terminated after '+sc+' node'+(sc===1?'':'s')+'. Best: '+best+'.';$('rb').textContent='Reconnect';$('ov').classList.remove('hide')}}
+$('in').addEventListener('input',()=>{if(dead)return;paint();if($('in').value===tgt){sc++;trace=Math.max(0,trace-20);log('[ OK ] node '+sc+' breached');tgt=nextCmd();$('in').value='';paint()}});
+$('rb').onclick=start;$('hud').textContent='Best: '+best;
+
+</script></body></html>
