@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Horror Memory — The Underground</title><style>
+:root{--a:#e8a341;--b:#a3221a;--d:#8a7a68}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(ellipse at 50% 20%,#241a10,#0a0705 70%);color:#e8dcc8;font-family:'Courier New',monospace;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;user-select:none}
+.back{align-self:flex-start;color:var(--d);text-decoration:none;font-size:13px}.back:hover{color:var(--a)}
+h1{color:var(--b);font-size:clamp(18px,5vw,26px);letter-spacing:3px;text-shadow:0 0 18px rgba(163,34,26,.6)}
+#hud{color:var(--a);font-size:15px;letter-spacing:1px;text-align:center;min-height:22px}
+.wrap{position:relative;width:min(96vw,640px)}
+canvas{width:100%;display:block;border:3px solid #5a3a1c;border-radius:10px;background:#000;touch-action:none}
+.ov{position:absolute;inset:0;background:rgba(8,5,3,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;border-radius:8px;padding:16px;z-index:5}.ov.hide{display:none}
+.ov h2{color:var(--b);font-size:28px;text-shadow:0 0 20px rgba(163,34,26,.6)}.ov p{color:#d8cbb5;font-size:14px;line-height:1.5}
+button{background:rgba(232,163,65,.14);border:1px solid var(--a);color:var(--a);padding:12px 22px;border-radius:8px;font:inherit;cursor:pointer}button:hover{background:rgba(232,163,65,.26)}
+.tip{color:var(--d);font-size:12px;text-align:center;max-width:520px}
+body{touch-action:manipulation}#grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%}
+.pad{aspect-ratio:1;font-size:clamp(36px,12vw,54px);border-radius:50%;border:2px solid #3a2a18;background:#120c07;filter:brightness(.35);transition:filter .12s,box-shadow .12s,background .12s;padding:0}
+.pad.on{filter:brightness(1.5);box-shadow:0 0 60px var(--c);background:var(--c)}
+#scare{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:45vmin;background:#a3221a;opacity:0;pointer-events:none;z-index:9}#scare.on{opacity:1}</style></head><body>
+<a class="back" href="../../index.html">← The Underground</a><h1>HORROR MEMORY</h1><div id="hud"></div>
+<div class="wrap" style="width:min(86vw,360px)"><div id="grid"></div><div id="ov" class="ov"><h2 id="oh">HORROR MEMORY</h2><p id="ovp">Watch the lights wake in the dark, then repeat the order. Something may look back at you. Turn your sound on.</p><button id="rb">Begin</button></div></div><div id="scare">👁️</div><p class="tip">One wrong pad ends it. The sequence speeds up as it grows.</p>
+<script>
+const $=id=>document.getElementById(id);
+const E=['🕯️','💀','👁️','🦴'],C=['#e8a341','#a3221a','#6b8f3f','#6a7fb5'],F=[98,117,139,165],pads=[];
+let seq=[],pos=0,busy=true,dead=true,best=+localStorage.ug_hm||0,ac;
+function tone(f,len=.35,vol=.12,type='sine'){try{ac=ac||new AudioContext();const o=ac.createOscillator(),v=ac.createGain(),t=ac.currentTime;o.type=type;o.frequency.value=f;v.gain.setValueAtTime(vol,t);v.gain.exponentialRampToValueAtTime(.0001,t+len);o.connect(v);v.connect(ac.destination);o.start();o.stop(t+len)}catch(e){}}
+function scare(){$('scare').classList.add('on');tone(70,.3,.4,'sawtooth');tone(93,.3,.3,'square');setTimeout(()=>$('scare').classList.remove('on'),140)}
+function flash(i,ms){pads[i].classList.add('on');tone(F[i]*2,ms/1000+.1);setTimeout(()=>pads[i].classList.remove('on'),ms)}
+for(let i=0;i<4;i++){const b=document.createElement('button');b.className='pad';b.textContent=E[i];b.style.setProperty('--c',C[i]);b.onclick=()=>press(i);$('grid').appendChild(b);pads.push(b)}
+function round(){
+  seq.push(Math.random()*4|0);busy=true;pos=0;$('hud').textContent='Round '+seq.length+' · watch…';
+  const gap=Math.max(380,700-seq.length*25);
+  seq.forEach((s,k)=>setTimeout(()=>flash(s,gap*.6),700+k*gap));
+  if(seq.length>=3&&Math.random()<.4)setTimeout(scare,700+Math.random()*seq.length*gap);
+  setTimeout(()=>{busy=false;$('hud').textContent='Round '+seq.length+' · your turn'},700+seq.length*gap);
+}
+function press(i){
+  if(busy||dead)return;flash(i,200);
+  if(i!==seq[pos]){dead=true;const s=seq.length-1;if(s>best){best=s;localStorage.ug_hm=best}scare();
+    setTimeout(()=>{$('oh').textContent='IT SAW YOU';$('ovp').textContent='You survived '+s+' round'+(s===1?'':'s')+'. Best: '+best+'.';$('rb').textContent='Light another candle';$('ov').classList.remove('hide')},500);return}
+  if(++pos===seq.length){busy=true;$('hud').textContent='…';setTimeout(round,900)}
+}
+$('rb').onclick=()=>{seq=[];dead=false;$('ov').classList.add('hide');round()};
+$('hud').textContent='Best: '+best;
+
+</script></body></html>
