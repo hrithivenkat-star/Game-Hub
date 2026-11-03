@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>The Underground — Game Hub</title>
-<meta name="description" content="A darker corner of Game Hub. 8 subdivisions. Survival games in the shadows.">
+<meta name="description" content="A darker corner of Game Hub. 5 games in the shadows. No respawns.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Special+Elite&display=swap');
 
@@ -157,7 +157,7 @@ nav{
 .progress-fill{
   height:100%;
   background:linear-gradient(90deg, var(--blood), var(--amber));
-  width:12.5%;
+  width:100%;
   border-radius:3px;
   box-shadow:0 0 8px rgba(232,163,65,.5);
 }
@@ -322,78 +322,54 @@ nav{
   <section class="hero">
     <div class="hero-eyebrow">You Are Not Supposed To Be Here</div>
     <h1>THE UNDERGROUND</h1>
-    <p class="hero-sub">Beneath the neon lies something quieter. Eight subdivisions, each built around a single twisted rule. No respawns for the careless.</p>
+    <p class="hero-sub">Beneath the neon lies something quieter. Five rooms, each built around a single twisted rule. No respawns for the careless.</p>
     <div class="scurry-strip"><span class="rat-emoji">🐀</span></div>
     <div class="progress-row">
-      <span id="progressLabel">1 / 8 unlocked</span>
+      <span id="progressLabel">5 / 5 unlocked</span>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     </div>
   </section>
 
   <div class="subdivisions" id="subGrid">
     <a href="games/rat-chef-escape/index.html" class="sub-card featured">
-      <span class="game-count-badge">1 GAME</span>
+      <span class="game-count-badge">CLASSIC</span>
       <div class="sub-icon">🧀</div>
-      <div class="sub-title">Kitchen</div>
+      <div class="sub-title">Rat Chef Escape</div>
       <div class="sub-desc">Steal cheese. Dodge falling pots. Never let the chef see you move.</div>
-      <div class="sub-cta">PLAY: RAT CHEF ESCAPE <span class="arrow">▶</span></div>
+      <div class="sub-cta">PLAY <span class="arrow">▶</span></div>
     </a>
 
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">🧬</div>
-      <div class="sub-title">Combine 2 Incompatible Genres</div>
-      <div class="sub-desc">Two rulebooks. One game. Neither should work together.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
+    <a href="games/dungeon-crawler/index.html" class="sub-card">
+      <span class="game-count-badge">NEW</span>
+      <div class="sub-icon">🗡️</div>
+      <div class="sub-title">Dungeon Crawler</div>
+      <div class="sub-desc">A tiny roguelike. Every floor is new, every death is permanent.</div>
+      <div class="sub-cta">DESCEND <span class="arrow">▶</span></div>
+    </a>
 
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">💓</div>
-      <div class="sub-title">Keep It Alive</div>
-      <div class="sub-desc">Something depends on you. It will not forgive neglect.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
+    <a href="games/flashlight-maze/index.html" class="sub-card">
+      <span class="game-count-badge">NEW</span>
+      <div class="sub-icon">🔦</div>
+      <div class="sub-title">Flashlight Maze</div>
+      <div class="sub-desc">You only see what the light touches, and the battery is dying.</div>
+      <div class="sub-cta">ENTER <span class="arrow">▶</span></div>
+    </a>
 
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
+    <a href="games/horror-memory/index.html" class="sub-card">
+      <span class="game-count-badge">NEW</span>
       <div class="sub-icon">🕯️</div>
-      <div class="sub-title">Keep The Light On</div>
-      <div class="sub-desc">Darkness is not empty. It is waiting for the light to fail.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
+      <div class="sub-title">Horror Memory</div>
+      <div class="sub-desc">Repeat the sequence in the dark. Something is watching you do it.</div>
+      <div class="sub-cta">BEGIN <span class="arrow">▶</span></div>
+    </a>
 
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">🤠</div>
-      <div class="sub-title">Sci-Fi Wild West</div>
-      <div class="sub-desc">Six-shooters and starships. The frontier never really changes.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
-
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">⚙️</div>
-      <div class="sub-title">Automation</div>
-      <div class="sub-desc">Build the machine. Then watch it decide it doesn't need you.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
-
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">🕳️</div>
-      <div class="sub-title">Deeper And Deeper</div>
-      <div class="sub-desc">Each layer down changes the rules a little more than the last.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
-
-    <div class="sub-card locked">
-      <span class="lock-badge">🔒 SOON</span>
-      <div class="sub-icon">🌱</div>
-      <div class="sub-title">Start With Nothing</div>
-      <div class="sub-desc">No tools. No map. No help. Build a way out of empty hands.</div>
-      <div class="sub-cta">LOCKED</div>
-    </div>
+    <a href="games/hacker-terminal/index.html" class="sub-card">
+      <span class="game-count-badge">NEW</span>
+      <div class="sub-icon">💻</div>
+      <div class="sub-title">Hacker Terminal</div>
+      <div class="sub-desc">Type fast and type exact. The trace is closing in.</div>
+      <div class="sub-cta">JACK IN <span class="arrow">▶</span></div>
+    </a>
   </div>
 
   <div class="utility-row">
@@ -408,11 +384,11 @@ nav{
   <div class="modal">
     <h2>How To Survive</h2>
     <ul>
-      <li><strong>Move</strong> — WASD / Arrow Keys on desktop, on-screen joystick on mobile</li>
-      <li><strong>Watch the chef</strong> — a warning flash means he's about to turn. Freeze the instant he does.</li>
-      <li><strong>Shadows on the floor</strong> mean a pot is about to fall — don't stand under one.</li>
-      <li><strong>Golden cheese</strong> is worth 5x a normal piece — but it's not worth dying for.</li>
-      <li>Every minute survived, enemies get faster and meaner.</li>
+      <li><strong>Rat Chef Escape</strong> — WASD / arrows. Freeze the instant the chef turns. Dodge pot shadows.</li>
+      <li><strong>Dungeon Crawler</strong> — Arrows / WASD or swipe. Bump to attack. One life, no respawns.</li>
+      <li><strong>Flashlight Maze</strong> — Reach the door before the battery dies. 🔋 recharges you.</li>
+      <li><strong>Horror Memory</strong> — Repeat the sequence. Ignore whatever flashes at you.</li>
+      <li><strong>Hacker Terminal</strong> — Type each command exactly. Clean entries push the trace back.</li>
     </ul>
     <button class="modal-close" id="modalClose">Close</button>
   </div>
