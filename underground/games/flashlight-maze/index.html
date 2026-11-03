@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Flashlight Maze — The Underground</title><style>
+:root{--a:#e8a341;--b:#a3221a;--d:#8a7a68}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(ellipse at 50% 20%,#241a10,#0a0705 70%);color:#e8dcc8;font-family:'Courier New',monospace;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;user-select:none}
+.back{align-self:flex-start;color:var(--d);text-decoration:none;font-size:13px}.back:hover{color:var(--a)}
+h1{color:var(--b);font-size:clamp(18px,5vw,26px);letter-spacing:3px;text-shadow:0 0 18px rgba(163,34,26,.6)}
+#hud{color:var(--a);font-size:15px;letter-spacing:1px;text-align:center;min-height:22px}
+.wrap{position:relative;width:min(96vw,640px)}
+canvas{width:100%;display:block;border:3px solid #5a3a1c;border-radius:10px;background:#000;touch-action:none}
+.ov{position:absolute;inset:0;background:rgba(8,5,3,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;border-radius:8px;padding:16px;z-index:5}.ov.hide{display:none}
+.ov h2{color:var(--b);font-size:28px;text-shadow:0 0 20px rgba(163,34,26,.6)}.ov p{color:#d8cbb5;font-size:14px;line-height:1.5}
+button{background:rgba(232,163,65,.14);border:1px solid var(--a);color:var(--a);padding:12px 22px;border-radius:8px;font:inherit;cursor:pointer}button:hover{background:rgba(232,163,65,.26)}
+.tip{color:var(--d);font-size:12px;text-align:center;max-width:520px}
+</style></head><body>
+<a class="back" href="../../index.html">← The Underground</a><h1>FLASHLIGHT MAZE</h1><div id="hud"></div>
+<div class="wrap"><canvas id="c" width="588" height="420"></canvas><div id="ov" class="ov"><h2 id="oh">FLASHLIGHT MAZE</h2><p id="ovp">Reach 🚪 before the battery dies. 🔋 adds charge. The weaker the light, the less you see. Arrows / WASD or swipe.</p><button id="rb">Switch on</button></div></div><p class="tip">Each maze drains the battery faster. Clearing one gives a small recharge.</p>
+<script>
+const $=id=>document.getElementById(id);
+const C=21,R=15,T=28,cv=$('c'),g=cv.getContext('2d');
+let m,p,ex,bats,bat=100,lvl=1,dead=true,last=0,best=+localStorage.ug_fm||0;
+function gen(){
+  m=[...Array(R)].map(()=>Array(C).fill(1));const s=[[1,1]];m[1][1]=0;
+  while(s.length){const[x,y]=s[s.length-1];
+    const n=[[2,0],[-2,0],[0,2],[0,-2]].map(([a,b])=>[x+a,y+b,a/2,b/2]).filter(([a,b])=>a>0&&b>0&&a<C-1&&b<R-1&&m[b][a]);
+    if(!n.length){s.pop();continue}
+    const[a,b,i,j]=n[Math.random()*n.length|0];m[y+j][x+i]=0;m[b][a]=0;s.push([a,b])}
+  for(let i=0;i<14;i++){const x=1+(Math.random()*(C-2)|0),y=1+(Math.random()*(R-2)|0);if(x%2!==y%2)m[y][x]=0}
+  p={x:1,y:1};ex={x:C-2,y:R-2};
+  const f=[];for(let y=1;y<R-1;y++)for(let x=1;x<C-1;x++)if(!m[y][x]&&!(x<4&&y<4)&&!(x===ex.x&&y===ex.y))f.push({x,y});
+  f.sort(()=>Math.random()-.5);bats=f.slice(0,5);
+}
+function start(){lvl=1;bat=100;dead=false;gen();$('ov').classList.add('hide')}
+function move(dx,dy){
+  if(dead)return;const nx=p.x+dx,ny=p.y+dy;if(m[ny][nx])return;p.x=nx;p.y=ny;
+  const i=bats.findIndex(b=>b.x===nx&&b.y===ny);if(i>-1){bats.splice(i,1);bat=Math.min(100,bat+25)}
+  if(nx===ex.x&&ny===ex.y){lvl++;bat=Math.min(100,bat+30);gen()}
+}
+function end(){dead=true;const s=lvl-1;if(s>best){best=s;localStorage.ug_fm=best}$('oh').textContent='THE DARK WINS';$('ovp').textContent='You cleared '+s+' maze'+(s===1?'':'s')+'. Best: '+best+'.';$('rb').textContent='Try again';$('ov').classList.remove('hide')}
+function draw(){
+  g.fillStyle='#000';g.fillRect(0,0,C*T,R*T);
+  for(let y=0;y<R;y++)for(let x=0;x<C;x++){g.fillStyle=m[y][x]?'#5a4028':'#2a1e12';g.fillRect(x*T,y*T,T,T)}
+  g.font='20px serif';g.textAlign='center';g.textBaseline='middle';
+  g.fillText('🚪',ex.x*T+T/2,ex.y*T+T/2+1);bats.forEach(b=>g.fillText('🔋',b.x*T+T/2,b.y*T+T/2+1));
+  const px=p.x*T+T/2,py=p.y*T+T/2;g.fillStyle='#ffcb6b';g.beginPath();g.arc(px,py,7,0,7);g.fill();
+  const r=(28+bat*1.35)*(bat<20?.85+Math.random()*.3:1),gr=g.createRadialGradient(px,py,r*.25,px,py,r);
+  gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.985)');g.fillStyle=gr;g.fillRect(0,0,C*T,R*T);
+  $('hud').textContent='🔋 '+Math.max(0,bat|0)+'%   Maze '+lvl+'   Best '+best;
+}
+function loop(t){const dt=Math.min(.1,(t-last)/1000);last=t;if(!dead){bat-=dt*(4+lvl*.6);if(bat<=0)end()}if(m)draw();requestAnimationFrame(loop)}
+gen();requestAnimationFrame(loop);
+const K={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};
+addEventListener('keydown',e=>{const k=K[e.key.length===1?e.key.toLowerCase():e.key];if(k){e.preventDefault();move(...k)}});
+let t0;cv.addEventListener('touchstart',e=>t0=e.touches[0]);
+cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-t0.clientX,dy=t.clientY-t0.clientY;if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;Math.abs(dx)>Math.abs(dy)?move(Math.sign(dx),0):move(0,Math.sign(dy))});
+$('rb').onclick=start;
+
+</script></body></html>
