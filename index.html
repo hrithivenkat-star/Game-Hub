@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<script src="/shared/loader.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Game Hub — The Next-Gen Gaming</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#ff3d81">
@@ -11,8 +12,10 @@
 <meta name="apple-mobile-web-app-title" content="GameHub">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="description" content="Game Hub — the next-gen gaming city. 25+ games across 5 districts: Downtown Arcade, the Docklands, Arena District, 2-Player Turf and the Underground.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700;800&family=Permanent+Marker&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700;800&family=Permanent+Marker&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --pink:#ff2f87;--orange:#ff7a3d;--purple:#8b2ff0;--teal:#00e0c6;--yellow:#ffd23f;--red:#ff2e3a;
@@ -219,43 +222,131 @@ footer{border-top:1px solid var(--line);padding:34px 0;text-align:center;margin-
 footer p{font-size:13px;color:var(--dim)}
 footer a{color:var(--teal);text-decoration:none}
 
-/* ===== MODAL ===== */
-.modal-bg{position:fixed;inset:0;background:rgba(4,2,10,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .3s ease}
-.modal-bg.hidden{display:none}
-.modal{background:var(--panel);border:1px solid rgba(255,47,135,.3);border-radius:8px;padding:34px;width:100%;max-width:440px;text-align:center;box-shadow:0 0 70px rgba(255,47,135,.1)}
-.modal-icon{font-size:48px;display:block;margin-bottom:12px;animation:float 2.5s ease-in-out infinite}
-.modal-title{font-family:'Anton',sans-serif;font-size:22px;color:#fff;margin-bottom:8px;letter-spacing:.5px}
-.modal-sub{font-size:14px;color:var(--dim);margin-bottom:22px;line-height:1.6}
-.nick-in{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,47,135,.3);color:#fff;font-family:'Anton',sans-serif;font-size:16px;padding:14px 18px;border-radius:4px;margin-bottom:6px;text-align:center;letter-spacing:2px;outline:none;transition:all .2s}
-.nick-in:focus{border-color:var(--pink);box-shadow:0 0 16px rgba(255,47,135,.15)}
-.nick-in::placeholder{color:rgba(166,150,194,.5);font-size:13px;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif}
-.nick-hint{font-size:11px;color:var(--dim);margin-bottom:20px}
-.modal-btns{display:flex;gap:10px;justify-content:center}
-.mbtn{background:linear-gradient(90deg,var(--pink),var(--orange));border:none;color:#160718;padding:13px 26px;border-radius:2px;font-family:'Anton',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .2s;clip-path:polygon(8% 0,100% 0,92% 100%,0 100%)}
-.mbtn:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.mbtn-skip{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--dim);padding:13px 18px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-.mbtn-skip:hover{color:#fff}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:0.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* ===== UPGRADE LAYER: restyle only, no new content ===== */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--glass:rgba(18,11,33,.72)}
+::selection{background:var(--pink);color:#fff}
+html{scrollbar-color:#3a2a5c var(--bg);scrollbar-width:thin}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+section[id],.sec-hdr{scroll-margin-top:84px}
+
+/* nav: the sticky nav lived in a wrapper that only contained itself, so it never stuck. */
+.container:has(>nav){display:contents}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 20px}
+nav{box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.nl{font-size:14px;transition:color .2s,background .2s,border-color .2s}
+.nl:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.12)}
+.nick-pill{border-radius:20px}
+.nav-cta{box-shadow:0 6px 18px rgba(255,47,135,.35)}
+@media(max-width:768px){.nav-inner{padding:0 14px}}
+
+/* ticker: pause on hover, soft edge fade */
+.ticker-wrap{-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.ticker-wrap:hover .ticker-inner{animation-play-state:paused}
+.ti{font-size:14px}
+
+/* hero */
+.hero{padding:96px 0 70px}
+.hero-badge{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:7px 18px;font-size:12px}
+.wordmark h1{text-shadow:0 6px 0 rgba(10,4,20,.25),0 0 80px rgba(255,47,135,.55),0 0 140px rgba(139,47,240,.3)}
+.hero-sub{font-size:19px;line-height:1.6}
+.hbtn{font-size:14px;padding:16px 30px 16px 34px;transition:transform .25s var(--ease),filter .2s,box-shadow .25s}
+.hbtn-c{box-shadow:0 10px 30px rgba(255,47,135,.4)}
+.hbtn-d{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hbtn:hover{transform:translateY(-3px)}
+.hbtn:active{transform:translateY(0) scale(.98)}
+
+/* stats: glass panel */
+.stats-bar{background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35);margin-top:6px}
+.stat{transition:background .25s}
+.stat:hover{background:rgba(255,255,255,.05)}
+.stat-n{font-size:30px}
+.stat-l{font-size:12px}
+
+/* section headers */
+.sec-hdr{margin:96px 0 40px}
+.sec-ey{font-size:12px;letter-spacing:6px}
+.sec-title{position:relative;display:inline-block;padding-bottom:14px}
+.sec-title::after{content:'';position:absolute;left:50%;bottom:0;width:56px;height:3px;transform:translateX(-50%);border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--orange))}
+.sec-sub{font-size:16px}
+
+/* map */
+.map-wrap{border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04)}
+.map-compass{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.district-caption{background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 11px;border-radius:6px;transition:border-color .25s,transform .25s var(--ease)}
+.district:hover .district-caption,.district:focus-visible .district-caption{border-color:var(--c);transform:translateY(2px)}
+.district-pin{transition:transform .3s var(--ease),box-shadow .3s}
+.district:hover .district-pin,.district:focus-visible .district-pin{transform:rotate(-45deg) scale(1.18);box-shadow:0 0 30px var(--c),0 6px 14px rgba(0,0,0,.5)}
+.district-name{font-size:12px}
+.district-count{font-size:12px}
+.district-tip{border-radius:10px;padding:16px 18px;width:250px;transition:opacity .22s,transform .22s var(--ease)}
+.district-tip p{font-size:14px}
+.tip-pills span{font-size:11px;padding:3px 9px}
+.tip-go{font-size:12px}
+.d-live,.d-new{font-size:10px;padding:3px 8px}
+/* top-row pins: open the tooltip downward so the map's overflow:hidden doesn't clip it */
+.district:nth-of-type(1) .district-tip,.district:nth-of-type(3) .district-tip{bottom:auto;top:calc(100% + 14px);transform:translate(-50%,-6px)}
+.district:nth-of-type(1):hover .district-tip,.district:nth-of-type(1):focus-visible .district-tip,
+.district:nth-of-type(3):hover .district-tip,.district:nth-of-type(3):focus-visible .district-tip{transform:translate(-50%,0)}
+.district:nth-of-type(1) .district-tip::after,.district:nth-of-type(3) .district-tip::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--c)}
+/* touch screens can't hover: a tap should just go; the legend below carries the detail */
+@media(hover:none){.district-tip{display:none}}
+
+/* legend */
+.legend{border-radius:0 0 14px 14px;overflow:hidden;border-top:none}
+.legend a{padding:18px 16px;position:relative;transition:background .25s}
+.legend a::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--lc,transparent);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+.legend a:hover::before{transform:scaleX(1)}
+.legend a:nth-child(1){--lc:var(--pink)}.legend a:nth-child(2){--lc:var(--purple)}.legend a:nth-child(3){--lc:var(--orange)}.legend a:nth-child(4){--lc:var(--teal)}.legend a:nth-child(5){--lc:var(--red)}
+.legend .dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 10px currentColor}
+.legend .lname{font-size:15px}
+.legend .lcount{font-size:13px}
+
+/* featured cards: accent glow instead of a flat hover */
+.featured-grid{gap:14px}
+.fc{padding:26px 12px 20px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 60%),var(--panel);transition:transform .3s var(--ease),border-color .25s,background .25s}
+.fc::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--c),transparent 70%);opacity:0;transition:opacity .3s;pointer-events:none}
+.fc:hover,.fc:focus-visible{transform:translateY(-6px);box-shadow:none;border-color:var(--c)}
+.fc:hover::after,.fc:focus-visible::after{opacity:.2}
+.fc-icon{font-size:38px;margin-bottom:12px;transition:transform .3s var(--ease)}
+.fc:hover .fc-icon{transform:scale(1.18) rotate(-6deg)}
+.fc-name{font-size:15px;letter-spacing:1px}
+.fc-score{font-size:13px}
+.fc-score span{font-size:15px}
+.fc:nth-child(2){animation-delay:.05s}.fc:nth-child(3){animation-delay:.1s}.fc:nth-child(4){animation-delay:.15s}.fc:nth-child(5){animation-delay:.2s}
+
+/* strips */
+.strip{border-radius:12px;padding:28px 30px;margin-top:20px;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
+.strip-lb:hover{transform:translateY(-3px);border-color:rgba(255,210,63,.5);box-shadow:0 16px 44px rgba(255,210,63,.12)}
+.strip-title{font-size:21px}
+.strip-sub{font-size:15px}
+.chip{border-radius:8px;min-width:76px}
+.chip-l{font-size:11px}
+.strip-cta{font-size:12px;padding:14px 26px;transition:filter .2s,transform .2s}
+.strip:hover .strip-cta{filter:brightness(1.15);transform:translateX(3px)}
+.ug-badge{font-size:11px}
+
+/* footer */
+footer{margin-top:90px;background:linear-gradient(180deg,transparent,rgba(139,47,240,.06))}
+footer p{font-size:14px;line-height:1.9}
+footer a{transition:color .2s}
+footer a:hover{color:#fff}
+
+
+/* small screens */
+@media(max-width:600px){
+  .hero{padding:64px 0 50px}
+  .sec-hdr{margin:72px 0 30px}
+  .stat-n{font-size:26px}
+  .strip{padding:22px 18px}
+  .legend a{padding:16px 12px}
+}
 </style>
 </head>
 <body>
-
-<div class="modal-bg" id="nick-modal">
-  <div class="modal">
-    <span class="modal-icon">🎮</span>
-    <div class="modal-title">Welcome to the City</div>
-    <div class="modal-sub">Set a nickname to track scores and compete on live leaderboards across every district.</div>
-    <input class="nick-in" id="nick-in" maxlength="16" placeholder="Your nickname..." autocomplete="off" autocorrect="off" autocapitalize="off"/>
-    <div class="nick-hint">Max 16 chars · Shows on all leaderboards</div>
-    <div class="modal-btns">
-      <button class="mbtn" id="nick-save">Enter Game Hub →</button>
-      <button class="mbtn-skip" id="nick-skip">Skip</button>
-    </div>
-    <a href="/login.html" style="display:block;text-align:center;margin-top:14px;color:var(--teal);font-size:12.5px;text-decoration:none;">Have an account? Log in to sync scores &amp; achievements →</a>
-  </div>
-</div>
 
 <div class="ticker-wrap">
   <div class="ticker-inner">
@@ -519,22 +610,6 @@ try{
 </script>
 
 <script>
-// Guest quick-start modal — only for players who haven't set a nickname OR signed in yet.
-// Real account state (login/profile/avatar) is owned by shared/gh-auth.js below.
-let nick=localStorage.getItem('player_nick')||localStorage.getItem('gh_player')||'';
-(function init(){
-  if(!nick){document.getElementById('nick-modal').classList.remove('hidden');setTimeout(()=>document.getElementById('nick-in').focus(),300);}
-})();
-document.getElementById('nick-save').onclick=()=>{
-  const v=document.getElementById('nick-in').value.trim();
-  if(!v){document.getElementById('nick-in').style.borderColor='rgba(255,46,58,.7)';return;}
-  nick=v;
-  if(window.GH&&GH.setPlayer)GH.setPlayer(v); else localStorage.setItem('player_nick',v);
-  document.getElementById('nick-modal').classList.add('hidden');
-};
-document.getElementById('nick-skip').onclick=()=>document.getElementById('nick-modal').classList.add('hidden');
-document.getElementById('nick-in').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nick-save').click();});
-
 const localMap={
   'fs-snake':'snake_best','fs-tetris':'tetris_best','fs-gs':'gs_best','fs-cw':'cw_best',
 };
